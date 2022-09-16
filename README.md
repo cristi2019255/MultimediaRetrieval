@@ -24,6 +24,8 @@
 
 In order to get the project started first run the following command: `pip install -r requirements.txt`
 
+For the technical report I've set up a latex file in overleaf, please follow this link `https://www.overleaf.com/1781678451tvmkmtkhcrbg`
+
 ## TODO
 
 Download the benchmark dataset from princeton and put it here (the website was down)
