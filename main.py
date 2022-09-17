@@ -1,7 +1,9 @@
-from utils.renderer import render_file
+
+from utils.renderer import render
+
 
 def main():
-    render_file()
+    render()
 
 if __name__ == '__main__':
     main()
