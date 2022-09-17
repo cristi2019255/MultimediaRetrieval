@@ -13,24 +13,22 @@
 # limitations under the License.
 
 import psycopg2
-import json
 import tools
+import os
+from dotenv import load_dotenv
 
-def get_configurations():
-    with open('config.json') as f:
-        conf = json.load(f)
-        return conf
-
-def get_db_connection():
-    conf = get_configurations()
+def get_db_connection(db_name = None):       
+    # loading the environment variables
+    load_dotenv()
+    print("Connecting to PostgreSQL database...")        
     try:
-        conn = psycopg2.connect( 
-                database=conf.get('DB_NAME'),               
-                user=conf.get('DB_USER'),
-                password=conf.get('DB_PASSWORD'),
-                host=conf.get('DB_HOST'),
-                port= conf.get('DB_PORT')
-                )
+        conn = psycopg2.connect(    
+            database = db_name if db_name else os.getenv('POSTGRES_DB'),            
+            user = os.getenv('POSTGRES_USER'),
+            password = os.getenv('POSTGRES_PASSWORD'),
+            host = os.getenv('POSTGRES_HOST'),
+            port = os.getenv('POSTGRES_PORT')
+        )
         conn.autocommit = True
         return conn
     except Exception as e:
@@ -41,9 +39,8 @@ def create_db(connection):
     # Creating a cursor object
     cursor = connection.cursor()
   
-    # query to create a database     
-    conf = get_configurations()
-    db_name = conf.get('DB_NAME')
+    # query to create a database         
+    db_name = os.getenv('DB_NEW_NAME')
     sql = f''' CREATE database {db_name}; ''';    
     
     try:    

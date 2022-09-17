@@ -18,11 +18,14 @@ from statistics import *
 from statistics import get_average_shape, plot_histogram
 from renderer import render_file
 
-
-def prepare_database(conn):
+def prepare_database(conn):    
     
     # creating the database and the tables    
-    create_db(conn)    
+    create_db(conn)  
+    
+    # changing the connection to the new database
+    conn = get_db_connection(os.getenv('DB_NEW_NAME'))
+      
     create_table(conn)
     
     # inserting data in the database
@@ -40,7 +43,7 @@ def preprocess():
     db_connection = get_db_connection()
     
     # preparing the database
-    #prepare_database(db_connection)
+    prepare_database(db_connection)
     
     # getting statistics about the database
     filename = get_average_shape(db_connection, by = "vertices_count")
