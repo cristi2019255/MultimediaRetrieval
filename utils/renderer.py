@@ -12,31 +12,37 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import pymeshlab
-import numpy as np
-import matplotlib.pyplot as plt
-from mpl_toolkits.mplot3d import art3d
+import pyvista
 
-
-def render_file(filename="./LabeledDB_new/Airplane/61.off"):
-    meshes = pymeshlab.MeshSet()
-    meshes.load_new_mesh(filename)
-    display_mesh(meshes.current_mesh(), filename)
-
-
-def display_mesh(mesh, filename):
-    print('Displaying mesh')
-    v = np.array(mesh.vertex_matrix())    
-    f = np.array(mesh.face_matrix())
-    vertex_count = mesh.vertex_number()
-    faces_count = mesh.face_number()
+def render(filenames=["./LabeledDB_new/Airplane/61.ply"]):
     
-    fig = plt.figure()
-    ax = fig.add_subplot(projection="3d")
-
-    pc = art3d.Poly3DCollection(v[f], edgecolor="black")
-    ax.add_collection(pc)
+    # setting up the plotter    
+    plotter = pyvista.Plotter(shape=(2, len(filenames)), row_weights=[4,1])    # instantiate the plotter    
+       
+    # adding the meshes to the plotter
+    for index, filename in enumerate(filenames):
+        mesh = pyvista.read(filename)        
+        plotter.subplot(0,index)
+        plotter.camera.zoom(0.35)    
+        plotter.show_grid()                                
+        plotter.add_mesh(mesh, color="tan", show_edges=True, smooth_shading=True)
+        plotter.add_title(filename, font_size=10)             
+        plotter.add_axes(interactive=True)             
+        plotter.add_bounding_box()
+        plotter.subplot(1, index)
+        
+        bounds = [round(i,2) for i in mesh.bounds]
+        data = f"Number of faces: {mesh.n_faces} \nNumber of vertices: {mesh.n_points} \nFaces type: {mesh.faces.shape[0]} \nAxis aligned bounding box: \n{bounds}"
+                
+        plotter.add_text(text = data, font_size=14, color="black", position="upper_left", name="text")
+        
+    plotter.show()                  # show the rendering window
     
-    plt.axis('off')
-    plt.title(filename)
-    plt.show()
+    
+def test_render():
+    filenames = []
+    for i in range(1,5):
+        j = 60 + i
+        filenames.append(f"./LabeledDB_new/Airplane/{j}.ply")
+    print(filenames)
+    render(filenames)

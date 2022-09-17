@@ -15,11 +15,24 @@
 import os
 from pymeshlab import MeshSet
 
+def off2ply(filename = "./LabeledDB_new/Airplane/61.off"):
+    meshes = MeshSet()
+    meshes.load_new_mesh(filename)
+    filename = filename.replace('.off', '.ply')
+    meshes.save_current_mesh(filename)
+    return filename
+
+def convert_to_ply(directory = "./LabeledDB_new"):
+    for r, d, f in os.walk(directory):                
+        for file in f:            
+            if ('.off' in file):
+                off2ply(os.path.join(r, file))
+
 def scan_files(directory = "./LabeledDB_new"):    
     files = {}
     for r, d, f in os.walk(directory):                
         for file in f:
-            if ('.off' in file) or ('.ply' in file):
+            if ('.ply' in file):
                 dir = r.split('/')[-1]
                 if not dir in files:
                     files[dir] = [os.path.join(r, file)]
