@@ -13,9 +13,9 @@
 # limitations under the License.
 
 import psycopg2
-import tools
 import os
 from dotenv import load_dotenv
+from utils.tools import get_features
 
 def get_db_connection(db_name = None):       
     # loading the environment variables
@@ -58,12 +58,15 @@ def create_table(connection):
     # query to create a table
     sql = '''CREATE TABLE IF NOT EXISTS shapes (
             id SERIAL PRIMARY KEY NOT NULL,
+            file_name VARCHAR(50) NOT NULL,
             class VARCHAR(50) NOT NULL,
             faces_count INT NOT NULL,
             vertices_count INT NOT NULL,
             faces_type VARCHAR(50) NOT NULL,            
-            axis_aligned_bounding_box VARCHAR(50) NOT NULL,
-            file_name VARCHAR(50) NOT NULL,
+            bounding_box_dim_x FLOAT NOT NULL,
+            bounding_box_dim_y FLOAT NOT NULL,
+            bounding_box_dim_z FLOAT NOT NULL,
+            bounding_box_diagonal FLOAT NOT NULL,            
             created_at TIMESTAMP NOT NULL DEFAULT NOW()
             );'''
     try:        
@@ -78,9 +81,10 @@ def insert_data(connection, files):
     for key, value in files.items():
         for file in value:
             print(file)
-            [faces_count, vertices_count, faces_type, axis_aligned_bounding_box] = tools.get_features(file)
-            sql = f'''INSERT INTO shapes (class, faces_count, vertices_count, faces_type, axis_aligned_bounding_box, file_name) 
-                VALUES ('{key}', '{faces_count}', '{vertices_count}', '{faces_type}', '{axis_aligned_bounding_box}', '{file}');'''
+            [faces_count, vertices_count, faces_type, axis_aligned_bounding_box] = get_features(file)
+            [dim_x, dim_y, dim_z, diagonal] = axis_aligned_bounding_box
+            sql = f'''INSERT INTO shapes (class, faces_count, vertices_count, faces_type, file_name, bounding_box_dim_x, bounding_box_dim_y, bounding_box_dim_z, bounding_box_diagonal) 
+                VALUES ('{key}', {faces_count}, {vertices_count}, '{faces_type}', '{file}', {dim_x}, {dim_y}, {dim_z}, {diagonal});'''            
             try:        
                 cursor.execute(sql)
                 print("Data has been inserted successfully !!");

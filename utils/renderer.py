@@ -14,6 +14,8 @@
 
 import pyvista
 
+from utils.tools import get_features
+
 def render(filenames=["./LabeledDB_new/Airplane/61.ply"]):
     
     # setting up the plotter    
@@ -31,8 +33,8 @@ def render(filenames=["./LabeledDB_new/Airplane/61.ply"]):
         plotter.add_bounding_box()
         plotter.subplot(1, index)
         
-        bounds = [round(i,2) for i in mesh.bounds]
-        data = f"Number of faces: {mesh.n_faces} \nNumber of vertices: {mesh.n_points} \nFaces type: {mesh.faces.shape[0]} \nAxis aligned bounding box: \n{bounds}"
+        [n_faces, n_vertices, faces_type, axis_aligned_bounding_box] = get_features(filename)        
+        data = f"Number of faces: {n_faces} \nNumber of vertices: {n_vertices} \nFaces type: {faces_type} \nAxis aligned bounding box: \n{axis_aligned_bounding_box}"        
                 
         plotter.add_text(text = data, font_size=14, color="black", position="upper_left", name="text")
         

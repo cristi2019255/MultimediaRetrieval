@@ -12,10 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from tools import *
-from db_tools import *
-from renderer import render
-from statistics import get_average_shape, plot_histogram
+from utils.tools import *
+from utils.db_tools import *
+from utils.renderer import render
+from utils.statistics import get_average_shape, plot_histogram
 
 def prepare_database(conn):    
     
@@ -42,7 +42,10 @@ def preprocess():
     db_connection = get_db_connection()
     
     # preparing the database
+    # this is a costly operation, so it is recommended to run it only once
     #prepare_database(db_connection)
+    
+    db_connection = get_db_connection(os.getenv('DB_NEW_NAME'))
     
     # getting statistics about the database
     filename = get_average_shape(db_connection, by = "vertices_count")
@@ -61,5 +64,3 @@ def preprocess():
     
     # Closing the connection
     db_connection.close()
-    
-preprocess()

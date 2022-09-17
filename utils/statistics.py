@@ -43,7 +43,7 @@ def get_average_shape(connection, by = "vertices_count"):
         cur.execute("SELECT  * FROM shapes WHERE id = {0}".format(avg_id))
         avg_shape = cur.fetchone()
         print(f"The average shape by {by} is: {avg_shape} ")
-        return avg_shape[6]
+        return avg_shape[1]
     except Exception as e:
         print(e)
         return None
