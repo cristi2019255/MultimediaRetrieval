@@ -15,20 +15,21 @@
 import pymeshlab
 import numpy as np
 import matplotlib.pyplot as plt
-#import meshplot as mp
 from mpl_toolkits.mplot3d import art3d
 
 
 def render_file(filename="./LabeledDB_new/Airplane/61.off"):
     meshes = pymeshlab.MeshSet()
     meshes.load_new_mesh(filename)
-    display_mesh(meshes.current_mesh())
+    display_mesh(meshes.current_mesh(), filename)
 
 
-def display_mesh(mesh):
+def display_mesh(mesh, filename):
     print('Displaying mesh')
     v = np.array(mesh.vertex_matrix())    
     f = np.array(mesh.face_matrix())
+    vertex_count = mesh.vertex_number()
+    faces_count = mesh.face_number()
     
     fig = plt.figure()
     ax = fig.add_subplot(projection="3d")
@@ -37,4 +38,5 @@ def display_mesh(mesh):
     ax.add_collection(pc)
     
     plt.axis('off')
+    plt.title(filename)
     plt.show()

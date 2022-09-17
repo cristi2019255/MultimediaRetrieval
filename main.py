@@ -1,6 +1,4 @@
-
-from renderer import render_file
-
+from utils.renderer import render_file
 
 def main():
     print("Hello World!")
