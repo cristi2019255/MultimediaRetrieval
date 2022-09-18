@@ -1,10 +1,11 @@
 
-from renderer import render_file
+from utils.preprocesing import preprocess
+from utils.renderer import render
 
 
 def main():
-    print("Hello World!")
-    render_file()
+    render()
+    preprocess()
 
 if __name__ == '__main__':
     main()
