@@ -14,53 +14,68 @@
 
 from utils.tools import *
 from utils.db_tools import *
-from utils.renderer import render
-from utils.statistics import get_average_shape, plot_histogram
+from utils.statistics import *
 
-def prepare_database(conn):    
+class Prepocesor:
+    def __init__(self):
+        self.db = Database()
     
-    # creating the database and the tables    
-    create_db(conn)  
+    def preprocess(self):
+        # plotting histograms before resampling
+        plot_histogram(self.db.get_column_data(by = "vertices_count"), by = "vertices_count")
+        plot_histogram(self.db.get_column_data(by = "faces_count"), by = "faces__count")
+        plot_histogram(self.db.get_column_data(by = "class"), by = "class")
+                 
+        # getting statistics about the database and resampling the outliers
+        [_, _, _, _, avg_vertices_count, _, _, _, _, _, _, ] = self.db.get_average_shape(by = "vertices_count")
+        [_, _, _, avg_faces_count, _, _, _, _, _, _, _, ] = self.db.get_average_shape(by = "faces_count")
     
-    # changing the connection to the new database
-    conn = get_db_connection(os.getenv('DB_NEW_NAME'))
-      
-    create_table(conn)
+        # resampling the outliers
+        self.resample_outliers(avg=avg_vertices_count, std=500, by = "vertices_count")
+        self.resample_outliers(avg=avg_faces_count, std=500, by = "faces_count")
     
-    # inserting data in the database
-    files = scan_files()    
-    insert_data(conn, files)
+        # plotting histograms after resampling
+        plot_histogram(self.db.get_column_data(by = "vertices_count"), by = "vertices_count")
+        plot_histogram(self.db.get_column_data(by = "faces_count"), by = "faces__count")
         
+        # Closing the connection with db
+        self.db.close()
     
-def resample_outliers(conn):
-    pass
     
+    def resample_outliers(self, avg = 1000, std = 500, by = "vertices_count"):
+         
+        def resample(data, resample_function):
+            try:
+                for row in data:
+                    filename = row[0]
+                    resample_function(filename, avg)
+                    self.db.update_data(filename)
+            except Exception as e:
+                print(e)
+        
+        # query to get the outliers
+        
+        sql_sub_samples = '''SELECT file_name FROM shapes WHERE {0} < {1};'''.format(by, (avg - std))
+        self.db.cursor.execute(sql_sub_samples)
+        rows_sub_sample = self.db.cursor.fetchall()
+        resample(rows_sub_sample, sub_sample)
+    
+        sql_super_samples = '''SELECT file_name FROM shapes WHERE {0} > {1};'''.format(by, (avg + std))
+        self.db.cursor.execute(sql_super_samples)
+        rows_super_sample = self.db.cursor.fetchall()
+        
+        resample(rows_super_sample, super_sample)
+       
 
-def preprocess():
+
+def super_sample(filename, to = 1000):
+    print(filename)
+    ms = MeshSet()
+    ms.load_new_mesh(filename)
+    mesh = ms.current_mesh()
+    # TODO: figure out a way to resample the mesh to a specific number of vertices)
+    #mesh.save(filename)
+
+def sub_sample(filename, to = 1000):
+    print(filename)
     
-    # getting database connection
-    db_connection = get_db_connection()
-    
-    # preparing the database
-    # this is a costly operation, so it is recommended to run it only once
-    #prepare_database(db_connection)
-    
-    db_connection = get_db_connection(os.getenv('DB_NEW_NAME'))
-    
-    # getting statistics about the database
-    filename = get_average_shape(db_connection, by = "vertices_count")
-    render([filename])
-    
-    filename = get_average_shape(db_connection, by = "faces_count")
-    render([filename])
-    
-    # plotting histograms
-    plot_histogram(db_connection, by = "vertices_count")
-    plot_histogram(db_connection, by = "faces_count")
-    plot_histogram(db_connection, by = "class")
-    
-    # resampling outliers
-    resample_outliers(db_connection)
-    
-    # Closing the connection
-    db_connection.close()

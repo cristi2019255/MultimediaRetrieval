@@ -48,7 +48,7 @@ def get_features(filename = "./LabeledDB_new/Airplane/61.off"):
     
     faces_count = mesh.face_number()
     vertices_count = mesh.vertex_number()    
-    faces_ratio = mesh.face_matrix().shape[1]    
+    faces_ratio = mesh.face_matrix().shape[1] # TODO: check this, I think it's wrong
     
     faces_type = 'triangles' if faces_ratio == 3 else 'quads' if faces_ratio == 4 else 'mix'
     bounding_box = mesh.bounding_box()
