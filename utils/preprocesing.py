@@ -68,7 +68,7 @@ class Prepocesor:
        
 
 
-def super_sample(filename, to = 1000):
+def super_sample(filename, target = 1000):
     print(filename)
     ms = MeshSet()
     ms.load_new_mesh(filename)
@@ -76,6 +76,6 @@ def super_sample(filename, to = 1000):
     # TODO: figure out a way to resample the mesh to a specific number of vertices)
     #mesh.save(filename)
 
-def sub_sample(filename, to = 1000):
+def sub_sample(filename, target = 1000):
     print(filename)
     
