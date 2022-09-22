@@ -57,14 +57,13 @@ def test_shape():
     shape = Shape("./LabeledDB_new/Airplane/61.ply")
     shape.normalize()
     shape.save_mesh("./test_data/61_normalized.ply")
-    render(["./LabeledDB_new/Airplane/61.ply", "./61_normalized.ply"])
+    render(["./LabeledDB_new/Airplane/61.ply", "./test_data/61_normalized.ply"])
 
 
 def test_subsampling():
     file_name = "./LabeledDB_new/Airplane/61.off"
     ms = MeshSet()
     ms.load_new_mesh(file_name)
-    render([file_name])
 
     # https://pymeshlab.readthedocs.io/en/latest/filter_list.html?highlight=Quadratic%20Edge%20Collapse%20Detection#meshing_decimation_quadric_edge_collapse
     # https://support.shapeways.com/hc/en-us/articles/360022742294-Polygon-reduction-with-MeshLab
@@ -79,7 +78,7 @@ def test_subsampling():
     new_file_name = "./test_data/61_subsampled.ply"
 
     ms.save_current_mesh(new_file_name)
-    render([new_file_name])
+    render(["./LabeledDB_new/Airplane/61.ply", new_file_name])
 
 
 # test_subsampling()
@@ -89,7 +88,6 @@ def test_supersampling():
     file_name = "./LabeledDB_new/Airplane/61.off"
     ms = MeshSet()
     ms.load_new_mesh(file_name)
-    render([file_name])
 
     # https://pymeshlab.readthedocs.io/en/latest/filter_list.html?highlight=Remeshing%2C%20Simplification%20and%20Reconstruction#meshing_surface_subdivision_butterfly
 
@@ -102,7 +100,7 @@ def test_supersampling():
     new_file_name = "./test_data/61_supersampled.ply"
 
     ms.save_current_mesh(new_file_name)
-    render([new_file_name])
+    render(["./LabeledDB_new/Airplane/61.ply", new_file_name])
 
 
 # test_supersampling()
