@@ -21,7 +21,7 @@ def test():
     percentage = Percentage((current_nr_vertices / NR_DESIRED_VERTICES))
     ms.apply_filter("generate_resampled_uniform_mesh", cellsize=percentage)  # kind of a subsampling
 
-    new_file_name = "./61_resampled.ply"
+    new_file_name = "./test_data/61_resampled.ply"
 
     ms.save_current_mesh(new_file_name)
     render([new_file_name])
@@ -47,7 +47,7 @@ def test2():
     # ms.apply_filter('generate_surface_reconstruction_vcg')
     # ms.add_mesh(mesh)
 
-    new_file_name = "./61_resampled.ply"
+    new_file_name = "test_data/61_resampled.ply"
 
     ms.save_current_mesh(new_file_name)
     render([new_file_name])
@@ -56,7 +56,7 @@ def test2():
 def test_shape():
     shape = Shape("./LabeledDB_new/Airplane/61.ply")
     shape.normalize()
-    shape.save_mesh("./61_normalized.ply")
+    shape.save_mesh("./test_data/61_normalized.ply")
     render(["./LabeledDB_new/Airplane/61.ply", "./61_normalized.ply"])
 
 
@@ -76,7 +76,7 @@ def test_subsampling():
 
     ms.apply_filter("meshing_decimation_quadric_edge_collapse", targetfacenum=NR_DESIRED_VERTICES, qualitythr=0.9)
 
-    new_file_name = "./61_subsampled.ply"
+    new_file_name = "./test_data/61_subsampled.ply"
 
     ms.save_current_mesh(new_file_name)
     render([new_file_name])
@@ -99,7 +99,7 @@ def test_supersampling():
 
     ms.apply_filter("meshing_surface_subdivision_butterfly", iterations=3)
 
-    new_file_name = "./61_supersampled.ply"
+    new_file_name = "./test_data/61_supersampled.ply"
 
     ms.save_current_mesh(new_file_name)
     render([new_file_name])
