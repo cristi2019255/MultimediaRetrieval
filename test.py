@@ -104,4 +104,22 @@ def test_supersampling():
     ms.save_current_mesh(new_file_name)
     render([new_file_name])
 
+
 # test_supersampling()
+
+"""
+theoretical pipeline:
+1. Choose an appropriate number of faces [d]; Can be done via either the mean or median in the original data.
+2. Check the number of faces of the model [f]
+    If f = x:
+        pass
+    If f > x:
+        Subsample so f = x
+    If f < x:
+        Supersample until f > x
+        Subsample so f = x
+
+As a result, all models would have the same number of faces. 
+
+I asked the prof. if it would be a good way of doing things. Will update accordingly. 
+"""
