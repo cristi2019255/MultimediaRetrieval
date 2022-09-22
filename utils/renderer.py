@@ -36,7 +36,7 @@ def render(filenames=["./LabeledDB_new/Airplane/61.ply"]):
         plotter.add_axes(interactive=True)
         plotter.add_bounding_box()
         plotter.subplot(1, index)
-
+        
         [n_faces, n_vertices, faces_type, axis_aligned_bounding_box] = get_features(filename)
         data = f"Number of faces: {n_faces} \nNumber of vertices: {n_vertices} \nFaces type: {faces_type} \nAxis aligned bounding box: \n{axis_aligned_bounding_box}"
 

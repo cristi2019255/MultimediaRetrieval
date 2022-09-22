@@ -15,7 +15,8 @@
 import psycopg2
 import os
 from dotenv import load_dotenv
-from utils.tools import get_features, scan_files
+from shape import Shape
+from utils.tools import scan_files
 import numpy as np
 
 
@@ -79,7 +80,8 @@ class Database:
         for key, value in files.items():
             for file in value:
                 print(file)
-                [faces_count, vertices_count, faces_type, axis_aligned_bounding_box] = get_features(file)
+                shape = Shape(file)
+                [faces_count, vertices_count, faces_type, axis_aligned_bounding_box] = shape.get_features(file)
                 [dim_x, dim_y, dim_z, diagonal] = axis_aligned_bounding_box
                 sql = f'''INSERT INTO shapes (class, faces_count, vertices_count, faces_type, file_name, bounding_box_dim_x, bounding_box_dim_y, bounding_box_dim_z, bounding_box_diagonal) 
                     VALUES ('{key}', {faces_count}, {vertices_count}, '{faces_type}', '{file}', {dim_x}, {dim_y}, {dim_z}, {diagonal});'''
@@ -90,7 +92,8 @@ class Database:
                     print("Data already exists!")
 
     def update_data(self, filename):
-        [faces_count, vertices_count, faces_type, axis_aligned_bounding_box] = get_features(filename)
+        shape = Shape(filename)
+        [faces_count, vertices_count, faces_type, axis_aligned_bounding_box] = shape.get_features(filename)
         [dim_x, dim_y, dim_z, diagonal] = axis_aligned_bounding_box
         sql = f'''UPDATE SET 
                 faces_count = {0}, 
