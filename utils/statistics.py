@@ -12,10 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# (a) Find out what is the average shape in the database (in terms of vertex and face counts);
-# (b) If there are significant outliers from this average (e.g. shapes having many, or few, vertices or cells).
-# The best way to do this is to show a histogram counting how many shapes are in the database for every range of the property of interest 
-# (e.g., number of vertices, number of faces, shape class).
+# (a) Find out what is the average shape in the database (in terms of vertex and face counts); (b) If there are
+# significant outliers from this average (e.g. shapes having many, or few, vertices or cells). The best way to do
+# this is to show a histogram counting how many shapes are in the database for every range of the property of
+# interest (e.g., number of vertices, number of faces, shape class).
 
 
 import matplotlib.pyplot as plt

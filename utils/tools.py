@@ -15,43 +15,47 @@
 import os
 from pymeshlab import MeshSet
 
-def off2ply(filename = "./LabeledDB_new/Airplane/61.off"):
+
+def off2ply(filename="./LabeledDB_new/Airplane/61.off"):
     meshes = MeshSet()
     meshes.load_new_mesh(filename)
     filename = filename.replace('.off', '.ply')
     meshes.save_current_mesh(filename)
     return filename
 
-def convert_to_ply(directory = "./LabeledDB_new"):
-    for r, d, f in os.walk(directory):                
-        for file in f:            
+
+def convert_to_ply(directory="./LabeledDB_new"):
+    for r, d, f in os.walk(directory):
+        for file in f:
             if ('.off' in file):
                 off2ply(os.path.join(r, file))
 
-def scan_files(directory = "./LabeledDB_new"):    
+
+def scan_files(directory="./LabeledDB_new"):
     files = {}
-    for r, d, f in os.walk(directory):                
+    for r, d, f in os.walk(directory):
         for file in f:
             if ('.ply' in file):
                 dir = r.split('/')[-1]
                 if not dir in files:
                     files[dir] = [os.path.join(r, file)]
-                else:                
-                    files[dir].append(os.path.join(r, file))        
+                else:
+                    files[dir].append(os.path.join(r, file))
     return files
 
 
-def get_features(filename = "./LabeledDB_new/Airplane/61.off"):
+def get_features(filename="./LabeledDB_new/Airplane/61.off"):
     meshes = MeshSet()
     meshes.load_new_mesh(filename)
     mesh = meshes.current_mesh()
-    
+
     faces_count = mesh.face_number()
-    vertices_count = mesh.vertex_number()    
-    faces_ratio = mesh.face_matrix().shape[1] # TODO: check this, I think it's wrong
-    
+    vertices_count = mesh.vertex_number()
+    faces_ratio = mesh.face_matrix().shape[1]  # TODO: check this, I think it's wrong
+
     faces_type = 'triangles' if faces_ratio == 3 else 'quads' if faces_ratio == 4 else 'mix'
     bounding_box = mesh.bounding_box()
-    axis_aligned_bounding_box = [bounding_box.dim_x(), bounding_box.dim_y(), bounding_box.dim_z(), bounding_box.diagonal()]
-    
+    axis_aligned_bounding_box = [bounding_box.dim_x(), bounding_box.dim_y(), bounding_box.dim_z(),
+                                 bounding_box.diagonal()]
+
     return [faces_count, vertices_count, faces_type, axis_aligned_bounding_box]

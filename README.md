@@ -31,5 +31,5 @@ For the technical report I've set up a latex file in overleaf, please follow thi
 
 Download the benchmark dataset from princeton and put it here (the website was down)
 
-Disscuss about step 1 (working but not sure if we should use matplotlib),
+Discuss about step 1 (working but not sure if we should use matplotlib),
 I suggest we use pymeshlab for working with meshes and objects because it is from my point of view one of the best (for now) for working in python
