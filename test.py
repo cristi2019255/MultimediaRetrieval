@@ -7,7 +7,8 @@ from utils.renderer import render
 
 NR_DESIRED_VERTICES = 1000
 
-
+# old, not used
+"""
 def test():
     # test for sub sampling, if too many vertices, it will be reduced
 
@@ -51,6 +52,7 @@ def test2():
 
     ms.save_current_mesh(new_file_name)
     render([new_file_name])
+"""
 
 
 def test_shape():
