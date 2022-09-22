@@ -14,15 +14,19 @@
 
 import pyvista
 
-from utils.tools import get_features
+from utils.tools import get_features, off2ply
 
-def render(filenames=["./LabeledDB_new/Airplane/61.ply"]):
+def render(filenames=["./LabeledDB_new/Airplane/61.ply"]):    
     
     # setting up the plotter    
     plotter = pyvista.Plotter(shape=(2, len(filenames)), row_weights=[4,1])    # instantiate the plotter    
        
     # adding the meshes to the plotter
     for index, filename in enumerate(filenames):
+        
+        if ('.off' in filename):
+            filename = off2ply(filename)
+            
         mesh = pyvista.read(filename)        
         plotter.subplot(0,index)
         plotter.camera.zoom(0.35)    
@@ -45,6 +49,6 @@ def test_render():
     filenames = []
     for i in range(1,5):
         j = 60 + i
-        filenames.append(f"./LabeledDB_new/Airplane/{j}.ply")
+        filenames.append(f"./LabeledDB_new/Airplane/{j}.off")
     print(filenames)
     render(filenames)
