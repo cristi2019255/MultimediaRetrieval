@@ -85,3 +85,23 @@ def test_subsampling():
 # test_subsampling()
 
 
+def test_supersampling():
+    file_name = "./LabeledDB_new/Airplane/61.off"
+    ms = MeshSet()
+    ms.load_new_mesh(file_name)
+    render([file_name])
+
+    # https://pymeshlab.readthedocs.io/en/latest/filter_list.html?highlight=Remeshing%2C%20Simplification%20and%20Reconstruction#meshing_surface_subdivision_butterfly
+
+    # all filters for Subdivision Surfaces below could be used, PyMeshLab has implementations for all of them
+    # email sent out to ask which one is most appropriate to use
+    # https://www.universal-robots.com/media/1818206/12.png
+
+    ms.apply_filter("meshing_surface_subdivision_butterfly", iterations=3)
+
+    new_file_name = "./61_supersampled.ply"
+
+    ms.save_current_mesh(new_file_name)
+    render([new_file_name])
+
+# test_supersampling()
