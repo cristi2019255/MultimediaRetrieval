@@ -180,9 +180,6 @@ class Shape:
         self.align_with_principal_components()
         self.flip_on_moment()
         self.rescale_shape()
-        
-        self.save_mesh()
-    
 
     def get_features(self):
         """_summary_ compute the features of the shape

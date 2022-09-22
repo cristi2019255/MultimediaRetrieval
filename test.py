@@ -54,8 +54,7 @@ def test2():
 
 def test_shape():
     shape = Shape("./LabeledDB_new/Airplane/61.ply")
-    shape.render()
     shape.normalize()
-    shape.render()
-    
+    shape.save_mesh("./61_normalized.ply")
+    render(["./LabeledDB_new/Airplane/61.ply", "./61_normalized.ply"])
 test_shape()
