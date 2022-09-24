@@ -17,7 +17,7 @@ def main():
     #preprocessor.preprocess()
 
     # extracting features
-    feature_extractor.extract_features()
+    #feature_extractor.extract_features()
 
 if __name__ == '__main__':
     main()

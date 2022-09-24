@@ -49,11 +49,11 @@ def test_supersampling():
         Super sampling a certain amount of iterations until the number of faces is greater than the desired number of faces
         When greater than the desired number of faces, sub sample to the desired number of faces 
     """
-    shape = Shape("./test_data/61_subsampled.ply")
+    shape = Shape("./LabeledDB_new/Bird/253.ply")
     
-    shape.resample(target_faces=7654)
-    shape.save_mesh("./test_data/61_supersampled.ply")
-    render(["./test_data/61_subsampled.ply", "./test_data/61_supersampled.ply"])
+    shape.resample(target_faces=21000)
+    shape.save_mesh("./test_data/supersampled.ply")
+    render(["./LabeledDB_new/Bird/253.ply", "./test_data/supersampled.ply"])
 
 #test_shape_normalization()
 #test_subsampling()

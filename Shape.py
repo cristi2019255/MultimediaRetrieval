@@ -16,6 +16,7 @@ from pymeshlab import MeshSet, Mesh
 import numpy as np
 from utils.renderer import render
 import os
+from termcolor import colored
 
 NR_DESIRED_FACES = 5000
 
@@ -152,7 +153,7 @@ class Shape:
         
         old_faces = faces
         while faces < target_faces:
-            self.ms.apply_filter("meshing_surface_subdivision_butterfly", iterations=1)
+            self.ms.apply_filter("meshing_surface_subdivision_butterfly", iterations=2)
             self.mesh = self.ms.current_mesh()
             faces = self.mesh.face_number()
             
@@ -161,6 +162,7 @@ class Shape:
             
             
             if old_faces == faces:
+                print(colored(f'[WARN] file {self.file_name} does not doing super sampling','red'))
                 break
             old_faces = faces
             
