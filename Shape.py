@@ -366,11 +366,65 @@ class Shape:
         [dim_x, dim_y, dim_z] = [bbox.dim_x(), bbox.dim_y(), bbox.dim_z()]
         return max(dim_x, dim_y, dim_z) / min(dim_x, dim_y, dim_z)
     
-    def get_curvature(self):
+    def get_surface_area(self):
         """
-        _summary_ compute the curvature of the shape
+        _summary_ compute the surface area of the shape
         """
         return 1.0
+    
+    def get_bbox_volume(self):
+        """
+        _summary_ compute the volume of the shape
+        """
+        return 1.0
+
+    def get_compactness(self):
+        """
+        _summary_ compute the compactness of the shape
+        """
+        return 1.0
+
+    def get_diameter(self):
+        """
+        _summary_ compute the diameter of the shape
+        """
+        return 1.0
+    
+    def get_eccentricity(self):
+        """
+        _summary_ compute the eccentricity of the shape
+        """
+        return 1.0
+    
+    def get_A3(self):
+        """
+        _summary_ compute the A3 of the shape
+        """
+        return [1.0]
+    
+    def get_D1(self):
+        """
+        _summary_ compute the D1 of the shape
+        """
+        return [1.0]
+    
+    def get_D2(self):
+        """
+        _summary_ compute the D2 of the shape
+        """
+        return [1.0]
+    
+    def get_D3(self):
+        """
+        _summary_ compute the D3 of the shape
+        """
+        return [1.0]
+    
+    def get_D4(self):
+        """
+        _summary_ compute the D4 of the shape
+        """
+        return [1.0]
     
     # TODO: check this and add the other features
     

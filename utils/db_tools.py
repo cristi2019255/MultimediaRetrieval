@@ -68,10 +68,27 @@ class Database:
         self.execute_query(sql, 'create')
 
     def create_features_table(self):
+        """_summary_ Create features table in the database
+        
+        Notations:
+            A3: angle between 3 random vertices
+            D1: distance between barycenter and random vertex
+            D2: distance between 2 random vertices
+            D3: square root of area of triangle given by 3 random vertices
+            D4: cube root of volume of tetrahedron formed by 4 random vertices
+        """
         sql = '''CREATE TABLE IF NOT EXISTS features (
             id SERIAL PRIMARY KEY NOT NULL,
-            elongation FLOAT NOT NULL,
-            curvature FLOAT NOT NULL,
+            surface_area FLOAT NOT NULL DEFAULT 0,
+            compactness FLOAT NOT NULL DEFAULT 0,
+            bbox_volume FLOAT NOT NULL DEFAULT 0,
+            diameter FLOAT NOT NULL DEFAULT 0,
+            eccentricity FLOAT NOT NULL DEFAULT 0,
+            A3 FLOAT[], 
+            D1 FLOAT[],
+            D2 FLOAT[],
+            D3 FLOAT[],
+            D4 FLOAT[],
             created_at TIMESTAMP NOT NULL DEFAULT NOW(),
             shape_id INT NOT NULL,
             CONSTRAINT shape_id FOREIGN KEY (id) REFERENCES shapes (id)
@@ -127,8 +144,27 @@ class Database:
         self.execute_query(sql, "update")
 
     def insert_features_data(self, shape:Shape, shape_id:int):
-        sql = f'''INSERT INTO features (shape_id, elongation, curvature) 
-                VALUES ({shape_id}, {shape.get_elongation()}, {shape.get_curvature()});'''
+        features = {'A3': shape.get_A3(), 'D1': shape.get_D1(), 'D2': shape.get_D2(), 'D3': shape.get_D3(), 'D4': shape.get_D4()}
+        A3 = "'" + str(features['A3']).replace('[', '{').replace(']', '}') + "'"
+        D1 = "'" + str(features['D1']).replace('[', '{').replace(']', '}') + "'"
+        D2 = "'" + str(features['D2']).replace('[', '{').replace(']', '}') + "'"
+        D3 = "'" + str(features['D3']).replace('[', '{').replace(']', '}') + "'"
+        D4 = "'" + str(features['D4']).replace('[', '{').replace(']', '}') + "'"
+        
+        
+        sql = f'''INSERT INTO features (shape_id, surface_area, compactness, bbox_volume, diameter, eccentricity, A3, D1, D2, D3, D4) 
+                VALUES ({shape_id}, 
+                        {shape.get_surface_area()}, 
+                        {shape.get_compactness()},
+                        {shape.get_bbox_volume()},
+                        {shape.get_diameter()},
+                        {shape.get_eccentricity()}, 
+                        {A3},
+                        {D1},
+                        {D2},
+                        {D3},
+                        {D4}
+                    );'''
         
         get_feature_id_sql = f'''SELECT id FROM features WHERE shape_id = {shape_id};'''
         
