@@ -56,5 +56,5 @@ def test_supersampling():
     render(["./LabeledDB_new/Bird/253.ply", "./test_data/supersampled.ply"])
 
 #test_shape_normalization()
-#test_subsampling()
-test_supersampling()
+test_subsampling()
+#test_supersampling()

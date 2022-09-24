@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from pymeshlab import MeshSet, Mesh
+from pymeshlab import MeshSet, Mesh, Percentage
 import numpy as np
 from utils.renderer import render
 import os
@@ -127,7 +127,7 @@ class Shape:
 
         # This would be done before normalisation, so we dont need to preserve boundaries, normal, etc
 
-        self.ms.apply_filter("meshing_decimation_quadric_edge_collapse", targetfacenum=target_faces, qualitythr=0.9)
+        self.ms.apply_filter("meshing_decimation_quadric_edge_collapse", targetfacenum=target_faces, qualitythr=1)
         self.mesh = self.ms.current_mesh()
         
     def _super_sample(self, target_faces = NR_DESIRED_FACES):
@@ -153,7 +153,7 @@ class Shape:
         
         old_faces = faces
         while faces < target_faces:
-            self.ms.apply_filter("meshing_surface_subdivision_butterfly", iterations=2)
+            self.ms.apply_filter("meshing_surface_subdivision_butterfly", iterations=1, threshold=Percentage(0))
             self.mesh = self.ms.current_mesh()
             faces = self.mesh.face_number()
             

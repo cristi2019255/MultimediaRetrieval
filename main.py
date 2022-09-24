@@ -11,13 +11,13 @@ def main():
     # preparing the database
     # this is a costly operation, so it is recommended to run it only once
     
-    #preprocessor.db.prepare_db()
+    preprocessor.db.prepare_db()
      
     # preprocessing the shapes
-    #preprocessor.preprocess()
+    preprocessor.preprocess()
 
     # extracting features
-    #feature_extractor.extract_features()
+    feature_extractor.extract_features()
 
 if __name__ == '__main__':
     main()
