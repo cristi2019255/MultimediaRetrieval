@@ -16,12 +16,33 @@ from pymeshlab import MeshSet, Mesh
 import numpy as np
 from utils.renderer import render
 
+NR_DESIRED_FACES = 5000
+
 class Shape:
+    # ------------------ Class Methods ------------------
+    
+    # ------------------ 1. Constructors ------------------
     def __init__(self, vertices, faces):
+        """_summary_ construct a shape from vertices and faces
+
+        Args:
+            vertices (numpy.ndarray): vertices matrix of the shape
+            faces (numpy.ndarray): faces matrix of the shape
+        """
         self.vertices = vertices
         self.faces = faces
+        self.mesh = Mesh(self.vertices, self.faces)
+        self.file_name = None
+        self.ms = MeshSet()
+        self.ms.add_mesh(self.mesh)
+        
     
     def __init__(self, file_name: str):
+        """_summary_ construct a shape from file_name
+
+        Args:
+            file_name (str): the file name of the shape
+        """
         self.ms = MeshSet()
         self.ms.load_new_mesh(file_name)
         self.file_name = file_name
@@ -29,7 +50,17 @@ class Shape:
         self.vertices = self.mesh.vertex_matrix()
         self.faces = self.mesh.face_matrix()
     
+    # ----------------- 2. General shape I/O methods -----------------
+    
     def save_mesh(self, file_name: str = None):
+        """_summary_: save the mesh to a file
+
+        Args:
+            file_name (str, optional): Defaults to None.
+
+        Raises:
+            ValueError: No filename provided
+        """
         if file_name is None:
             file_name = self.file_name
             if file_name is None:
@@ -40,13 +71,70 @@ class Shape:
     
     def render(self):
         render([self.file_name])
+        
+    def __str__(self):
+        return self.file_name
     
+    
+    # -------------------- 3. Shape resampling -------------------------
+    
+    def sub_sample(self, target_faces = NR_DESIRED_FACES):
+        """_summary_ Sub sampling is done by using the Quadric Edge Collapse Decimation filter
+            Sub sampling to a fixed number of faces
+
+        Args:
+            target_faces (int, optional): Target number of faces. Defaults to NR_DESIRED_FACES = 5000.
+        """
+        # https://pymeshlab.readthedocs.io/en/latest/filter_list.html?highlight=Quadratic%20Edge%20Collapse%20Detection#meshing_decimation_quadric_edge_collapse
+        # https://support.shapeways.com/hc/en-us/articles/360022742294-Polygon-reduction-with-MeshLab
+        # 1: calculate the mean number of faces in the distribution for NR_DESIRED_FACES
+        # for testing, 5000
+        # 2: TODO: need to pick an appropriate quality threshold (qualitythr), right now it's just a number pulled out of my ass
+
+        # This would be done before normalisation, so we dont need to preserve boundaries, normal, etc
+
+        assert(target_faces > 100)
+        assert(target_faces < 20000)
+        self.ms.apply_filter("meshing_decimation_quadric_edge_collapse", targetfacenum=target_faces, qualitythr=0.9)
+        self.mesh = self.ms.current_mesh()
+    
+    def super_sample(self, target_faces = NR_DESIRED_FACES):
+        """_summary_  Super sampling is done by using the Subdivision Surfaces filter
+           Super sampling a certain amount of iterations until the number of faces is greater than the desired number of faces
+           When greater than the desired number of faces, sub sample to the desired number of faces 
+
+        Args:
+            target_faces (int, optional): Target number of faces. Defaults to NR_DESIRED_FACES = 5000.
+        """
+        # https://pymeshlab.readthedocs.io/en/latest/filter_list.html?highlight=Remeshing%2C%20Simplification%20and%20Reconstruction#meshing_surface_subdivision_butterfly
+        # all filters for Subdivision Surfaces below could be used, PyMeshLab has implementations for all of them
+        # email sent out to ask which one is most appropriate to use
+        # https://www.universal-robots.com/media/1818206/12.png
+
+        assert(target_faces > 100)
+        assert(target_faces < 20000)
+        
+        faces = self.mesh.face_number()
+        
+        # It works but it is provoking me anxiety the way we do it (Cristian Grosu), I wanna change it
+        while faces < target_faces:
+            self.ms.apply_filter("meshing_surface_subdivision_butterfly", iterations=1)
+            self.mesh = self.ms.current_mesh()
+            faces = self.mesh.face_number()
+        
+        if faces > target_faces:
+            self.sub_sample(target_faces)
+            return
+            
+        self.mesh = self.ms.current_mesh()
+
+    # -------------------- 4. Shape Normalization ----------------------
     
     def get_barycenter(self):
         """
         _summary_: Computing the barycenter of a shape
         
-        TODO: get the correct area for each point
+        TODO: is this the correct way to compute the barycenter?
         """ 
         x = 0
         y = 0
@@ -206,5 +294,24 @@ class Shape:
         return 1 if x > 0 else -1
     
     @staticmethod
-    def get_triangle_area(triangle) -> float:
+    def get_triangle_area(triangle):
         return 0.5 * np.linalg.norm(np.cross(triangle[1] - triangle[0], triangle[2] - triangle[0]))
+    
+    
+    # ----------------- 5. Feature extraction from shape ---------------------#
+    def get_elongation(self):
+        """
+        _summary_ compute the elongation of the shape
+        """
+        bbox = self.mesh.bounding_box()
+        [dim_x, dim_y, dim_z] = [bbox.dim_x(), bbox.dim_y(), bbox.dim_z()]
+        return max(dim_x, dim_y, dim_z) / min(dim_x, dim_y, dim_z)
+    
+    def get_curvature(self):
+        """
+        _summary_ compute the curvature of the shape
+        """
+        return self.mesh.curvature()
+    
+    # TODO: check this and add the other features
+    

@@ -13,11 +13,16 @@
 # limitations under the License.
 
 import pyvista
-
 from utils.tools import get_features, off2ply
 
 
 def render(filenames=["./LabeledDB_new/Airplane/61.ply"]):
+    """_summary_ Rendering shapes from a list of files
+
+    Args:
+        filenames (list[str], optional): Defaults to ["./LabeledDB_new/Airplane/61.ply"].
+    """
+    
     # setting up the plotter    
     plotter = pyvista.Plotter(shape=(2, len(filenames)), row_weights=[4, 1])  # instantiate the plotter
 
@@ -38,6 +43,7 @@ def render(filenames=["./LabeledDB_new/Airplane/61.ply"]):
         plotter.subplot(1, index)
         
         [n_faces, n_vertices, faces_type, axis_aligned_bounding_box] = get_features(filename)
+        axis_aligned_bounding_box = list(map(lambda x: round(x, 2),axis_aligned_bounding_box))
         data = f"Number of faces: {n_faces} \nNumber of vertices: {n_vertices} \nFaces type: {faces_type} \nAxis aligned bounding box: \n{axis_aligned_bounding_box}"
 
         plotter.add_text(text=data, font_size=14, color="black", position="upper_left", name="text")

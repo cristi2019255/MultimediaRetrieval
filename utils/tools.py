@@ -17,6 +17,14 @@ from pymeshlab import MeshSet
 
 
 def off2ply(filename="./LabeledDB_new/Airplane/61.off"):
+    """_summary_ Converting an .off file to .ply file
+
+    Args:
+        filename (str, optional): Defaults to "./LabeledDB_new/Airplane/61.off".
+
+    Returns:
+        str : new file name with .ply extension
+    """
     meshes = MeshSet()
     meshes.load_new_mesh(filename)
     filename = filename.replace('.off', '.ply')
@@ -25,6 +33,11 @@ def off2ply(filename="./LabeledDB_new/Airplane/61.off"):
 
 
 def convert_to_ply(directory="./LabeledDB_new"):
+    """_summary_ Converts all files in a directory with .off extension to .ply files
+
+    Args:
+        directory (str, optional): Defaults to "./LabeledDB_new".
+    """
     for r, d, f in os.walk(directory):
         for file in f:
             if ('.off' in file):
@@ -32,6 +45,14 @@ def convert_to_ply(directory="./LabeledDB_new"):
 
 
 def scan_files(directory="./LabeledDB_new"):
+    """_summary_ Returns a list of all files in a directory with .ply extension
+
+    Args:
+        directory (str, optional): Defaults to "./LabeledDB_new".
+
+    Returns:
+        [str]: file names
+    """
     files = {}
     for r, d, f in os.walk(directory):
         for file in f:
@@ -45,6 +66,14 @@ def scan_files(directory="./LabeledDB_new"):
 
 
 def get_features(filename="./LabeledDB_new/Airplane/61.off"):
+    """_summary_ Computing basic features for a shape
+
+    Args:
+        filename (str, optional): The file where the shape is stored. Defaults to "./LabeledDB_new/Airplane/61.off".
+
+    Returns:
+        [int, int, str, [int, int, int, int]]: faces_count, vertices_count, faces_type, axis_aligned_bounding_box
+    """
     meshes = MeshSet()
     meshes.load_new_mesh(filename)
     mesh = meshes.current_mesh()

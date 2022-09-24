@@ -15,7 +15,7 @@
 import psycopg2
 import os
 from dotenv import load_dotenv
-from shape import Shape
+from Shape import Shape
 from utils.tools import scan_files
 import numpy as np
 
