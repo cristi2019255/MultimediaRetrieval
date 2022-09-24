@@ -61,35 +61,47 @@ class Database:
             bounding_box_dim_x FLOAT NOT NULL,
             bounding_box_dim_y FLOAT NOT NULL,
             bounding_box_dim_z FLOAT NOT NULL,
-            bounding_box_diagonal FLOAT NOT NULL,            
+            bounding_box_diagonal FLOAT NOT NULL, 
+            features_id INT NOT NULL DEFAULT 0,           
             created_at TIMESTAMP NOT NULL DEFAULT NOW()
             );'''
-        try:
-            self.cursor.execute(sql)
-            if self.log:
-                print("[INFO] Table has been created successfully !!");
-        except Exception as e:
-            if self.log:
-                print("[WARN] Table already exists!")
+        self.execute_query(sql, 'create')
 
-    def insert_data(self, files):
+    def create_features_table(self):
+        sql = '''CREATE TABLE IF NOT EXISTS features (
+            id SERIAL PRIMARY KEY NOT NULL,
+            elongation FLOAT NOT NULL,
+            curvature FLOAT NOT NULL,
+            created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+            shape_id INT NOT NULL,
+            CONSTRAINT shape_id FOREIGN KEY (id) REFERENCES shapes (id)
+            ); '''
+        self.execute_query(sql, 'create')
+    
+    def get_table_data(self, table = 'shapes', columns = None):
+        if columns is None:
+            sql = f'''SELECT * FROM {table} '''
+        else:
+            sql = f'''SELECT {', '.join(columns)} FROM {table} '''
+        self.cursor.execute(sql)
+        rows = self.cursor.fetchall()
+        return rows
+       
+    def insert_shape_data(self, files):
         for key, value in files.items():
             for file in value:
-                print(file)
+                
+                if self.log:
+                    print("[INFO] Inserting data for file: " + file)
+                
                 shape = Shape(file)
                 [faces_count, vertices_count, faces_type, axis_aligned_bounding_box] = shape.get_features()
                 [dim_x, dim_y, dim_z, diagonal] = axis_aligned_bounding_box
                 sql = f'''INSERT INTO shapes (class, faces_count, vertices_count, faces_type, file_name, bounding_box_dim_x, bounding_box_dim_y, bounding_box_dim_z, bounding_box_diagonal) 
                     VALUES ('{key}', {faces_count}, {vertices_count}, '{faces_type}', '{file}', {dim_x}, {dim_y}, {dim_z}, {diagonal});'''
-                try:
-                    self.cursor.execute(sql)
-                    if self.log:
-                        print("[INFO] Data has been inserted successfully !!");
-                except Exception as e:
-                    if self.log:
-                        print("[WARN] Data already exists!")
+                self.execute_query(sql, "insert")
 
-    def update_data(self, shape:Shape, original_filename: str):
+    def update_shape_data(self, shape:Shape, original_filename: str):
         """_summary_ Updating the data in the database after preprocessing
 
         Args:
@@ -111,21 +123,49 @@ class Database:
                 bounding_box_dim_z = {dim_z},
                 bounding_box_diagonal = {diagonal}
                 WHERE file_name = '{original_filename}';'''
+        
+        self.execute_query(sql, "update")
+
+    def insert_features_data(self, shape:Shape, shape_id:int):
+        sql = f'''INSERT INTO features (shape_id, elongation, curvature) 
+                VALUES ({shape_id}, {shape.get_elongation()}, {shape.get_curvature()});'''
+        
+        get_feature_id_sql = f'''SELECT id FROM features WHERE shape_id = {shape_id};'''
+        
+        self.execute_query(sql, "insert")
+        self.execute_query(get_feature_id_sql, "select")
+        return self.cursor.fetchone()[0]
+        
+        
+    def update_shape_feature_id(self, shape_id:int, feature_id:int):
+        sql = f'''UPDATE shapes SET features_id = {feature_id} WHERE id = {shape_id};'''
+        self.execute_query(sql, "update")
+        
+    def execute_query(self, sql, type = "insert"):
         try:
             self.cursor.execute(sql)
             if self.log:
-                print("[INFO] Data has been updated successfully !!");
+                print(f"[INFO] Data has been {type}ed successfully !!");
         except Exception as e:
+            message = {
+                'insert': "[ERROR] Data already exists!",
+                'update': "[ERROR] Data does not exist!",
+                'create': "[ERROR] Table already exists!",
+            }
             if self.log:
-                print("[WARN] Data already exists!")
-
+                print(message[type])
+                print("[ERROR] " + sql)
+                print(f"[ERROR] {e}")
+    
     def close(self):
+        if self.log:
+            print("[INFO] Closing the connection to the database...")
         self.connection.close()
         self.cursor.close()
 
-    def get_column_data(self, by="vertices_count"):
+    def get_column_data(self, by="vertices_count", table="shapes"):
         try:
-            self.cursor.execute("SELECT {0} FROM shapes".format(by))
+            self.cursor.execute("SELECT {0} FROM {1}".format(by, table))
             rows = self.cursor.fetchall()
             data = [row[0] for row in rows]
             return data
@@ -134,20 +174,21 @@ class Database:
                 print(f"[ERROR] {e}")
             return None
 
-    def get_average_shape(self, by="vertices_count"):
+    def get_average(self, by="vertices_count", table = "sahpes"):
         try:
-            data = self.get_column_data(by)
+            data = self.get_column_data(by, table)
             avg = np.mean(data)
             
-            avg_id = np.argmin(abs(np.array(
-                data) - avg))  # TODO: change, not the best way to get the closest value assuming id is the same as index
-            self.cursor.execute("SELECT  * FROM shapes WHERE id = {0}".format(avg_id))
-            avg_shape = self.cursor.fetchone()
+            #avg_id = np.argmin(abs(np.array(
+            #    data) - avg))  # TODO: change, not the best way to get the closest value assuming id is the same as index
+            #self.cursor.execute("SELECT  * FROM shapes WHERE id = {0}".format(avg_id))
+            #avg_shape = self.cursor.fetchone()
             
             if self.log:
                 print(f"[INFO] The average by {by} is {avg}")
-                print(f"[INFO] The average shape by {by} is: {avg_shape} ")
-            return avg_shape
+                #print(f"[INFO] The average shape by {by} is: {avg_shape} ")
+            return avg
+
         except Exception as e:
             if self.log:
                 print(f"[ERROR] {e}")
@@ -156,4 +197,4 @@ class Database:
     def prepare_db(self):
         self.create_shapes_table()
         files = scan_files()
-        self.insert_data(files)
+        self.insert_shape_data(files)

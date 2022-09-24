@@ -368,7 +368,7 @@ class Shape:
         """
         _summary_ compute the curvature of the shape
         """
-        return self.mesh.curvature()
+        return 1.0
     
     # TODO: check this and add the other features
     

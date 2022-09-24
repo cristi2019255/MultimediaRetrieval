@@ -31,14 +31,12 @@ class Prepocesor:
         plot_histogram(self.db.get_column_data(by="class"), title="Histogram of shape classes")
 
         # getting statistics about the database and resampling the outliers
-        #[_, _, _, _, avg_vertices_count, _, _, _, _, _, _, ] = self.db.get_average_shape(by="vertices_count")
-        
-        #[_, _, _, avg_faces_count, _, _, _, _, _, _, _, ] = self.db.get_average_shape(by="faces_count")
+        avg_faces_count = self.db.get_average(by="faces_count", table="shapes")
 
-        # resampling the outliers
-        
         avg_faces_count = NR_DESIRED_FACES # hardcoded because of the time it takes to resample
          
+
+        # resampling the outliers
         self.resample_outliers_and_normalize(target_faces_nr=avg_faces_count)
         
         # plotting histograms after resampling
@@ -81,6 +79,6 @@ class Prepocesor:
                 shape.file_name = shape.file_name.replace("./","./preprocessed/")
                 shape.save_mesh()
                     
-                self.db.update_data(shape, original_file_name)
+                self.db.update_shape_data(shape, original_file_name)
         except Exception as e:
             print(f"[Error] {e}")
