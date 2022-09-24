@@ -25,6 +25,6 @@ def plot_histogram(data, title = "Histogram of vertex counts"):
     plt.title(title)
     file_name = title.replace(" ", "_") + ".png"
     plt.savefig(f"./report/{file_name}")   
-    
+    plt.clf()
     #plt.show()
 
