@@ -34,4 +34,4 @@ Download the benchmark dataset from princeton and put it here (the website was d
 For Step 2:
 
 Problems: Re-scaling needs to be tested, not sure if it is working correct
-Sub/Supersampling
+Sub/Supersampling don't like how super sampling is implemented now
