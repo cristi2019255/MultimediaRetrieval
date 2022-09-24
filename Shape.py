@@ -15,6 +15,7 @@
 from pymeshlab import MeshSet, Mesh
 import numpy as np
 from utils.renderer import render
+import os
 
 NR_DESIRED_FACES = 5000
 
@@ -69,6 +70,7 @@ class Shape:
                 raise ValueError("No file name provided")
         
         self.ms.add_mesh(self.mesh)
+        os.makedirs(os.path.dirname(file_name), exist_ok=True)
         self.ms.save_current_mesh(file_name)
     
     def render(self):
@@ -100,7 +102,14 @@ class Shape:
             self._sub_sample(target_faces)
         else:
             self._super_sample(target_faces)
-    
+        
+        
+        self.vertices = self.mesh.vertex_matrix()
+        self.faces = self.mesh.face_matrix()
+        
+        if self.log:
+            print("[INFO] Resampling succeeded with ", self.mesh.face_number(), " faces")
+            
     
     def _sub_sample(self, target_faces = NR_DESIRED_FACES):
         """_summary_ Sub sampling is done by using the Quadric Edge Collapse Decimation filter
@@ -119,7 +128,7 @@ class Shape:
 
         self.ms.apply_filter("meshing_decimation_quadric_edge_collapse", targetfacenum=target_faces, qualitythr=0.9)
         self.mesh = self.ms.current_mesh()
-    
+        
     def _super_sample(self, target_faces = NR_DESIRED_FACES):
         """_summary_  Super sampling is done by using the Subdivision Surfaces filter
            Super sampling a certain amount of iterations until the number of faces is greater than the desired number of faces
@@ -136,12 +145,26 @@ class Shape:
         
         faces = self.mesh.face_number()
         
+        if self.log:
+            print(f'[INFO] Super sampling... {faces} -> {target_faces}')
+        
         # It works but it is provoking me anxiety the way we do it (Cristian Grosu), I wanna change it
+        
+        old_faces = faces
         while faces < target_faces:
             self.ms.apply_filter("meshing_surface_subdivision_butterfly", iterations=1)
             self.mesh = self.ms.current_mesh()
             faces = self.mesh.face_number()
-        
+            
+            if self.log:
+                print('[INFO] \t Current number of faces: ', faces)
+            
+            
+            if old_faces == faces:
+                break
+            old_faces = faces
+            
+                    
         if faces > target_faces:
             self._sub_sample(target_faces)
             return
@@ -269,11 +292,21 @@ class Shape:
             print("[INFO] Rescaling the shape so that the bounding box is the unit cube")
         
         bbox = self.mesh.bounding_box()
-        [dim_x, dim_y, dim_z] = [bbox.dim_x(), bbox.dim_y(), bbox.dim_z()]
-        scale_factor = 1 / max(dim_x, dim_y, dim_z)
+        dims = [abs(bbox.dim_x()), abs(bbox.dim_y()), abs(bbox.dim_z())]
+        m = max(dims)
+    
+        if m <= 1.0:
+            return
+        
+        scale_factor = 1 / m
+        
+        if self.log:
+            print("[INFO] Scaling factor: " + str(scale_factor))
         
         for vertex in self.vertices:
-            vertex = vertex * scale_factor   
+            vertex[0] = vertex[0] * scale_factor   
+            vertex[1] = vertex[1] * scale_factor
+            vertex[2] = vertex[2] * scale_factor
 
         self.mesh = Mesh(self.vertices, self.faces)
             
@@ -290,6 +323,8 @@ class Shape:
         self.align_with_principal_components()
         self.flip_on_moment()
         self.rescale_shape()
+        self.mesh = Mesh(self.vertices, self.faces)
+        self.ms.add_mesh(self.mesh, "normalized")
 
     def get_features(self):
         """_summary_ compute the features of the shape
@@ -303,8 +338,8 @@ class Shape:
 
         faces_type = 'triangles' if faces_ratio == 3 else 'quads' if faces_ratio == 4 else 'mix'
         bounding_box = self.mesh.bounding_box()
-        axis_aligned_bounding_box = [bounding_box.dim_x(), bounding_box.dim_y(), bounding_box.dim_z(),
-                                    bounding_box.diagonal()]
+        axis_aligned_bounding_box = [abs(bounding_box.dim_x()), abs(bounding_box.dim_y()), abs(bounding_box.dim_z()),
+                                    abs(bounding_box.diagonal())]
 
         return [faces_count, vertices_count, faces_type, axis_aligned_bounding_box]
 

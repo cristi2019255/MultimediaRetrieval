@@ -23,7 +23,7 @@ import matplotlib.pyplot as plt
 def plot_histogram(data, title = "Histogram of vertex counts"):
     plt.hist(data)
     plt.title(title)
-    file_name = title.replace(" ", "_").join(".png")
+    file_name = title.replace(" ", "_") + ".png"
     plt.savefig(f"./report/{file_name}")   
     
     #plt.show()

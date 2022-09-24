@@ -25,8 +25,8 @@ class Database:
         self.log = log
         self.connection = self.get_db_connection()
         self.cursor = self.connection.cursor()
-        self.create_db()
-
+    
+    
     def get_db_connection(self, db_name=None):
         # loading the environment variables
         load_dotenv()
@@ -50,24 +50,10 @@ class Database:
                 print(f"[ERROR] {e}")
             return e
 
-    def create_db(self):
-        db_name = os.getenv('DB_NEW_NAME')
-        sql = f''' CREATE database {db_name}; ''';
-        try:
-            self.cursor.execute(sql)
-            if self.log:
-                print("[INFO] Database has been created successfully !!");
-        except Exception as e:
-            if self.log:
-                print('[WARN] Database already exists!')
-
-        # changing the connection to the new database
-        self.connection = self.get_db_connection(os.getenv('DB_NEW_NAME'))
-
     def create_shapes_table(self):
         sql = '''CREATE TABLE IF NOT EXISTS shapes (
             id SERIAL PRIMARY KEY NOT NULL,
-            file_name VARCHAR(50) NOT NULL,
+            file_name VARCHAR(300) NOT NULL,
             class VARCHAR(50) NOT NULL,
             faces_count INT NOT NULL,
             vertices_count INT NOT NULL,
@@ -103,27 +89,28 @@ class Database:
                     if self.log:
                         print("[WARN] Data already exists!")
 
-    def update_data(self, filename):
-        shape = Shape(filename)
+    def update_data(self, shape:Shape, original_filename: str):
+        """_summary_ Updating the data in the database after preprocessing
+
+        Args:
+            shape (Shape): _description_ The shape object
+            original_filename (str): _description_ The original filename
+        """
+        
         [faces_count, vertices_count, faces_type, axis_aligned_bounding_box] = shape.get_features()
         [dim_x, dim_y, dim_z, diagonal] = axis_aligned_bounding_box
+        filename = shape.file_name
+        
         sql = f'''UPDATE shapes SET 
-                faces_count = {0}, 
-                vertices_count = {1}, 
-                faces_type = {2},
-                bounding_box_dim_x = {3},
-                bounding_box_dim_y = {4},
-                bounding_box_dim_z = {5},
-                bounding_box_diagonal = {6}
-                WHERE file_name = '{filename}';'''.format(
-            faces_count,
-            vertices_count,
-            faces_type,
-            dim_x,
-            dim_y,
-            dim_z,
-            diagonal
-        )
+                faces_count = {faces_count}, 
+                file_name = '{filename}',
+                vertices_count = {vertices_count}, 
+                faces_type = '{faces_type}',
+                bounding_box_dim_x = {dim_x},
+                bounding_box_dim_y = {dim_y},
+                bounding_box_dim_z = {dim_z},
+                bounding_box_diagonal = {diagonal}
+                WHERE file_name = '{original_filename}';'''
         try:
             self.cursor.execute(sql)
             if self.log:

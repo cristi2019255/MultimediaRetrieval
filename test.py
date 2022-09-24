@@ -25,7 +25,7 @@ def test_shape_normalization():
     """
     _summary_ test the shape normalization
     """
-    shape = Shape("./LabeledDB_new/Airplane/61.ply")
+    shape = Shape("./LabeledDB_new/Airplane/61.ply", log=True)
     shape.normalize()
     shape.save_mesh("./test_data/61_normalized.ply")
     render(["./LabeledDB_new/Airplane/61.ply", "./test_data/61_normalized.ply"])
@@ -55,6 +55,6 @@ def test_supersampling():
     shape.save_mesh("./test_data/61_supersampled.ply")
     render(["./test_data/61_subsampled.ply", "./test_data/61_supersampled.ply"])
 
-
-test_subsampling()
-#test_supersampling()
+#test_shape_normalization()
+#test_subsampling()
+test_supersampling()
