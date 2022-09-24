@@ -12,8 +12,8 @@ def main():
     
     preprocessor.db.prepare_db() 
     
-    
     preprocessor.preprocess()
+
 
 if __name__ == '__main__':
     main()

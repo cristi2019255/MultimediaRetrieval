@@ -47,6 +47,9 @@ class Prepocesor:
 
         # Closing the connection with db
         self.db.close()
+        
+        if self.log:
+            print("[Success] Preprocessing completed!!!")
 
     def resample_outliers_and_normalize(self, target_faces_nr=NR_DESIRED_FACES):
 
