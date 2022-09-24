@@ -16,65 +16,52 @@ from utils.tools import *
 from utils.db_tools import *
 from utils.statistics import *
 
+NR_DESIRED_FACES = 5000
+
 
 class Prepocesor:
-    def __init__(self):
-        self.db = Database()
+    def __init__(self, log = False):
+        self.log = log
+        self.db = Database(log = self.log)
 
     def preprocess(self):
         # plotting histograms before resampling
-        plot_histogram(self.db.get_column_data(by="vertices_count"), by="vertices_count")
-        plot_histogram(self.db.get_column_data(by="faces_count"), by="faces__count")
-        plot_histogram(self.db.get_column_data(by="class"), by="class")
+        plot_histogram(self.db.get_column_data(by="vertices_count"), title="Histogram of vertex counts")
+        plot_histogram(self.db.get_column_data(by="faces_count"), title="Histogram of faces counts")
+        plot_histogram(self.db.get_column_data(by="class"), title="Histogram of shape classes")
 
         # getting statistics about the database and resampling the outliers
-        [_, _, _, _, avg_vertices_count, _, _, _, _, _, _, ] = self.db.get_average_shape(by="vertices_count")
+        #[_, _, _, _, avg_vertices_count, _, _, _, _, _, _, ] = self.db.get_average_shape(by="vertices_count")
         
-        #[_, _, _, avg_faces_count, _, _, _, _, _, _, _, ] = self.db.get_average_shape(by="faces_count")
+        [_, _, _, avg_faces_count, _, _, _, _, _, _, _, ] = self.db.get_average_shape(by="faces_count")
 
         # resampling the outliers
-        self.resample_outliers(avg=avg_vertices_count, by="vertices_count")
+        self.resample_outliers_and_normalize(target_faces_nr=avg_faces_count)
         
         # plotting histograms after resampling
-        plot_histogram(self.db.get_column_data(by="vertices_count"), by="vertices_count")
-        plot_histogram(self.db.get_column_data(by="faces_count"), by="faces__count")
+        plot_histogram(self.db.get_column_data(by="vertices_count"), title="Histogram of vertex counts after resampling")
+        plot_histogram(self.db.get_column_data(by="faces_count"), title="Histogram of faces counts after resampling")
 
         # Closing the connection with db
         self.db.close()
 
-    def resample_outliers(self, avg=1000, by="vertices_count"):
+    def resample_outliers_and_normalize(self, target_faces_nr=NR_DESIRED_FACES):
 
-        def resample(data, resample_function):
-            try:
-                for row in data:
-                    filename = row[0]
-                    resample_function(filename, avg)
-                    self.db.update_data(filename)
-            except Exception as e:
-                print(e)
-
-        # query to get the outliers
-
-        sql_sub_samples = '''SELECT file_name FROM shapes WHERE {0} < {1};'''.format(by, (avg))
-        self.db.cursor.execute(sql_sub_samples)
-        rows_sub_sample = self.db.cursor.fetchall()
-        resample(rows_sub_sample, sub_sample)
-
-        sql_super_samples = '''SELECT file_name FROM shapes WHERE {0} > {1};'''.format(by, (avg))
-        self.db.cursor.execute(sql_super_samples)
-        rows_super_sample = self.db.cursor.fetchall()
-
-        resample(rows_super_sample, super_sample)
-
-
-def super_sample(filename, target=1000):
-    print(filename)
-    ms = MeshSet()
-    ms.load_new_mesh(filename)
-    mesh = ms.current_mesh()
-    # TODO: figure out a way to resample the mesh to a specific number of vertices)
-    # mesh.save(filename)
-
-
-def sub_sample(filename, target=1000):
-    print(filename)
+        # query to get all the shapes to be resampled
+        self.db.cursor.execute('''SELECT file_name FROM shapes LIMIT 100''')
+        rows = self.db.cursor.fetchall()
+            
+        try:
+            for row in rows:
+                filename = row[0]
+                if self.log:
+                    print("[INFO] Resampling shape: ", filename)    
+                
+                shape = Shape(filename)
+                shape.resample(target_faces=target_faces_nr)
+                shape.normalize()
+                shape.save_mesh()
+                    
+                self.db.update_data(filename)
+        except Exception as e:
+            print(f"[Error] {e}")

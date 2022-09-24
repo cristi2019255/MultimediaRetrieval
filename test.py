@@ -39,13 +39,9 @@ def test_subsampling():
     
     shape = Shape("./LabeledDB_new/Airplane/61.off")
     
-    shape.sub_sample(target_faces=2000)
+    shape.resample(target_faces=2000)
     shape.save_mesh("./test_data/61_subsampled.ply")
     render(["./LabeledDB_new/Airplane/61.ply", "./test_data/61_subsampled.ply"])
-
-
-#test_subsampling()
-
 
 def test_supersampling():
     """_summary_ testing shape super sampling
@@ -55,8 +51,10 @@ def test_supersampling():
     """
     shape = Shape("./test_data/61_subsampled.ply")
     
-    shape.super_sample(target_faces=7654)
+    shape.resample(target_faces=7654)
     shape.save_mesh("./test_data/61_supersampled.ply")
     render(["./test_data/61_subsampled.ply", "./test_data/61_supersampled.ply"])
 
-test_supersampling()
+
+test_subsampling()
+#test_supersampling()

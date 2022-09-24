@@ -21,7 +21,8 @@ import numpy as np
 
 
 class Database:
-    def __init__(self):
+    def __init__(self, log = False):
+        self.log = log
         self.connection = self.get_db_connection()
         self.cursor = self.connection.cursor()
         self.create_db()
@@ -29,7 +30,11 @@ class Database:
     def get_db_connection(self, db_name=None):
         # loading the environment variables
         load_dotenv()
-        print("Connecting to PostgreSQL database...")
+        
+        database = db_name if db_name else os.getenv('POSTGRES_DB'),
+        
+        if self.log:
+            print("[INFO] Connecting to PostgreSQL database...", database)
         try:
             conn = psycopg2.connect(
                 database=db_name if db_name else os.getenv('POSTGRES_DB'),
@@ -41,7 +46,8 @@ class Database:
             conn.autocommit = True
             return conn
         except Exception as e:
-            print(e)
+            if self.log:
+                print(f"[ERROR] {e}")
             return e
 
     def create_db(self):
@@ -49,9 +55,11 @@ class Database:
         sql = f''' CREATE database {db_name}; ''';
         try:
             self.cursor.execute(sql)
-            print("Database has been created successfully !!");
+            if self.log:
+                print("[INFO] Database has been created successfully !!");
         except Exception as e:
-            print('Database already exists!')
+            if self.log:
+                print('[WARN] Database already exists!')
 
         # changing the connection to the new database
         self.connection = self.get_db_connection(os.getenv('DB_NEW_NAME'))
@@ -72,38 +80,42 @@ class Database:
             );'''
         try:
             self.cursor.execute(sql)
-            print("Table has been created successfully !!");
+            if self.log:
+                print("[INFO] Table has been created successfully !!");
         except Exception as e:
-            print("Table already exists!")
+            if self.log:
+                print("[WARN] Table already exists!")
 
     def insert_data(self, files):
         for key, value in files.items():
             for file in value:
                 print(file)
                 shape = Shape(file)
-                [faces_count, vertices_count, faces_type, axis_aligned_bounding_box] = shape.get_features(file)
+                [faces_count, vertices_count, faces_type, axis_aligned_bounding_box] = shape.get_features()
                 [dim_x, dim_y, dim_z, diagonal] = axis_aligned_bounding_box
                 sql = f'''INSERT INTO shapes (class, faces_count, vertices_count, faces_type, file_name, bounding_box_dim_x, bounding_box_dim_y, bounding_box_dim_z, bounding_box_diagonal) 
                     VALUES ('{key}', {faces_count}, {vertices_count}, '{faces_type}', '{file}', {dim_x}, {dim_y}, {dim_z}, {diagonal});'''
                 try:
                     self.cursor.execute(sql)
-                    print("Data has been inserted successfully !!");
+                    if self.log:
+                        print("[INFO] Data has been inserted successfully !!");
                 except Exception as e:
-                    print("Data already exists!")
+                    if self.log:
+                        print("[WARN] Data already exists!")
 
     def update_data(self, filename):
         shape = Shape(filename)
-        [faces_count, vertices_count, faces_type, axis_aligned_bounding_box] = shape.get_features(filename)
+        [faces_count, vertices_count, faces_type, axis_aligned_bounding_box] = shape.get_features()
         [dim_x, dim_y, dim_z, diagonal] = axis_aligned_bounding_box
-        sql = f'''UPDATE SET 
+        sql = f'''UPDATE shapes SET 
                 faces_count = {0}, 
                 vertices_count = {1}, 
                 faces_type = {2},
                 bounding_box_dim_x = {3},
                 bounding_box_dim_y = {4},
                 bounding_box_dim_z = {5},
-                bounding_box_diagonal = {6},
-                FROM shapes WHERE file_name = '{filename}';'''.format(
+                bounding_box_diagonal = {6}
+                WHERE file_name = '{filename}';'''.format(
             faces_count,
             vertices_count,
             faces_type,
@@ -114,9 +126,11 @@ class Database:
         )
         try:
             self.cursor.execute(sql)
-            print("Data has been updated successfully !!");
+            if self.log:
+                print("[INFO] Data has been updated successfully !!");
         except Exception as e:
-            print("Data already exists!")
+            if self.log:
+                print("[WARN] Data already exists!")
 
     def close(self):
         self.connection.close()
@@ -129,22 +143,27 @@ class Database:
             data = [row[0] for row in rows]
             return data
         except Exception as e:
-            print(e)
+            if self.log:
+                print(f"[ERROR] {e}")
             return None
 
     def get_average_shape(self, by="vertices_count"):
         try:
             data = self.get_column_data(by)
             avg = np.mean(data)
-            print(f"The average by {by} is {avg}")
+            
             avg_id = np.argmin(abs(np.array(
                 data) - avg))  # TODO: change, not the best way to get the closest value assuming id is the same as index
             self.cursor.execute("SELECT  * FROM shapes WHERE id = {0}".format(avg_id))
             avg_shape = self.cursor.fetchone()
-            print(f"The average shape by {by} is: {avg_shape} ")
+            
+            if self.log:
+                print(f"[INFO] The average by {by} is {avg}")
+                print(f"[INFO] The average shape by {by} is: {avg_shape} ")
             return avg_shape
         except Exception as e:
-            print(e)
+            if self.log:
+                print(f"[ERROR] {e}")
             return None
 
     def prepare_db(self):

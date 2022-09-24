@@ -20,9 +20,11 @@
 
 import matplotlib.pyplot as plt
 
-
-def plot_histogram(data, by = "vertices_count"):
+def plot_histogram(data, title = "Histogram of vertex counts"):
     plt.hist(data)
-    plt.title(f"Histogram of {by}")    
-    plt.show()
+    plt.title(title)
+    file_name = title.replace(" ", "_").join(".png")
+    plt.savefig(f"./report/{file_name}")   
+    
+    #plt.show()
 

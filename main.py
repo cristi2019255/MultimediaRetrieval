@@ -4,13 +4,13 @@ from utils.preprocesing import Prepocesor
 
 def main():
     #render()   
-    preprocessor = Prepocesor()
+    preprocessor = Prepocesor(log = True)
     
     
     # preparing the database
     # this is a costly operation, so it is recommended to run it only once
     
-    preprocessor.db.prepare_db() 
+    #preprocessor.db.prepare_db() 
     
     
     preprocessor.preprocess()

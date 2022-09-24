@@ -22,7 +22,7 @@ class Shape:
     # ------------------ Class Methods ------------------
     
     # ------------------ 1. Constructors ------------------
-    def __init__(self, vertices, faces):
+    def __init__(self, vertices, faces, log: bool = False):
         """_summary_ construct a shape from vertices and faces
 
         Args:
@@ -35,9 +35,10 @@ class Shape:
         self.file_name = None
         self.ms = MeshSet()
         self.ms.add_mesh(self.mesh)
+        self.log = log
         
     
-    def __init__(self, file_name: str):
+    def __init__(self, file_name: str, log: bool = False):
         """_summary_ construct a shape from file_name
 
         Args:
@@ -49,6 +50,7 @@ class Shape:
         self.mesh = self.ms.current_mesh()
         self.vertices = self.mesh.vertex_matrix()
         self.faces = self.mesh.face_matrix()
+        self.log = log
     
     # ----------------- 2. General shape I/O methods -----------------
     
@@ -78,7 +80,29 @@ class Shape:
     
     # -------------------- 3. Shape resampling -------------------------
     
-    def sub_sample(self, target_faces = NR_DESIRED_FACES):
+    def resample(self, target_faces = NR_DESIRED_FACES):
+        """_summary_ resample the shape to a fixed number of faces
+
+        Args:
+            target_faces (int, optional): Defaults to NR_DESIRED_FACES.
+        """
+        
+        assert(target_faces > 0)
+        faces = self.mesh.face_number()
+        
+        if self.log:
+            print("[INFO] Resampling shape from ", faces," to ", target_faces, " faces")
+        
+        if faces == target_faces:
+            return
+        
+        if faces > target_faces:
+            self._sub_sample(target_faces)
+        else:
+            self._super_sample(target_faces)
+    
+    
+    def _sub_sample(self, target_faces = NR_DESIRED_FACES):
         """_summary_ Sub sampling is done by using the Quadric Edge Collapse Decimation filter
             Sub sampling to a fixed number of faces
 
@@ -93,12 +117,10 @@ class Shape:
 
         # This would be done before normalisation, so we dont need to preserve boundaries, normal, etc
 
-        assert(target_faces > 100)
-        assert(target_faces < 20000)
         self.ms.apply_filter("meshing_decimation_quadric_edge_collapse", targetfacenum=target_faces, qualitythr=0.9)
         self.mesh = self.ms.current_mesh()
     
-    def super_sample(self, target_faces = NR_DESIRED_FACES):
+    def _super_sample(self, target_faces = NR_DESIRED_FACES):
         """_summary_  Super sampling is done by using the Subdivision Surfaces filter
            Super sampling a certain amount of iterations until the number of faces is greater than the desired number of faces
            When greater than the desired number of faces, sub sample to the desired number of faces 
@@ -111,8 +133,6 @@ class Shape:
         # email sent out to ask which one is most appropriate to use
         # https://www.universal-robots.com/media/1818206/12.png
 
-        assert(target_faces > 100)
-        assert(target_faces < 20000)
         
         faces = self.mesh.face_number()
         
@@ -123,7 +143,7 @@ class Shape:
             faces = self.mesh.face_number()
         
         if faces > target_faces:
-            self.sub_sample(target_faces)
+            self._sub_sample(target_faces)
             return
             
         self.mesh = self.ms.current_mesh()
@@ -157,7 +177,9 @@ class Shape:
             _param_ vertices(list of 3D vectors): the vertices matrix of the shape
             _param_ barycenter(3D vector): the barycenter of the shape
         """
-        print("[INFO] Translating the barycenter to the origin of the coordinate system")
+        if self.log:
+            print("[INFO] Translating the barycenter to the origin of the coordinate system")
+        
         barycenter = self.get_barycenter()
         for vertex in self.vertices:
             vertex[0] -= barycenter[0]
@@ -190,8 +212,8 @@ class Shape:
         """
         _summary_ align the shape with the principal components
         """
-        
-        print("[INFO] Aligning the shape with the principal components")
+        if self.log:
+            print("[INFO] Aligning the shape with the principal components")
         
         eigen_values, eigen_vectors = self.principal_component_analysis()
 
@@ -215,8 +237,8 @@ class Shape:
     def flip_on_moment(self):
         """_summary_ Flipping the shape based on moment test
         """
-        
-        print("[INFO] Flipping the shape based on moment test")
+        if self.log:
+            print("[INFO] Flipping the shape based on moment test")
         
         f_x = 0
         f_y = 0
@@ -243,8 +265,8 @@ class Shape:
         """
         _summary_ rescale the shape so that the bounding box is the unit cube
         """
-        
-        print("[INFO] Rescaling the shape so that the bounding box is the unit cube")
+        if self.log:
+            print("[INFO] Rescaling the shape so that the bounding box is the unit cube")
         
         bbox = self.mesh.bounding_box()
         [dim_x, dim_y, dim_z] = [bbox.dim_x(), bbox.dim_y(), bbox.dim_z()]
