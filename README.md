@@ -18,14 +18,19 @@
 
 ## Description
 
-...
+A multimedia retrieval pipeline for 3D shapes.
 
 ## Geting started
 
-In order to get the project started first run the following command: `pip install -r requirements.txt`
-In order to run up the database run `docker-compose up`
+In order to run the application follow the next 3 simple steps:
 
-For the technical report I've set up a latex file in overleaf, please follow this link `https://www.overleaf.com/1781678451tvmkmtkhcrbg`
+1) In order to get the project started first run the following command: `pip install -r requirements.txt`
+2) In order to run up the database run `docker-compose up`
+3) Now you can run `pyton3 main.py` to start the application
+
+Enjoy!
+
+For the technical report please follow this link `https://www.overleaf.com/1781678451tvmkmtkhcrbg`
 
 ## TODO
 
@@ -34,6 +39,11 @@ Download the benchmark dataset from princeton and put it here (the website was d
 For Step 2:
 
 Problems:
-Re-scaling (giving bounding box of dimension 2 in any direction), not sure if it is working correct
-Sub/Supersampling don't like how super sampling is implemented now,furthermore when super sampling
-for some shapes the filter does not work, should we just discard them? (See report folder, histograms)
+    Don't like how sub sampling is implemented now
+
+For Step 3:
+    Test if the features are correctly implemented
+    Testing througth histograms on each feature and class apartenance
+
+For Step 4:
+    ...
