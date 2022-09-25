@@ -122,11 +122,19 @@ class Shape:
         Args:
             target_faces (int, optional): Target number of faces. Defaults to NR_DESIRED_FACES = 5000.
         """
+
         # https://pymeshlab.readthedocs.io/en/latest/filter_list.html?highlight=Quadratic%20Edge%20Collapse%20Detection#meshing_decimation_quadric_edge_collapse
         # https://support.shapeways.com/hc/en-us/articles/360022742294-Polygon-reduction-with-MeshLab
+        # https://help.sketchfab.com/hc/en-us/articles/205852789-MeshLab-Decimating-a-model
+
         # 1: calculate the mean number of faces in the distribution for NR_DESIRED_FACES
         # for testing, 5000
+
         # 2: TODO: need to pick an appropriate quality threshold (qualitythr), right now it's just a number pulled out of my ass
+
+        # 3: TODO: test out different method "meshing_decimation_clustering"
+        # https://pymeshlab.readthedocs.io/en/latest/filter_list.html?highlight=Quadratic%20Edge%20Collapse%20Detection#meshing_decimation_clustering
+        # doesn't allow for exact # of faces to be chosen so different implementation would be required
 
         # This would be done before normalisation, so we dont need to preserve boundaries, normal, etc
 
