@@ -19,7 +19,7 @@ from utils.statistics import *
 NR_DESIRED_FACES = 21758
 
 
-class Prepocesor:
+class Preprocessor:
     def __init__(self, log = False):
         self.log = log
         self.db = Database(log = self.log)

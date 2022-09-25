@@ -44,7 +44,7 @@ def convert_to_ply(directory="./LabeledDB_new"):
                 off2ply(os.path.join(r, file))
 
 
-def scan_files(directory="./LabeledDB_new"):
+def scan_files(directory="./LabeledDB_new", limit=None):
     """_summary_ Returns a list of all files in a directory with .ply extension
 
     Args:
@@ -62,7 +62,12 @@ def scan_files(directory="./LabeledDB_new"):
                     files[dir] = [os.path.join(r, file)]
                 else:
                     files[dir].append(os.path.join(r, file))
-    return files
+    
+    if limit is None:
+        return files
+    else:
+        k = list(files.keys())[0]
+        return {k: files[k][:limit]}
 
 
 def get_features(filename="./LabeledDB_new/Airplane/61.off"):

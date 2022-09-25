@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import math
 from pymeshlab import MeshSet, Mesh, Percentage
 import numpy as np
 from utils.renderer import render
@@ -19,6 +20,8 @@ import os
 from termcolor import colored
 
 NR_DESIRED_FACES = 5000
+NR_SAMPLES_FOR_FEATURE_DESCRIPTORS = 500
+FEATURE_DESCRIPTORS_DIMENSIONS = 8
 
 class Shape:
     # ------------------ Class Methods ------------------
@@ -220,7 +223,7 @@ class Shape:
             vertices (_type_): _description_
 
         Returns:
-            _type_: _description_
+            (np.ndarray, np.ndarray): (eigenvalues, eigenvectors)
         """
         
         # computing the covariance matrix
@@ -356,6 +359,13 @@ class Shape:
     def get_triangle_area(triangle):
         return 0.5 * np.linalg.norm(np.cross(triangle[1] - triangle[0], triangle[2] - triangle[0]))
     
+    @staticmethod
+    def get_angle_between_vertices(v1, v2, v3):
+        return np.arccos(np.dot(v1 - v2, v3 - v2) / (np.linalg.norm(v1 - v2) * np.linalg.norm(v3 - v2)))
+    
+    @staticmethod
+    def get_tetrahedron_volume(v1,v2,v3,v4):
+        return np.abs(np.dot(v4 - v1, np.cross(v2 - v1, v3 - v1))) / 6
     
     # ----------------- 5. Feature extraction from shape ---------------------#
     def get_elongation(self):
@@ -370,61 +380,177 @@ class Shape:
         """
         _summary_ compute the surface area of the shape
         """
-        return 1.0
+        surface_area = 0
+        
+        for face in self.faces:
+            triangle = self.vertices[face]
+            surface_area += self.get_triangle_area(triangle)
+        
+        return surface_area
     
     def get_bbox_volume(self):
         """
+        _summary_ compute the volume of bounding box of the shape
+        """
+        bbox = self.mesh.bounding_box()
+        [dim_x, dim_y, dim_z] = [bbox.dim_x(), bbox.dim_y(), bbox.dim_z()]
+        
+        return dim_x * dim_y * dim_z
+
+    def get_volume(self):
+        """
         _summary_ compute the volume of the shape
         """
-        return 1.0
-
+        # Another idea sum other all the tetrahedron volumes formed by the center of the shape (barycenter) and the vertices of the faces of the shape
+        out_dict = self.ms.get_geometric_measures()
+        
+        # added this because not working for non-convex shapes I think
+        if 'mesh_volume' not in out_dict:
+            return 1.0
+        
+        return out_dict['mesh_volume']
+    
     def get_compactness(self):
         """
         _summary_ compute the compactness of the shape
         """
-        return 1.0
+        # Formula: S^3 / (36 * \pi * V^2)
+        return (self.get_surface_area() ** 3) / (36 * math.pi * self.get_volume() ** 2)
 
     def get_diameter(self):
         """
         _summary_ compute the diameter of the shape
         """
-        return 1.0
+        
+        # wrong for now
+        # need to compute the max distance between any two points on the shape surface
+        # or it maybe good ... need to check
+        
+        return self.mesh.bounding_box().diagonal()
     
     def get_eccentricity(self):
         """
         _summary_ compute the eccentricity of the shape
         """
-        return 1.0
-    
+        eigenvalues, _ = self.principal_component_analysis()
+        
+        # lambda_1 >= lambda_2 >= lambda_3
+        # returning |lambda_1| / |lambda_3|        
+        return abs(eigenvalues[0]) / abs(eigenvalues[2])
+        
     def get_A3(self):
         """
         _summary_ compute the A3 of the shape
+        
+        distribution histogram of the angles between 3 random vertices
         """
-        return [1.0]
+        
+        n = self.vertices.shape[0] # number of vertices
+        
+        angles = []
+        for _ in range(NR_SAMPLES_FOR_FEATURE_DESCRIPTORS):
+            # getting 3 random vertices
+            [v1,v2,v3] = self.vertices[np.random.choice(n, 3, replace=False)]
+            
+            angles.append(self.get_angle_between_vertices(v1, v2, v3))
+        
+        hist, _ = np.histogram(angles, bins=FEATURE_DESCRIPTORS_DIMENSIONS, range=(0, math.pi), density=True)
+        hist = list(hist)
+        if self.log:
+            print("[INFO] Histogram for A3 feature vector is: " + str(hist))
+        
+        return hist
     
     def get_D1(self):
         """
         _summary_ compute the D1 of the shape
+        
+        distribution histogram of the distances between barycenter and a random vertex
         """
-        return [1.0]
+        n = self.vertices.shape[0] # number of vertices
+        barycenter = self.get_barycenter()
+        distances = []
+        
+        for _ in range(NR_SAMPLES_FOR_FEATURE_DESCRIPTORS):
+            # getting a random vertex
+            v = self.vertices[np.random.choice(n, 1, replace=False)]
+            
+            distances.append(np.linalg.norm(v - barycenter))
+        
+        hist, _ = np.histogram(distances, bins=FEATURE_DESCRIPTORS_DIMENSIONS, density=True)
+        hist = list(hist)
+        if self.log:
+            print("[INFO] Histogram for D1 feature vector is: " + str(hist))
+        
+        return hist
     
     def get_D2(self):
         """
         _summary_ compute the D2 of the shape
+        
+        distance between 2 random vertices
         """
-        return [1.0]
+        n = self.vertices.shape[0] # number of vertices
+        
+        distances = []
+        
+        for _ in range(NR_SAMPLES_FOR_FEATURE_DESCRIPTORS):
+            # getting 2 random vertices
+            v1, v2 = self.vertices[np.random.choice(n, 2, replace=False)]
+            
+            distances.append(np.linalg.norm(v1 - v2))
+        
+        hist, _ = np.histogram(distances, bins=FEATURE_DESCRIPTORS_DIMENSIONS, density=True)
+        hist = list(hist)
+        if self.log:
+            print("[INFO] Histogram for D2 feature vector is: " + str(hist))
+        
+        return hist
     
     def get_D3(self):
         """
         _summary_ compute the D3 of the shape
+        
+        square root of area of triangle given by 3 random vertices
         """
-        return [1.0]
+         
+        n = self.vertices.shape[0] # number of vertices
+        
+        areas = []
+        for _ in range(NR_SAMPLES_FOR_FEATURE_DESCRIPTORS):
+            # getting 3 random vertices
+            [v1,v2,v3] = self.vertices[np.random.choice(n, 3, replace=False)]
+            
+            areas.append(math.sqrt(self.get_triangle_area([v1, v2, v3])))
+        
+        hist, _ = np.histogram(areas, bins=FEATURE_DESCRIPTORS_DIMENSIONS, density=True)
+        hist = list(hist)
+        if self.log:
+            print("[INFO] Histogram for D3 feature vector is: " + str(hist))
+        
+        return hist
     
     def get_D4(self):
         """
         _summary_ compute the D4 of the shape
+        cube root of volume of tetrahedron formed by 4 random vertices
         """
-        return [1.0]
+        n = self.vertices.shape[0] # number of vertices
+        
+        volumes = []
+        for _ in range(NR_SAMPLES_FOR_FEATURE_DESCRIPTORS):
+            # getting 4 random vertices
+            [v1,v2,v3, v4] = self.vertices[np.random.choice(n, 4, replace=False)]
+            
+            volumes.append(math.sqrt(self.get_tetrahedron_volume(v1, v2, v3, v4)))
+        
+        hist, _ = np.histogram(volumes, bins=FEATURE_DESCRIPTORS_DIMENSIONS, density=True)
+        hist = list(hist)
+        
+        if self.log:
+            print("[INFO] Histogram for D4 feature vector is: " + str(hist))
+        
+        return hist
     
     # TODO: check this and add the other features
     

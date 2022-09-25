@@ -1,15 +1,16 @@
 
-from utils.renderer import render
+
 from utils.feature_extraction import FeatureExtractor
+from utils.preprocesing import Preprocessor
 
 def main():
     #render()   
-    #preprocessor = Prepocesor(log = True)
+    preprocessor = Preprocessor(log = True)
     
     # preparing the database
     # this is a costly operation, so it is recommended to run it only once
     
-    #preprocessor.db.prepare_db()
+    #preprocessor.db.prepare_db(limit=10)
      
     # preprocessing the shapes
     #preprocessor.preprocess()
@@ -19,7 +20,7 @@ def main():
     # extracting features
     feature_extractor.extract_features()
 
-    render(['./preprocessed/LabeledDB_new/Airplane/61.ply'])
+    #render(['./preprocessed/LabeledDB_new/Bust/307.ply', './preprocessed/LabeledDB_new/Bust/308.ply'])
     
 if __name__ == '__main__':
     main()

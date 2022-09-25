@@ -21,7 +21,7 @@ import numpy as np
 
 
 class Database:
-    def __init__(self, log = False):
+    def __init__(self, log:bool = False):
         self.log = log
         self.connection = self.get_db_connection()
         self.cursor = self.connection.cursor()
@@ -230,7 +230,7 @@ class Database:
                 print(f"[ERROR] {e}")
             return None
 
-    def prepare_db(self):
+    def prepare_db(self, limit:int = None):
         self.create_shapes_table()
-        files = scan_files()
+        files = scan_files(limit = limit)
         self.insert_shape_data(files)
