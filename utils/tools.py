@@ -13,7 +13,10 @@
 # limitations under the License.
 
 import os
+import time
 from pymeshlab import MeshSet
+
+from utils.Logger import Logger
 
 
 def off2ply(filename="./LabeledDB_new/Airplane/61.off"):
@@ -93,3 +96,10 @@ def get_features(filename="./LabeledDB_new/Airplane/61.off"):
                                  bounding_box.diagonal()]
 
     return [faces_count, vertices_count, faces_type, axis_aligned_bounding_box]
+
+def track_progress(function):
+    start = time.time()
+    function()
+    end = time.time()
+    logger = Logger(active=True)
+    logger.success(f"{function.__name__} finished in {end - start} seconds")

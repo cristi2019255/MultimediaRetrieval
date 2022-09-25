@@ -1,21 +1,13 @@
 
 
 from distutils.errors import PreprocessError
-import time
 from utils.FeatureExtractor import FeatureExtractor
+from utils.tools import track_progress
 
-from termcolor import colored
 
 def main():
     #track_progress(preprocess_data)
     track_progress(extract_features)
-
-def track_progress(function):
-    start = time.time()
-    function()
-    end = time.time()
-    print(colored(f"[SUCCESS] Total time for {function.__name__}:  {end - start} seconds", "green"))
-
 
 def preprocess_data():
     # preparing the database
