@@ -26,7 +26,7 @@ In order to run the application follow the next 3 simple steps:
 
 1) In order to get the project started first run the following command: `pip install -r requirements.txt`
 2) In order to run up the database run `docker-compose up`
-3) Now you can run `pyton3 main.py` to start the application
+3) Now you can run `python3 main.py` to start the application
 
 Enjoy!
 
