@@ -1,8 +1,9 @@
 
 
+from distutils.errors import PreprocessError
 import time
-from utils.preprocesing import Preprocessor
-from utils.feature_extraction import FeatureExtractor
+from utils.FeatureExtractor import FeatureExtractor
+
 from termcolor import colored
 
 def main():
@@ -20,7 +21,7 @@ def preprocess_data():
     # preparing the database
     # this is a costly operation, so it is recommended to run it only once
     
-    preprocessor = Preprocessor(log = True)
+    preprocessor = PreprocessError(log = True)
     preprocessor.db.prepare_db(limit=None)
     preprocessor.preprocess()    
 
