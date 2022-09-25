@@ -19,6 +19,8 @@ from utils.renderer import render
 import os
 from termcolor import colored
 
+from utils.tools import get_features
+
 NR_DESIRED_FACES = 5000
 NR_SAMPLES_FOR_FEATURE_DESCRIPTORS = 500
 FEATURE_DESCRIPTORS_DIMENSIONS = 8
@@ -214,8 +216,6 @@ class Shape:
             vertex[1] -= barycenter[1]
             vertex[2] -= barycenter[2]
         
-
-
     def principal_component_analysis(self):
         """_summary_ compute the principal components of the shape
 
@@ -250,15 +250,15 @@ class Shape:
         # sorting the eigen vectors according to the eigen values
         eigen_components.sort(key=lambda x: x[0], reverse=True)
         
-        x_vec = eigen_components[0][1]
-        y_vec = eigen_components[1][1]
-        z_vec = eigen_components[2][1]
+        e1 = eigen_components[0][1]
+        e2 = eigen_components[1][1]
+        e3 = eigen_components[2][1]
         
         # computing the rotation matrix
-        rotation_matrix = np.array([x_vec, y_vec, z_vec])
+        rotation_matrix = np.array([e1, e2, e3]).T
         
         # applying the rotation matrix
-        self.vertices = np.dot(rotation_matrix.T, self.vertices.T).T
+        self.vertices = np.dot(rotation_matrix, self.vertices.T).T
         
         self.mesh = Mesh(self.vertices, self.faces)
             
@@ -283,7 +283,7 @@ class Shape:
         
         transformation_matrix = np.array([[self.sign(f_x), 0, 0], [0, self.sign(f_y), 0], [0, 0, self.sign(f_z)]])
         
-        self.vertices = np.dot(self.vertices, transformation_matrix.T)
+        self.vertices = np.matmul(transformation_matrix, self.vertices.T).T
         
         self.mesh = Mesh(self.vertices, self.faces)
     
@@ -296,7 +296,7 @@ class Shape:
         assert(axis >= 0 and axis <= 2)
         nr_diff_vertices = 0
         for vertex in self.vertices:
-            nr_diff_vertices += self.sign(vertex[axis]) 
+            nr_diff_vertices += self.sign(vertex[axis]) * vertex[axis] ** 2 
         
         return nr_diff_vertices
                     
@@ -307,10 +307,12 @@ class Shape:
         if self.log:
             print("[INFO] Rescaling the shape so that the bounding box is the unit cube")
         
-        bbox = self.mesh.bounding_box()
-        dims = [abs(bbox.dim_x()), abs(bbox.dim_y()), abs(bbox.dim_z())]
-        m = max(dims)
-    
+        [x_max, y_max, z_max] = list(np.max(self.vertices, axis=0))
+        [x_min, y_min, z_min] = list(np.min(self.vertices, axis=0))
+        
+        
+        m = max(abs(x_max - x_min), abs(y_max - y_min), abs(z_max - z_min))
+
         if m <= 1.0:
             return
         
@@ -348,16 +350,7 @@ class Shape:
         Returns:
             list: the features of the shape
         """
-        faces_count = self.mesh.face_number()
-        vertices_count = self.mesh.vertex_number()
-        faces_ratio = self.mesh.face_matrix().shape[1]  # TODO: check this, I think it's wrong
-
-        faces_type = 'triangles' if faces_ratio == 3 else 'quads' if faces_ratio == 4 else 'mix'
-        bounding_box = self.mesh.bounding_box()
-        axis_aligned_bounding_box = [abs(bounding_box.dim_x()), abs(bounding_box.dim_y()), abs(bounding_box.dim_z()),
-                                    abs(bounding_box.diagonal())]
-
-        return [faces_count, vertices_count, faces_type, axis_aligned_bounding_box]
+        return get_features(self.file_name)
 
     #---------------------------------------#        
     @staticmethod
