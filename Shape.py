@@ -12,12 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from utils.Logger import Logger
 import math
 from pymeshlab import MeshSet, Mesh, Percentage
 import numpy as np
 from utils.renderer import render
 import os
-from termcolor import colored
 from utils.tools import get_features
 
 NR_DESIRED_FACES = 5000
@@ -41,7 +41,7 @@ class Shape:
         self.file_name = None
         self.ms = MeshSet()
         self.ms.add_mesh(self.mesh)
-        self.log = log
+        self.logger = Logger(active=log)
         
     
     def __init__(self, file_name: str, log: bool = False):
@@ -56,7 +56,7 @@ class Shape:
         self.mesh = self.ms.current_mesh()
         self.vertices = self.mesh.vertex_matrix()
         self.faces = self.mesh.face_matrix()
-        self.log = log
+        self.logger = Logger(active=log)
     
     # ----------------- 2. General shape I/O methods -----------------
     
@@ -97,8 +97,7 @@ class Shape:
         assert(target_faces > 0)
         faces = self.mesh.face_number()
         
-        if self.log:
-            print("[INFO] Resampling shape from ", faces," to ", target_faces, " faces")
+        self.logger.log("Resampling shape faces: {faces} -> {target_faces}")
         
         if faces == target_faces:
             return
@@ -112,9 +111,8 @@ class Shape:
         self.vertices = self.mesh.vertex_matrix()
         self.faces = self.mesh.face_matrix()
         
-        if self.log:
-            print("[INFO] Resampling succeeded with ", self.mesh.face_number(), " faces")
-            
+        self.logger.log("Resampling succeeded with {faces} faces")
+        
     
     def _sub_sample(self, target_faces = NR_DESIRED_FACES):
         """_summary_ Sub sampling is done by using the Quadric Edge Collapse Decimation filter
@@ -150,8 +148,7 @@ class Shape:
         
         faces = self.mesh.face_number()
         
-        if self.log:
-            print(f'[INFO] Super sampling... {faces} -> {target_faces}')
+        self.logger.log("Super sampling... {faces} -> {target_faces}")
         
         # It works but it is provoking me anxiety the way we do it (Cristian Grosu), I wanna change it
         
@@ -161,12 +158,11 @@ class Shape:
             self.mesh = self.ms.current_mesh()
             faces = self.mesh.face_number()
             
-            if self.log:
-                print('[INFO] \t Current number of faces: ', faces)
+            self.logger.log("\t Current number of faces: {faces}")
             
             
             if old_faces == faces:
-                print(colored(f'[WARN] file {self.file_name} does not doing super sampling','red'))
+                self.logger.error(f'File {self.file_name} does not doing super sampling')
                 break
             old_faces = faces
             
@@ -206,8 +202,8 @@ class Shape:
             _param_ vertices(list of 3D vectors): the vertices matrix of the shape
             _param_ barycenter(3D vector): the barycenter of the shape
         """
-        if self.log:
-            print("[INFO] Translating the barycenter to the origin of the coordinate system")
+        
+        self.logger.log("Translating the barycenter to the origin of the coordinate system")
         
         barycenter = self.get_barycenter()
         for vertex in self.vertices:
@@ -239,8 +235,7 @@ class Shape:
         """
         _summary_ align the shape with the principal components
         """
-        if self.log:
-            print("[INFO] Aligning the shape with the principal components")
+        self.logger.log("Aligning the shape with the principal components")
         
         eigen_values, eigen_vectors = self.principal_component_analysis()
 
@@ -264,8 +259,7 @@ class Shape:
     def flip_on_moment(self):
         """_summary_ Flipping the shape based on moment test
         """
-        if self.log:
-            print("[INFO] Flipping the shape based on moment test")
+        self.logger.log("Flipping the shape based on moment test")
         
         f_x = 0
         f_y = 0
@@ -307,8 +301,7 @@ class Shape:
         """
         _summary_ rescale the shape so that the bounding box is the unit cube
         """
-        if self.log:
-            print("[INFO] Rescaling the shape so that the bounding box is the unit cube")
+        self.logger.log("Rescaling the shape so that the bounding box is the unit cube")
         
         [x_max, y_max, z_max] = list(np.max(self.vertices, axis=0))
         [x_min, y_min, z_min] = list(np.min(self.vertices, axis=0))
@@ -320,8 +313,7 @@ class Shape:
         
         scale_factor = 1 / m
         
-        if self.log:
-            print("[INFO] Scaling factor: " + str(scale_factor))
+        self.logger.log("Scaling factor: " + str(scale_factor))
         
         for vertex in self.vertices:
             vertex[0] = vertex[0] * scale_factor   
@@ -462,8 +454,8 @@ class Shape:
         
         hist, _ = np.histogram(angles, bins=FEATURE_DESCRIPTORS_DIMENSIONS, range=(0, math.pi), density=True)
         hist = list(hist)
-        if self.log:
-            print("[INFO] Histogram for A3 feature vector is: " + str(hist))
+        
+        self.logger.log("Histogram for A3 feature vector is: " + str(hist))
         
         return hist
     
@@ -485,8 +477,8 @@ class Shape:
         
         hist, _ = np.histogram(distances, bins=FEATURE_DESCRIPTORS_DIMENSIONS, density=True)
         hist = list(hist)
-        if self.log:
-            print("[INFO] Histogram for D1 feature vector is: " + str(hist))
+        
+        self.logger.log(f"Histogram for D1 feature vector is: {hist}")
         
         return hist
     
@@ -508,8 +500,8 @@ class Shape:
         
         hist, _ = np.histogram(distances, bins=FEATURE_DESCRIPTORS_DIMENSIONS, density=True)
         hist = list(hist)
-        if self.log:
-            print("[INFO] Histogram for D2 feature vector is: " + str(hist))
+        
+        self.logger.log(f"Histogram for D2 feature vector is: {hist}")
         
         return hist
     
@@ -531,8 +523,8 @@ class Shape:
         
         hist, _ = np.histogram(areas, bins=FEATURE_DESCRIPTORS_DIMENSIONS, density=True)
         hist = list(hist)
-        if self.log:
-            print("[INFO] Histogram for D3 feature vector is: " + str(hist))
+        
+        self.logger.log(f"Histogram for D3 feature vector is: {hist}")
         
         return hist
     
@@ -553,8 +545,7 @@ class Shape:
         hist, _ = np.histogram(volumes, bins=FEATURE_DESCRIPTORS_DIMENSIONS, density=True)
         hist = list(hist)
         
-        if self.log:
-            print("[INFO] Histogram for D4 feature vector is: " + str(hist))
+        self.logger.log(f"Histogram for D4 feature vector is: {hist}")
         
         return hist
     

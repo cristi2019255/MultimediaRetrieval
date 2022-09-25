@@ -14,7 +14,7 @@ def track_progress(function):
     start = time.time()
     function()
     end = time.time()
-    print(colored(f"[INFO] Total time for {function.__name__}:  {end - start} seconds", "green"))
+    print(colored(f"[SUCCESS] Total time for {function.__name__}:  {end - start} seconds", "green"))
 
 
 def preprocess_data():

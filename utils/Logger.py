@@ -20,7 +20,7 @@ class Logger:
     
     def log(self, message):
         if self.active:
-            print(f"[INFO] {message}")
+            print(colored(f"[INFO] {message}", "magenta"))
     
     def warn(self, message):
         if self.active:
