@@ -92,6 +92,8 @@ class Preprocessor:
     
     def resample_outliers_and_normalize(self, target_faces_nr=NR_DESIRED_FACES):
 
+        os.makedirs("preprocessed", exist_ok=True)
+        
         # query to get all the shapes to be resampled
         self.db.cursor.execute('''SELECT file_name FROM shapes''')
         rows = self.db.cursor.fetchall()
