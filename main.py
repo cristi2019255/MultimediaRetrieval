@@ -9,7 +9,7 @@ def main():
     # preparing the database
     # this is a costly operation, so it is recommended to run it only once
     
-    preprocessor.db.prepare_db(limit=5)
+    preprocessor.db.prepare_db(limit=10)
      
     # preprocessing the shapes
     preprocessor.preprocess()

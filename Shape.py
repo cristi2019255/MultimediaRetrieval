@@ -18,7 +18,6 @@ import numpy as np
 from utils.renderer import render
 import os
 from termcolor import colored
-
 from utils.tools import get_features
 
 NR_DESIRED_FACES = 5000
@@ -300,6 +299,10 @@ class Shape:
         
         return nr_diff_vertices
                     
+    def get_bounding_box_dimensions(self):
+        bbox = self.mesh.bounding_box()
+        return [bbox.dim_x(), bbox.dim_y(), bbox.dim_z()]
+    
     def rescale_shape(self):
         """
         _summary_ rescale the shape so that the bounding box is the unit cube
@@ -310,9 +313,8 @@ class Shape:
         [x_max, y_max, z_max] = list(np.max(self.vertices, axis=0))
         [x_min, y_min, z_min] = list(np.min(self.vertices, axis=0))
         
-        
         m = max(abs(x_max - x_min), abs(y_max - y_min), abs(z_max - z_min))
-
+        
         if m <= 1.0:
             return
         
@@ -341,6 +343,7 @@ class Shape:
         self.align_with_principal_components()
         self.flip_on_moment()
         self.rescale_shape()
+        
         self.mesh = Mesh(self.vertices, self.faces)
         self.ms.add_mesh(self.mesh, "normalized")
 
@@ -376,8 +379,7 @@ class Shape:
         """
         _summary_ compute the elongation of the shape
         """
-        bbox = self.mesh.bounding_box()
-        [dim_x, dim_y, dim_z] = [bbox.dim_x(), bbox.dim_y(), bbox.dim_z()]
+        [dim_x, dim_y, dim_z] = self.get_bounding_box_dimensions()
         return max(dim_x, dim_y, dim_z) / min(dim_x, dim_y, dim_z)
     
     def get_surface_area(self):
@@ -396,15 +398,15 @@ class Shape:
         """
         _summary_ compute the volume of bounding box of the shape
         """
-        bbox = self.mesh.bounding_box()
-        [dim_x, dim_y, dim_z] = [bbox.dim_x(), bbox.dim_y(), bbox.dim_z()]
         
+        [dim_x, dim_y, dim_z] = self.get_bounding_box_dimensions()
         return dim_x * dim_y * dim_z
 
     def get_volume(self):
         """
         _summary_ compute the volume of the shape
         """
+        # TODO: does not work with shapes that are not convex
         # Another idea sum other all the tetrahedron volumes formed by the center of the shape (barycenter) and the vertices of the faces of the shape
         out_dict = self.ms.get_geometric_measures()
         
