@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from Shape import Shape
 from utils.Logger import Logger
 from utils.tools import *
 from utils.Database import Database
