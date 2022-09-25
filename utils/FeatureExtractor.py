@@ -13,13 +13,14 @@
 # limitations under the License.
 
 from Shape import Shape
-from utils.db_tools import Database
+from utils.Logger import Logger
+from utils.Database import Database
 
 
 class FeatureExtractor:
     def __init__(self, log=False):
-        self.log = log
-        self.db = Database(log=self.log)
+        self.logger = Logger(active=log)
+        self.db = Database(log=log)
         self.db.create_features_table()
         
     def extract_features(self):
@@ -29,9 +30,9 @@ class FeatureExtractor:
             shape = Shape(file_name=file_name)
             feature_id  = self.db.insert_features_data(shape, shape_id = id)
             self.db.update_shape_feature_id(id, feature_id = feature_id)
-            if self.log:
-                print("[INFO] Extracted features for shape with id: " + str(id))
-
+            
+            self.logger.log(f"Extracted features for shape with id: {id}")
+        
         # closing the db connection
         self.db.close()
     

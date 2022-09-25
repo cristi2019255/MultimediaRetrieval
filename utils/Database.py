@@ -16,13 +16,14 @@ import psycopg2
 import os
 from dotenv import load_dotenv
 from Shape import Shape
+from utils.Logger import Logger
 from utils.tools import scan_files
 import numpy as np
 
 
 class Database:
     def __init__(self, log:bool = False):
-        self.log = log
+        self.logger = Logger(active=log)
         self.connection = self.get_db_connection()
         self.cursor = self.connection.cursor()
     
@@ -33,8 +34,8 @@ class Database:
         
         database = db_name if db_name else os.getenv('POSTGRES_DB'),
         
-        if self.log:
-            print("[INFO] Connecting to PostgreSQL database...", database)
+        self.logger.log(f"Connecting to PostgreSQL database... {database}")
+        
         try:
             conn = psycopg2.connect(
                 database=db_name if db_name else os.getenv('POSTGRES_DB'),
@@ -46,8 +47,7 @@ class Database:
             conn.autocommit = True
             return conn
         except Exception as e:
-            if self.log:
-                print(f"[ERROR] {e}")
+            self.logger.log(f"Error while connecting to PostgreSQL database: {e}")
             return e
 
     def create_shapes_table(self):
@@ -108,8 +108,7 @@ class Database:
         for key, value in files.items():
             for file in value:
                 
-                if self.log:
-                    print("[INFO] Inserting data for file: " + file)
+                self.logger.log(f"Inserting data for file: {file}")
                 
                 shape = Shape(file)
                 [faces_count, vertices_count, faces_type, axis_aligned_bounding_box] = shape.get_features()
@@ -180,22 +179,20 @@ class Database:
     def execute_query(self, sql, type = "insert"):
         try:
             self.cursor.execute(sql)
-            if self.log:
-                print(f"[INFO] Data has been {type}ed successfully !!");
+            self.logger.log(f"Data has been {type}ed successfully !!")
+            
         except Exception as e:
             message = {
-                'insert': "[ERROR] Data already exists!",
-                'update': "[ERROR] Data does not exist!",
-                'create': "[ERROR] Table already exists!",
+                'insert': "Data already exists!",
+                'update': "Data does not exist!",
+                'create': "Table already exists!",
             }
-            if self.log:
-                print(message[type])
-                print("[ERROR] " + sql)
-                print(f"[ERROR] {e}")
-    
+            self.logger.error(message[type])
+            self.logger.error(sql)
+            self.logger.error(e)
+            
     def close(self):
-        if self.log:
-            print("[INFO] Closing the connection to the database...")
+        self.logger.log("Closing the connection to the database...")
         self.connection.close()
         self.cursor.close()
 
@@ -206,8 +203,7 @@ class Database:
             data = [row[0] for row in rows]
             return data
         except Exception as e:
-            if self.log:
-                print(f"[ERROR] {e}")
+            self.logger.error(e)
             return None
 
     def get_average(self, by="vertices_count", table = "sahpes"):
@@ -215,19 +211,12 @@ class Database:
             data = self.get_column_data(by, table)
             avg = np.mean(data)
             
-            #avg_id = np.argmin(abs(np.array(
-            #    data) - avg))  # TODO: change, not the best way to get the closest value assuming id is the same as index
-            #self.cursor.execute("SELECT  * FROM shapes WHERE id = {0}".format(avg_id))
-            #avg_shape = self.cursor.fetchone()
+            self.logger.log(f"Average {by} is {avg}")
             
-            if self.log:
-                print(f"[INFO] The average by {by} is {avg}")
-                #print(f"[INFO] The average shape by {by} is: {avg_shape} ")
             return avg
 
         except Exception as e:
-            if self.log:
-                print(f"[ERROR] {e}")
+            self.logger.error(e)
             return None
 
     def prepare_db(self, limit:int = None):

@@ -12,16 +12,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from utils.Logger import Logger
 from utils.tools import *
-from utils.db_tools import *
+from utils.Database import Database
 from utils.statistics import *
 
 NR_DESIRED_FACES = 21758
 
 class Preprocessor:
     def __init__(self, log = False):
-        self.log = log
-        self.db = Database(log = self.log)
+        self.logger = Logger(active=log)
+        self.db = Database(log = log)
 
     def preprocess(self):
         # getting statistics about the database and resampling the outliers
@@ -87,8 +88,7 @@ class Preprocessor:
         # Closing the connection with db
         self.db.close()
         
-        if self.log:
-            print("[Success] Preprocessing completed!!!")
+        self.logger.success("Preprocessing completed!!!")
     
     def resample_outliers_and_normalize(self, target_faces_nr=NR_DESIRED_FACES):
 
@@ -113,8 +113,7 @@ class Preprocessor:
         try:
             for row in rows:
                 filename = row[0]
-                if self.log:
-                    print("[INFO] Resampling shape: ", filename)    
+                self.logger.log("Resampling shape: " + filename)    
                 
                 shape = Shape(filename, log = False)
                 
@@ -140,7 +139,7 @@ class Preprocessor:
                     
                 self.db.update_shape_data(shape, original_file_name)
         except Exception as e:
-            print(f"[Error] {e}")
+            self.logger.error("Error while resampling and normalizing shapes: " + str(e))
 
         return ([barycenters_before_normalization, diff_axis_x_before_normalization, diff_axis_y_before_normalization, diff_axis_z_before_normalization],
                [barycenters_after_normalization, diff_axis_x_after_normalization, diff_axis_y_after_normalization, diff_axis_z_after_normalization])
