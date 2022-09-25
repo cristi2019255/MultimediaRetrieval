@@ -67,13 +67,17 @@ class Preprocessor:
                 
                 # TODO: is this change of order of operations correct? i.e. does it affect the results?
                 
+                """
                 if shape.mesh.face_number() > target_faces_nr:
                     shape.resample(target_faces=target_faces_nr)
                     shape.normalize()
                 else:
                     shape.normalize()
                     shape.resample(target_faces=target_faces_nr)
-                    
+                """
+                shape.resample(target_faces=target_faces_nr)
+                shape.normalize()
+    
                     
                 original_file_name = shape.file_name
                 shape.file_name = shape.file_name.replace("./","./preprocessed/")
