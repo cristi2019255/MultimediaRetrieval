@@ -1,6 +1,5 @@
 
 
-from utils.feature_extraction import FeatureExtractor
 from utils.preprocesing import Preprocessor
 
 def main():
@@ -10,15 +9,15 @@ def main():
     # preparing the database
     # this is a costly operation, so it is recommended to run it only once
     
-    #preprocessor.db.prepare_db(limit=10)
+    preprocessor.db.prepare_db(limit=5)
      
     # preprocessing the shapes
-    #preprocessor.preprocess()
+    preprocessor.preprocess()
 
-    feature_extractor = FeatureExtractor(log = True)
+    #feature_extractor = FeatureExtractor(log = True)
     
     # extracting features
-    feature_extractor.extract_features()
+    #feature_extractor.extract_features()
 
     #render(['./preprocessed/LabeledDB_new/Bust/307.ply', './preprocessed/LabeledDB_new/Bust/308.ply'])
     

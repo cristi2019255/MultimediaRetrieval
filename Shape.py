@@ -287,8 +287,19 @@ class Shape:
         
         self.mesh = Mesh(self.vertices, self.faces)
     
-    
+    def get_nr_of_vertices_diff_on_positive_axis(self, axis: int = 0):
+        """_summary_
+
+        Args:
+            axis (int, optional): 0:x 1:y 2:z. Defaults to 0.
+        """
+        assert(axis >= 0 and axis <= 2)
+        nr_diff_vertices = 0
+        for vertex in self.vertices:
+            nr_diff_vertices += self.sign(vertex[axis]) 
         
+        return nr_diff_vertices
+                    
     def rescale_shape(self):
         """
         _summary_ rescale the shape so that the bounding box is the unit cube
