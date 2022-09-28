@@ -2,7 +2,7 @@
 # Like, checking the libraries API, etc.
 
 from Shape import Shape
-from utils.renderer import render
+from utils.renderer import render, test_render_report
 
 """
 theoretical pipeline:
@@ -21,6 +21,7 @@ As a result, all models would have the same number of faces.
 I asked the prof. if it would be a good way of doing things. Will update accordingly. 
 """
 
+
 def test_shape_normalization():
     """
     _summary_ test the shape normalization
@@ -36,12 +37,13 @@ def test_subsampling():
        Sub sampling is done by using the Quadric Edge Collapse Decimation filter
        Sub sampling to a fixed number of faces
     """
-    
+
     shape = Shape("./LabeledDB_new/Airplane/61.off")
-    
+
     shape.resample(target_faces=2000)
     shape.save_mesh("./test_data/61_subsampled.ply")
     render(["./LabeledDB_new/Airplane/61.ply", "./test_data/61_subsampled.ply"])
+
 
 def test_supersampling():
     """_summary_ testing shape super sampling
@@ -50,11 +52,15 @@ def test_supersampling():
         When greater than the desired number of faces, sub sample to the desired number of faces 
     """
     shape = Shape("./LabeledDB_new/Bird/253.ply")
-    
+
     shape.resample(target_faces=21000)
     shape.save_mesh("./test_data/supersampled.ply")
     render(["./LabeledDB_new/Bird/253.ply", "./test_data/supersampled.ply"])
 
-#test_shape_normalization()
-test_subsampling()
-#test_supersampling()
+
+# render(["./LabeledDB_new/Airplane/61.ply", "./preprocessed/LabeledDB_new/Airplane/61.ply"])
+# test_shape_normalization()
+# test_subsampling()
+# test_supersampling()
+
+test_render_report()

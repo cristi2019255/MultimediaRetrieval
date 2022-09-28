@@ -15,16 +15,41 @@
 import pyvista
 from utils.tools import get_features, off2ply
 
+# create a new pyvista theme
+# inherit from the default
+my_theme = pyvista.themes.DefaultTheme()
 
-def render(filenames=["./LabeledDB_new/Airplane/61.ply"]):
-    """_summary_ Rendering shapes from a list of files
+# change mesh color
+my_theme.color = "silver"
+
+# change background color to white
+my_theme.background = 'white'
+
+# change the fonts
+my_theme.font.color = 'black'
+pyvista.global_theme.font.family = 'times'
+
+# load the new theme
+pyvista.global_theme.load_theme(my_theme)
+
+
+def render(filenames=["./LabeledDB_new/Airplane/61.ply"], show_features=True):
+    """_summary_ Rendering shapes and optionally their features from a list of files
 
     Args:
         filenames (list[str], optional): Defaults to ["./LabeledDB_new/Airplane/61.ply"].
+        show_features (Bool, optional): Defaults to True
     """
-    
-    # setting up the plotter    
-    plotter = pyvista.Plotter(shape=(2, len(filenames)), row_weights=[4, 1])  # instantiate the plotter
+
+    if show_features:
+        rows = 2
+        row_weights = [4, 1]
+    else:
+        rows = 1
+        row_weights = [1]
+
+    # setting up the plotter
+    plotter = pyvista.Plotter(shape=(rows, len(filenames)), row_weights=row_weights)  # instantiate the plotter
 
     # adding the meshes to the plotter
     for index, filename in enumerate(filenames):
@@ -36,17 +61,19 @@ def render(filenames=["./LabeledDB_new/Airplane/61.ply"]):
         plotter.subplot(0, index)
         plotter.camera.zoom(0.35)
         plotter.show_grid()
-        plotter.add_mesh(mesh, color="tan", show_edges=True, smooth_shading=True)
+        plotter.add_mesh(mesh, show_edges=True, smooth_shading=True)
         plotter.add_title(filename, font_size=10)
         plotter.add_axes(interactive=True)
         plotter.add_bounding_box()
-        plotter.subplot(1, index)
-        
-        [n_faces, n_vertices, faces_type, axis_aligned_bounding_box] = get_features(filename)
-        axis_aligned_bounding_box = list(map(lambda x: round(x, 2),axis_aligned_bounding_box))
-        data = f"Number of faces: {n_faces} \nNumber of vertices: {n_vertices} \nFaces type: {faces_type} \nAxis aligned bounding box: \n{axis_aligned_bounding_box}"
 
-        plotter.add_text(text=data, font_size=14, color="black", position="upper_left", name="text")
+        if show_features:
+            plotter.subplot(1, index)
+            [n_faces, n_vertices, faces_type, axis_aligned_bounding_box] = get_features(filename)
+            axis_aligned_bounding_box = list(map(lambda x: round(x, 2), axis_aligned_bounding_box))
+            data = f"Number of faces: {n_faces} \nNumber of vertices: {n_vertices} \n" \
+                   f"Faces type: {faces_type} \nAxis aligned bounding box: \n{axis_aligned_bounding_box}"
+
+            plotter.add_text(text=data, font_size=14, position="upper_left", name="text")
 
     plotter.show()  # show the rendering window
 
@@ -58,3 +85,9 @@ def test_render():
         filenames.append(f"./LabeledDB_new/Airplane/{j}.off")
     print(filenames)
     render(filenames)
+
+
+def test_render_report():
+    filenames = ["./LabeledDB_new/Airplane/61.ply", "./LabeledDB_new/Octopus/121.ply"]
+    render(filenames, show_features=False)
+    render(filenames, show_features=True)

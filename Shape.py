@@ -130,15 +130,14 @@ class Shape:
         # 1: calculate the mean number of faces in the distribution for NR_DESIRED_FACES
         # for testing, 5000
 
-        # 2: TODO: need to pick an appropriate quality threshold (qualitythr), right now it's just a number pulled out of my ass
-
-        # 3: TODO: test out different method "meshing_decimation_clustering"
-        # https://pymeshlab.readthedocs.io/en/latest/filter_list.html?highlight=Quadratic%20Edge%20Collapse%20Detection#meshing_decimation_clustering
-        # doesn't allow for exact # of faces to be chosen so different implementation would be required
-
         # This would be done before normalisation, so we dont need to preserve boundaries, normal, etc
 
         self.ms.apply_filter("meshing_decimation_quadric_edge_collapse", targetfacenum=target_faces, qualitythr=1)
+
+        # self.ms.apply_filter("meshing_decimation_clustering", threshold=Percentage(2))
+        # self.ms.apply_filter("generate_sampling_element", sampling=2, samplenum=target_faces)
+        # neither works better
+
         self.mesh = self.ms.current_mesh()
         
     def _super_sample(self, target_faces = NR_DESIRED_FACES):
@@ -231,7 +230,9 @@ class Shape:
         
         # computing the covariance matrix
         # When computing the covariance matrix each row of the input represents a variable, 
-        # and each column a single observation of all those variables, therefore we need to transpose the matrix of vertices
+        # and each column a single observation of all those variables,
+        # therefore we need to transpose the matrix of vertices
+
         covariance_matrix = np.cov(self.vertices.T)
         
         # computing the principal components
