@@ -19,6 +19,7 @@ import numpy as np
 from utils.renderer import render
 import os
 from utils.tools import get_features
+from numba import jit
 
 NR_DESIRED_FACES = 5000
 NR_SAMPLES_FOR_FEATURE_DESCRIPTORS = 500
@@ -195,7 +196,6 @@ class Shape:
         
         return [x / N, y / N, z / N]
 
-
     def translate_barycenter(self):
         """
             _summary_ translate the shape so that its barycenter is in the origin of the coordinate system
@@ -229,6 +229,14 @@ class Shape:
         # computing the principal components
         eigen_values, eigen_vectors = np.linalg.eig(covariance_matrix)
         
+        eigen_components = [(eigen_values[i], eigen_vectors[:, i]) for i in range(len(eigen_values))]
+        
+        # sorting the eigen vectors according to the eigen values
+        eigen_components.sort(key=lambda x: x[0], reverse=True)
+        
+        eigen_vectors = [eigen_components[i][1] for i in range(3)]
+        eigen_values = [eigen_components[i][0] for i in range(3)]
+        
         return eigen_values, eigen_vectors
     
     def align_with_principal_components(self):
@@ -237,19 +245,10 @@ class Shape:
         """
         self.logger.log("Aligning the shape with the principal components")
         
-        eigen_values, eigen_vectors = self.principal_component_analysis()
+        _, eigen_vectors = self.principal_component_analysis()
 
-        eigen_components = [(eigen_values[i], eigen_vectors[:, i]) for i in range(len(eigen_values))]
-        
-        # sorting the eigen vectors according to the eigen values
-        eigen_components.sort(key=lambda x: x[0], reverse=True)
-        
-        e1 = eigen_components[0][1]
-        e2 = eigen_components[1][1]
-        e3 = eigen_components[2][1]
-        
         # computing the rotation matrix
-        rotation_matrix = np.array([e1, e2, e3]).T
+        rotation_matrix = np.array(eigen_vectors)
         
         # applying the rotation matrix
         self.vertices = np.dot(rotation_matrix, self.vertices.T).T
@@ -308,7 +307,7 @@ class Shape:
         
         m = max(abs(x_max - x_min), abs(y_max - y_min), abs(z_max - z_min))
         
-        if m <= 1.0:
+        if m == 1.0:
             return
         
         scale_factor = 1 / m
@@ -347,22 +346,26 @@ class Shape:
         """
         return get_features(self.file_name)
 
-    #---------------------------------------#        
+    #---------------------------------------#       
     @staticmethod
+    @jit 
     def sign(x):
         if x == 0:
             return 0
         return 1 if x > 0 else -1
     
     @staticmethod
+    @jit
     def get_triangle_area(triangle):
         return 0.5 * np.linalg.norm(np.cross(triangle[1] - triangle[0], triangle[2] - triangle[0]))
     
     @staticmethod
+    @jit
     def get_angle_between_vertices(v1, v2, v3):
         return np.arccos(np.dot(v1 - v2, v3 - v2) / (np.linalg.norm(v1 - v2) * np.linalg.norm(v3 - v2)))
     
     @staticmethod
+    @jit
     def get_tetrahedron_volume(v1,v2,v3,v4):
         return np.abs(np.dot(v4 - v1, np.cross(v2 - v1, v3 - v1))) / 6
     
@@ -435,7 +438,7 @@ class Shape:
         # lambda_1 >= lambda_2 >= lambda_3
         # returning |lambda_1| / |lambda_3|        
         return abs(eigenvalues[0]) / abs(eigenvalues[2])
-        
+       
     def get_A3(self):
         """
         _summary_ compute the A3 of the shape
