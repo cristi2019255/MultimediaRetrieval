@@ -33,5 +33,5 @@ def plot_histogram(data, title="Histogram of vertex counts", bins=20, ticks=Fals
         plt.xticks(rotation=90, fontsize=10, va='top', ha='center')
 
     file_name = title.replace(" ", "_") + ".png"
-    plt.savefig(f"./report/{file_name}")
+    plt.savefig(f"./report/histograms/{file_name}")
     plt.close()
