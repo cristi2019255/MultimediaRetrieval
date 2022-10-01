@@ -20,12 +20,18 @@
 
 import matplotlib.pyplot as plt
 
-def plot_histogram(data, title = "Histogram of vertex counts"):
+plt.style.use(['science', 'no-latex'])  # style from SciencePlots
+
+
+def plot_histogram(data, title="Histogram of vertex counts", bins=20, ticks=False):
     plt.figure(figsize=(8, 6), dpi=80)
     plt.clf()
-    plt.hist(data)
+    plt.hist(data, bins, edgecolor='black', rwidth=0.9)
     plt.title(title)
-    file_name = title.replace(" ", "_") + ".png"
-    plt.savefig(f"./report/{file_name}")   
-    plt.close()
 
+    if ticks:
+        plt.xticks(rotation=90, fontsize=10, va='top', ha='center')
+
+    file_name = title.replace(" ", "_") + ".png"
+    plt.savefig(f"./report/{file_name}")
+    plt.close()
