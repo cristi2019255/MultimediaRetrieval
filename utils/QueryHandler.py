@@ -41,7 +41,7 @@ class QueryHandler:
     def find_similar_shapes(self, n = None, distance_measure = None, normalization = None):
 
         # Validate input parameters
-        if distance_measure not in ["Euclidean Distance", "Cosine Distance", "Earth''s Mover Distance"]:
+        if distance_measure not in ["Euclidean Distance", "Cosine Distance", "Earth Mover''s Distance"]:
             distance_measure = "Euclidean Distance"
 
         if normalization not in ["Minimum Maximum Normalization", "Standard Score Normalization"]:
@@ -119,7 +119,32 @@ class QueryHandler:
                                 + pow(features."eccentricity_normalized" - target."eccentricity_normalized", 2)
                             )   
                        when 'Cosine Distance' 
-                       then null
+                       then /* 1 - similarity to get a 'distance', now higher similarities will give higher values */
+                            1 -
+                            /* Dot Product */
+                            ( features."surface_area_normalized" * target."surface_area_normalized"
+                            + features."compactness_normalized"  * target."compactness_normalized" 
+                            + features."bbox_volume_normalized"  * target."bbox_volume_normalized" 
+                            + features."diameter_normalized"     * target."diameter_normalized"    
+                            + features."eccentricity_normalized" * target."eccentricity_normalized"
+                            )
+                            /
+                            /* Product of Magnitudes */
+                            (
+                                sqrt( features."surface_area_normalized" * features."surface_area_normalized"
+                                    + features."compactness_normalized"  * features."compactness_normalized" 
+                                    + features."bbox_volume_normalized"  * features."bbox_volume_normalized" 
+                                    + features."diameter_normalized"     * features."diameter_normalized"    
+                                    + features."eccentricity_normalized" * features."eccentricity_normalized"
+                                )
+                                *
+                                sqrt( target."surface_area_normalized" * target."surface_area_normalized"
+                                    + target."compactness_normalized"  * target."compactness_normalized" 
+                                    + target."bbox_volume_normalized"  * target."bbox_volume_normalized" 
+                                    + target."diameter_normalized"     * target."diameter_normalized"    
+                                    + target."eccentricity_normalized" * target."eccentricity_normalized"
+                                )
+                            )
                        when 'Earth''s Mover Distance'
                        then null
                    end as "distance"

@@ -29,7 +29,7 @@ def extract_features():
 def run_query(filename="./preprocessed/LabeledDB_new/Airplane/61.ply"):
     query = QueryHandler(log=True)
     query.fetch_shape(filename)
-    similar_shapes_data = query.find_similar_shapes(n = 5)
+    similar_shapes_data = query.find_similar_shapes(n = 7, distance_measure = 'Cosine Distance', normalization = 'Standard Score Normalization')
 
 
     print('Original shape:')
