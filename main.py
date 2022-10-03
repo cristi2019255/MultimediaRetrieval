@@ -3,11 +3,13 @@ from utils.Preprocessor import Preprocessor
 from utils.QueryHandler import QueryHandler
 from utils.tools import track_progress
 
+from Shape import Shape, render
+
 
 def main():
-    track_progress(preprocess_data)  # uncomment to preprocess data
+    # track_progress(preprocess_data)  # uncomment to preprocess data
     # track_progress(extract_features) # uncomment to extract features
-    # track_progress(run_query) # uncomment to run query
+    track_progress(run_query) # uncomment to run query
 
 
 def preprocess_data():
@@ -24,9 +26,25 @@ def extract_features():
     feature_extractor.extract_features()
 
 
-def run_query(filename="./LabeledDB_new/Airplane/61.off"):
+def run_query(filename="./preprocessed/LabeledDB_new/Airplane/61.ply"):
     query = QueryHandler(log=True)
     query.fetch_shape(filename)
+    similar_shapes_data = query.find_similar_shapes(n = 5)
+
+
+    print('Original shape:')
+
+    search_shape = Shape(filename)
+    search_shape.render()
+
+    for similar_shape_data in similar_shapes_data:
+
+        shape_id, filename_similar_shape, distance = similar_shape_data
+
+        print('Similar shape with distance: ' + str(distance))
+
+        similar_shape = Shape(filename_similar_shape)
+        similar_shape.render()
 
 
 if __name__ == '__main__':
