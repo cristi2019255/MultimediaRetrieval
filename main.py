@@ -9,7 +9,7 @@ from utils.tools import track_progress
 def main():
     # convert_to_ply(directory="./data/PRINCETON/train")
     track_progress(preprocess_data)  # uncomment to preprocess data
-    # track_progress(extract_features) # uncomment to extract features
+    #track_progress(extract_features) # uncomment to extract features
     # track_progress(run_query) # uncomment to run query
 
 
@@ -18,7 +18,7 @@ def preprocess_data():
     # this is a costly operation, so it is recommended to run it only once
 
     preprocessor = Preprocessor(log=True)
-    preprocessor.db.prepare_db(limit=None)
+    preprocessor.db.prepare_db(limit=10)
     preprocessor.preprocess()
 
 

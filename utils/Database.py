@@ -93,8 +93,7 @@ class Database:
             D3 FLOAT[],
             D4 FLOAT[],
             created_at TIMESTAMP NOT NULL DEFAULT NOW(),
-            shape_id INT NOT NULL,
-            CONSTRAINT shape_id FOREIGN KEY (id) REFERENCES shapes (id)
+            shape_id INT NOT NULL
             ); '''
         self.execute_query(sql, 'create')
     
@@ -159,7 +158,7 @@ class Database:
         volume = shape.get_volume()
         diameter = shape.get_diameter()
         eccentricity = shape.get_eccentricity()
-        volume_convex_hull, surface_area_convex_hull = shape.get_surface_area_convex_hull()
+        volume_convex_hull, surface_area_convex_hull = shape.get_convex_hull_measures()
         ratio_volume = volume / volume_convex_hull
         ratio_surface_area = surface_area / surface_area_convex_hull
         ratio_bbox_volume = volume / bbox_volume 

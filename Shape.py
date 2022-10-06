@@ -364,7 +364,6 @@ class Shape:
         return 1 if x > 0 else -1
     
     @staticmethod
-    @jit
     def get_triangle_area(triangle):
         return 0.5 * np.linalg.norm(np.cross(triangle[1] - triangle[0], triangle[2] - triangle[0]))
     
@@ -574,7 +573,7 @@ class Shape:
             # getting 4 random vertices
             [v1,v2,v3, v4] = self.vertices[np.random.choice(n, 4, replace=False)]
             
-            volumes.append(math.sqrt(self.get_tetrahedron_volume(v1, v2, v3, v4)))
+            volumes.append(math.sqrt(abs(self.get_tetrahedron_volume(v1, v2, v3, v4))))
         
         hist, _ = np.histogram(volumes, bins=FEATURE_DESCRIPTORS_DIMENSIONS, density=True)
         hist = list(hist / np.sum(hist)) # normalizing
