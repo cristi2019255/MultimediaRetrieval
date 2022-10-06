@@ -156,7 +156,7 @@ class Preprocessor:
 
                 try:
                     self.logger.log("Resampling shape: " + filename)
-                    #shape.resample(target_faces=target_faces_nr)            
+                    shape.resample(target_faces=target_faces_nr)            
                     # getting shapes data before normalization
                     barycenters_before_normalization.append(shape.get_barycenter())
 
@@ -170,7 +170,7 @@ class Preprocessor:
                     eigenvector_z_before_normalization.append(z)
 
                     # normalizing the shape
-                    #shape.normalize()
+                    shape.normalize()
 
                     # getting shapes data after normalization
                     barycenters_after_normalization.append(shape.get_barycenter())
