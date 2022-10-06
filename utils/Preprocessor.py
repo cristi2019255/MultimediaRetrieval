@@ -42,24 +42,22 @@ class Preprocessor:
 
         # for checking resampling
         plot_histogram(self.db.get_column_data(by="vertices_count"),
-                       title="Number of vertices before resampling", bins=25)
+                       title="Number of vertices before resampling")
 
         plot_histogram(self.db.get_column_data(by="faces_count"),
-                       title="Number of faces before resampling", bins=25)
+                       title="Number of faces before resampling")
 
         plot_histogram(self.db.get_column_data(by="class"),
-                       title="Distribution of shape classes", bins=19, ticks=True)  # bins should be dynamic
+                       title="Distribution of shape classes", ticks=True)  # bins should be dynamic
 
         # for checking normalization
         plot_histogram(self.db.get_column_data(by="bounding_box_diagonal"),
                        title="Length of bounding box diagonal before normalization")
 
         # resampling the outliers
-        statistics_before_normalization, statistics_after_normalization = self.resample_outliers_and_normalize(
-            target_faces_nr=avg_faces_count)
+        statistics_before_normalization, statistics_after_normalization = self.resample_outliers_and_normalize(target_faces_nr=avg_faces_count)
 
-        [barycenters, diff_x, diff_y, diff_z, eigenvectors_x, eigenvectors_y,
-         eigenvectors_z] = statistics_before_normalization
+        [barycenters, diff_x, diff_y, diff_z, eigenvectors_x, eigenvectors_y, eigenvectors_z] = statistics_before_normalization
 
         barycenters_dist = []
         for barycenter in barycenters:
@@ -149,50 +147,52 @@ class Preprocessor:
         eigenvector_y_after_normalization = []
         eigenvector_z_after_normalization = []
 
-        try:
-            for row in rows:
+        
+        for row in rows:
                 filename = row[0]
-                self.logger.log("Resampling shape: " + filename)
-
+                
                 shape = Shape(filename, log=False)
 
-                shape.resample(target_faces=target_faces_nr)
+                try:
+                    self.logger.log("Resampling shape: " + filename)
+                    shape.resample(target_faces=target_faces_nr)            
+                    # getting shapes data before normalization
+                    barycenters_before_normalization.append(shape.get_barycenter())
 
-                # getting shapes data before normalization
-                barycenters_before_normalization.append(shape.get_barycenter())
+                    diff_axis_x_before_normalization.append(shape.get_nr_of_vertices_diff_on_positive_axis(axis=0))
+                    diff_axis_y_before_normalization.append(shape.get_nr_of_vertices_diff_on_positive_axis(axis=1))
+                    diff_axis_z_before_normalization.append(shape.get_nr_of_vertices_diff_on_positive_axis(axis=2))
 
-                diff_axis_x_before_normalization.append(shape.get_nr_of_vertices_diff_on_positive_axis(axis=0))
-                diff_axis_y_before_normalization.append(shape.get_nr_of_vertices_diff_on_positive_axis(axis=1))
-                diff_axis_z_before_normalization.append(shape.get_nr_of_vertices_diff_on_positive_axis(axis=2))
+                    _, [x, y, z] = shape.principal_component_analysis()
+                    eigenvector_x_before_normalization.append(x)
+                    eigenvector_y_before_normalization.append(y)
+                    eigenvector_z_before_normalization.append(z)
 
-                _, [x, y, z] = shape.principal_component_analysis()
-                eigenvector_x_before_normalization.append(x)
-                eigenvector_y_before_normalization.append(y)
-                eigenvector_z_before_normalization.append(z)
+                    # normalizing the shape
+                    shape.normalize()
 
-                # normalizing the shape
-                shape.normalize()
+                    # getting shapes data after normalization
+                    barycenters_after_normalization.append(shape.get_barycenter())
 
-                # getting shapes data after normalization
-                barycenters_after_normalization.append(shape.get_barycenter())
+                    diff_axis_x_after_normalization.append(shape.get_nr_of_vertices_diff_on_positive_axis(axis=0))
+                    diff_axis_y_after_normalization.append(shape.get_nr_of_vertices_diff_on_positive_axis(axis=1))
+                    diff_axis_z_after_normalization.append(shape.get_nr_of_vertices_diff_on_positive_axis(axis=2))
 
-                diff_axis_x_after_normalization.append(shape.get_nr_of_vertices_diff_on_positive_axis(axis=0))
-                diff_axis_y_after_normalization.append(shape.get_nr_of_vertices_diff_on_positive_axis(axis=1))
-                diff_axis_z_after_normalization.append(shape.get_nr_of_vertices_diff_on_positive_axis(axis=2))
+                    _, [x, y, z] = shape.principal_component_analysis()
+                    eigenvector_x_after_normalization.append(x)
+                    eigenvector_y_after_normalization.append(y)
+                    eigenvector_z_after_normalization.append(z)
 
-                _, [x, y, z] = shape.principal_component_analysis()
-                eigenvector_x_after_normalization.append(x)
-                eigenvector_y_after_normalization.append(y)
-                eigenvector_z_after_normalization.append(z)
+                    original_file_name = shape.file_name
+                    shape.file_name = shape.file_name.replace("data", "preprocessed")
+                    shape.save_mesh()
 
-                original_file_name = shape.file_name
-                shape.file_name = shape.file_name.replace("./", "./preprocessed/")
-                shape.save_mesh()
-
-                self.db.update_shape_data(shape, original_file_name)
-        except Exception as e:
-            self.logger.error("Error while resampling and normalizing shapes: " + str(e))
-
+                    self.db.update_shape_data(shape, original_file_name)
+                except Exception as e:
+                    self.logger.error("Error while resampling and normalizing shapes: " + str(e))
+                    self.logger.error("Skipping shape: " + filename + "Deleting from db...")
+                    self.db.delete_shape(filename)
+                    
         return ([barycenters_before_normalization,
                  diff_axis_x_before_normalization,
                  diff_axis_y_before_normalization,

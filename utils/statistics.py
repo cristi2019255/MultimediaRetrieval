@@ -23,10 +23,10 @@ import matplotlib.pyplot as plt
 plt.style.use(['science', 'no-latex'])  # style from SciencePlots
 
 
-def plot_histogram(data, title="Histogram of vertex counts", bins=20, ticks=False):
+def plot_histogram(data, title="Histogram of vertex counts", ticks=False):
     plt.figure(figsize=(8, 6), dpi=80)
     plt.clf()
-    plt.hist(data, bins, edgecolor='black', rwidth=0.9)
+    plt.hist(data, edgecolor='black', rwidth=0.9, color='#607c8e')
     plt.title(title)
 
     if ticks:

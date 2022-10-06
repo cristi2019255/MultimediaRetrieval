@@ -28,10 +28,16 @@ def off2ply(filename="./LabeledDB_new/Airplane/61.off"):
     Returns:
         str : new file name with .ply extension
     """
+    if filename.endswith('.ply'):
+        return filename
+    
     meshes = MeshSet()
     meshes.load_new_mesh(filename)
-    filename = filename.replace('.off', '.ply')
-    meshes.save_current_mesh(filename)
+    if filename.endswith('.off') or filename.endswith('.obj'):
+        new_filename = filename[:-4] + '.ply'
+    else:
+        return filename
+    meshes.save_current_mesh(new_filename)
     return filename
 
 
@@ -43,8 +49,7 @@ def convert_to_ply(directory="./LabeledDB_new"):
     """
     for r, d, f in os.walk(directory):
         for file in f:
-            if ('.off' in file):
-                off2ply(os.path.join(r, file))
+            off2ply(os.path.join(r, file))
 
 
 def scan_files(directory="./LabeledDB_new", limit=None):
@@ -58,7 +63,7 @@ def scan_files(directory="./LabeledDB_new", limit=None):
     """
     files = {}
     for r, d, f in os.walk(directory):
-        for file in f:
+        for file in f:    
             if ('.ply' in file):
                 dir = r.split('/')[-1]
                 if not dir in files:

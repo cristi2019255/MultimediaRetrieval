@@ -1,0 +1,92 @@
+PSB 1
+12 66
+
+face  0 7
+face02
+face05
+face08
+face11
+face-02-cry
+face-04-grin
+face-reference
+
+head  0 2
+head-06-rage
+head-07-sad
+
+cat  0 6
+cat10n
+cat4n
+cat8n
+cat4
+cat-02
+cat-09
+
+man  0 7
+david12n
+david5n
+michael0n
+michael3
+michael5
+michael7
+michael9
+
+dog  0 6
+dog4n
+dog8n
+dog0
+dog10
+dog3
+dog7
+
+gorilla  0 4
+gorilla1n
+gorilla14
+gorilla19n
+gorilla8n
+
+horse  0 9
+horse12n
+horse15n
+horse0
+horse5
+horse-05
+horse-08
+horse-gallop-22
+horse-gallop-33
+horse-gallop-48
+
+lion  0 5
+lioness1
+lioness5
+lioness6
+lion-03
+lion-08
+
+woman  0 6
+victoria0n
+victoria14n
+victoria6n
+victoria10
+victoria25
+victoria7
+
+camel  0 6
+camel-01
+camel-06
+camel-gallop-04
+camel-gallop-15
+camel-gallop-24
+camel-gallop-42
+
+elephant  0 6
+elephant-03
+elephant-09
+elephant-gallop-07
+elephant-gallop-17
+elephant-gallop-48
+elephant-gallop-41
+
+flamm  0 2
+flam-01
+flam-09

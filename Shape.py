@@ -162,7 +162,7 @@ class Shape:
         
         old_faces = faces
         while faces < target_faces:
-            self.ms.apply_filter("meshing_surface_subdivision_butterfly", iterations=1, threshold=Percentage(0))
+            self.ms.apply_filter("meshing_surface_subdivision_loop", iterations=1, threshold=Percentage(0))
             self.mesh = self.ms.current_mesh()
             faces = self.mesh.face_number()
             
@@ -375,9 +375,11 @@ class Shape:
     
     @staticmethod
     @jit
-    def get_tetrahedron_volume(v1,v2,v3,v4):
-        return np.abs(np.dot(v4 - v1, np.cross(v2 - v1, v3 - v1))) / 6
+    def get_tetrahedron_volume(v1,v2,v3,v4 = np.array([0,0,0])):
+        return np.dot(v1 - v4, np.cross(v2 - v4, v3 - v4)) / 6
     
+    
+
     # ----------------- 5. Feature extraction from shape ---------------------#
     def get_elongation(self):
         """
@@ -409,16 +411,31 @@ class Shape:
     def get_volume(self):
         """
         _summary_ compute the volume of the shape
+        
+        APPROVED!
+        
+        Returns:
+            float: the volume of the shape
         """
-        # TODO: does not work with shapes that are not convex
-        # Another idea sum other all the tetrahedron volumes formed by the center of the shape (barycenter) and the vertices of the faces of the shape
-        out_dict = self.ms.get_geometric_measures()
         
-        # added this because not working for non-convex shapes I think
-        if 'mesh_volume' not in out_dict:
-            return 1.0
+        volume = 0
         
-        return out_dict['mesh_volume']
+        for face in self.faces:
+            [v1,v2,v3] = self.vertices[face]
+            volume += self.get_tetrahedron_volume(v1,v2,v3)
+        
+        return abs(volume)
+    
+    def get_convex_hull_measures(self):
+        """_summary_ compute the convex hull measures of the shape
+
+        Returns:
+            [float, float]: [volume, surface_area]
+        """
+        self.ms.generate_convex_hull()
+        measures = self.ms.get_geometric_measures()
+        self.ms.delete_current_mesh()
+        return [measures["mesh_volume"], measures["surface_area"]]    
     
     def get_compactness(self):
         """
@@ -432,11 +449,16 @@ class Shape:
         _summary_ compute the diameter of the shape
         """
         
-        # wrong for now
-        # need to compute the max distance between any two points on the shape surface
-        # or it maybe good ... need to check
+        # TODO: not very scalable, O(N^2), where N is the number of vertices
+        # TODO: find a better way to compute the diameter
+        diameter = 0
         
-        return self.mesh.bounding_box().diagonal()
+        for i in range(len(self.vertices)):
+            for j in range(i,len(self.vertices)):
+                distance = np.linalg.norm(self.vertices[i] - self.vertices[j])
+                if distance > diameter:
+                    diameter = distance
+        return diameter
     
     def get_eccentricity(self):
         """
@@ -465,7 +487,7 @@ class Shape:
             angles.append(self.get_angle_between_vertices(v1, v2, v3))
         
         hist, _ = np.histogram(angles, bins=FEATURE_DESCRIPTORS_DIMENSIONS, range=(0, math.pi), density=True)
-        hist = list(hist)
+        hist = list(hist / np.sum(hist)) # normalizing
         
         self.logger.log("Histogram for A3 feature vector is: " + str(hist))
         
@@ -488,7 +510,7 @@ class Shape:
             distances.append(np.linalg.norm(v - barycenter))
         
         hist, _ = np.histogram(distances, bins=FEATURE_DESCRIPTORS_DIMENSIONS, density=True)
-        hist = list(hist)
+        hist = list(hist / np.sum(hist)) # normalizing
         
         self.logger.log(f"Histogram for D1 feature vector is: {hist}")
         
@@ -511,7 +533,7 @@ class Shape:
             distances.append(np.linalg.norm(v1 - v2))
         
         hist, _ = np.histogram(distances, bins=FEATURE_DESCRIPTORS_DIMENSIONS, density=True)
-        hist = list(hist)
+        hist = list(hist / np.sum(hist)) # normalizing
         
         self.logger.log(f"Histogram for D2 feature vector is: {hist}")
         
@@ -534,7 +556,7 @@ class Shape:
             areas.append(math.sqrt(self.get_triangle_area([v1, v2, v3])))
         
         hist, _ = np.histogram(areas, bins=FEATURE_DESCRIPTORS_DIMENSIONS, density=True)
-        hist = list(hist)
+        hist = list(hist / np.sum(hist)) # normalizing
         
         self.logger.log(f"Histogram for D3 feature vector is: {hist}")
         
@@ -555,7 +577,7 @@ class Shape:
             volumes.append(math.sqrt(self.get_tetrahedron_volume(v1, v2, v3, v4)))
         
         hist, _ = np.histogram(volumes, bins=FEATURE_DESCRIPTORS_DIMENSIONS, density=True)
-        hist = list(hist)
+        hist = list(hist / np.sum(hist)) # normalizing
         
         self.logger.log(f"Histogram for D4 feature vector is: {hist}")
         

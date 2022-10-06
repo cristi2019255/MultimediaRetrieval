@@ -81,7 +81,10 @@ class Database:
             id SERIAL PRIMARY KEY NOT NULL,
             surface_area FLOAT NOT NULL DEFAULT 0,
             compactness FLOAT NOT NULL DEFAULT 0,
-            bbox_volume FLOAT NOT NULL DEFAULT 0,
+            ratio_bbox_volume FLOAT NOT NULL DEFAULT 0,
+            volume FLOAT NOT NULL DEFAULT 1,
+            ratio_ch_volume FLOAT NOT NULL DEFAULT 0, 
+            ratio_ch_area FLOAT NOT NULL DEFAULT 0,
             diameter FLOAT NOT NULL DEFAULT 0,
             eccentricity FLOAT NOT NULL DEFAULT 0,
             A3 FLOAT[], 
@@ -150,14 +153,27 @@ class Database:
         D3 = "'" + str(features['D3']).replace('[', '{').replace(']', '}') + "'"
         D4 = "'" + str(features['D4']).replace('[', '{').replace(']', '}') + "'"
         
+        surface_area = shape.get_surface_area()
+        compactness = shape.get_compactness()
+        bbox_volume = shape.get_bbox_volume()
+        volume = shape.get_volume()
+        diameter = shape.get_diameter()
+        eccentricity = shape.get_eccentricity()
+        volume_convex_hull, surface_area_convex_hull = shape.get_surface_area_convex_hull()
+        ratio_volume = volume / volume_convex_hull
+        ratio_surface_area = surface_area / surface_area_convex_hull
+        ratio_bbox_volume = volume / bbox_volume 
         
-        sql = f'''INSERT INTO features (shape_id, surface_area, compactness, bbox_volume, diameter, eccentricity, A3, D1, D2, D3, D4) 
+        sql = f'''INSERT INTO features (shape_id, surface_area, compactness, ratio_bbox_volume, volume, ratio_ch_volume, ratio_ch_area, diameter, eccentricity, A3, D1, D2, D3, D4) 
                 VALUES ({shape_id}, 
-                        {shape.get_surface_area()}, 
-                        {shape.get_compactness()},
-                        {shape.get_bbox_volume()},
-                        {shape.get_diameter()},
-                        {shape.get_eccentricity()}, 
+                        {surface_area}, 
+                        {compactness},
+                        {ratio_bbox_volume},
+                        {volume},
+                        {ratio_volume},
+                        {ratio_surface_area},
+                        {diameter},
+                        {eccentricity}, 
                         {A3},
                         {D1},
                         {D2},
@@ -170,7 +186,10 @@ class Database:
         self.execute_query(sql, "insert")
         self.execute_query(get_feature_id_sql, "select")
         return self.cursor.fetchone()[0]
-        
+    
+    def delete_shape(self, shape_file_name):
+        sql = f'''DELETE FROM shapes WHERE file_name = '{shape_file_name}';'''
+        self.execute_query(sql, "delete")
         
     def update_shape_feature_id(self, shape_id:int, feature_id:int):
         sql = f'''UPDATE shapes SET features_id = {feature_id} WHERE id = {shape_id};'''
@@ -179,7 +198,10 @@ class Database:
     def execute_query(self, sql, type = "insert"):
         try:
             self.cursor.execute(sql)
-            self.logger.log(f"Data has been {type}ed successfully !!")
+            if type == "delete":
+                self.logger.error(f"Data has been {type}ed successfully !!")
+            else:
+                self.logger.log(f"Data has been {type}ed successfully !!")
             
         except Exception as e:
             message = {
@@ -221,5 +243,10 @@ class Database:
 
     def prepare_db(self, limit:int = None):
         self.create_shapes_table()
-        files = scan_files(limit = limit)
+        
+        files = scan_files(directory="data/PRINCETON/train" ,limit = limit)
         self.insert_shape_data(files)
+        
+        files = scan_files(directory= "data/LabeledDB_new/train", limit = limit)
+        self.insert_shape_data(files)
+        
