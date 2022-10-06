@@ -84,9 +84,9 @@ class Preprocessor:
 
         # plotting histograms after resampling
         plot_histogram(self.db.get_column_data(by="vertices_count"),
-                       title="Number of vertices after resampling", bins=25)
+                       title="Number of vertices after resampling")
         plot_histogram(self.db.get_column_data(by="faces_count"),
-                       title="Number of faces after resampling", bins=25)
+                       title="Number of faces after resampling")
 
         plot_histogram(self.db.get_column_data(by="bounding_box_diagonal"),
                        title="Length of bounding box diagonal after normalization")
@@ -148,6 +148,7 @@ class Preprocessor:
         eigenvector_z_after_normalization = []
 
         
+        errors = 0
         for row in rows:
                 filename = row[0]
                 
@@ -155,7 +156,7 @@ class Preprocessor:
 
                 try:
                     self.logger.log("Resampling shape: " + filename)
-                    shape.resample(target_faces=target_faces_nr)            
+                    #shape.resample(target_faces=target_faces_nr)            
                     # getting shapes data before normalization
                     barycenters_before_normalization.append(shape.get_barycenter())
 
@@ -169,7 +170,7 @@ class Preprocessor:
                     eigenvector_z_before_normalization.append(z)
 
                     # normalizing the shape
-                    shape.normalize()
+                    #shape.normalize()
 
                     # getting shapes data after normalization
                     barycenters_after_normalization.append(shape.get_barycenter())
@@ -190,9 +191,12 @@ class Preprocessor:
                     self.db.update_shape_data(shape, original_file_name)
                 except Exception as e:
                     self.logger.error("Error while resampling and normalizing shapes: " + str(e))
-                    self.logger.error("Skipping shape: " + filename + "Deleting from db...")
+                    self.logger.error("Skipping shape: " + filename + " Deleting from db...")
                     self.db.delete_shape(filename)
-                    
+                    errors += 1
+        
+        self.logger.warn("Number of errors: " + str(errors))
+        
         return ([barycenters_before_normalization,
                  diff_axis_x_before_normalization,
                  diff_axis_y_before_normalization,
