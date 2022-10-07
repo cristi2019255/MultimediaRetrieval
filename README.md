@@ -25,25 +25,24 @@ A multimedia retrieval pipeline for 3D shapes.
 In order to run the application follow the next 3 simple steps:
 
 1) In order to get the project started first run the following command: `pip install -r requirements.txt`
-2) In order to get the database run `docker pull cristi2019255/multimedia_retrieval_uu_2022:1.0`
-3) Run `docker run cristi2019255/multimedia_retrieval_uu_2022:1.0` to start the container
-4) Now you can run `python3 main.py` to start the application
+2) In order to create the database run `docker-compose up`
+3) Now you can run `python3 main.py` to start the application
 
 Enjoy!
 
 For the technical report please follow this link `https://www.overleaf.com/1781678451tvmkmtkhcrbg`
 
+# Cloud database
+
+In latter stages when we will have all the features extracted we will upload the database to the cloud,
+so that we can use it for future steps
+
+Database dashboard in Hekoru: `https://data.heroku.com/datastores/fd3a9a51-2a81-42fd-8891-093915414ce3#`
+See `.env` for more details.
+
 ## TO update the Database locally
 
-...
-
-## TO update the Database to DockerHub
-
-0) Run `docker ps` to get the container id where the database is
-1) Run `docker commit <container-id> <hub-user>/<repo-name>[:<tag>]`
-2) Run `docker push <hub-user>/<repo-name>[:<tag>]`
-
-The container is pushed to docker-hub
+Run `docker-compose up` and update the database then run `docker-compose down` to shut down the container
 
 ## TODO
 

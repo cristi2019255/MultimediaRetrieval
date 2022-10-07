@@ -18,7 +18,7 @@ def preprocess_data():
     # this is a costly operation, so it is recommended to run it only once
 
     preprocessor = Preprocessor(log=True)
-    preprocessor.db.prepare_db(limit=10)
+    preprocessor.db.prepare_db(limit=5)
     preprocessor.preprocess()
 
 

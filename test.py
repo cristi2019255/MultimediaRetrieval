@@ -47,7 +47,7 @@ def test_volume():
     print(shape.get_surface_area())    
 
 
-render(["preprocessed/PRINCETON/train/household/m589.ply"])
+render(["data/PRINCETON/train/furniture/m855.ply"])
 # test_shape_normalization()
 # test_subsampling()
 # test_supersampling()
