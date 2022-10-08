@@ -1,10 +1,9 @@
 matplotlib==3.5.1
+numba==0.56.2
 numpy==1.22.2
 psycopg2==2.9.3
 pymeshlab==2022.2.post2
 python-dotenv==0.21.0
 pyvista==0.36.1
 termcolor==2.0.1
-
-SciencePlots
-numba~=0.56.2
+tqdm==4.62.3
