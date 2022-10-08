@@ -3,13 +3,14 @@ from utils.Preprocessor import Preprocessor
 from utils.QueryHandler import QueryHandler
 
 from Shape import Shape
+from utils.renderer import render
 from utils.tools import track_progress
 
 
 def main():
     #track_progress(preprocess_data)  # uncomment to preprocess data
-    track_progress(compute_statistics)  # uncomment to compute statistics
-    #track_progress(extract_features) # uncomment to extract features
+    #track_progress(compute_statistics)  # uncomment to compute statistics
+    track_progress(extract_features) # uncomment to extract features
     # track_progress(run_query) # uncomment to run query
 
 
@@ -22,6 +23,8 @@ def preprocess_data():
     preprocessor.preprocess()
 
 def compute_statistics():
+    # this is a costly operation, so it is recommended to run it only once
+    
     preprocessor = Preprocessor(log = True)
     preprocessor.compute_class_distribution()
     preprocessor.compute_statistics(type="before")
@@ -36,23 +39,17 @@ def extract_features():
 def run_query(filename="./preprocessed/LabeledDB_new/Airplane/61.ply"):
     query = QueryHandler(log=True)
     query.fetch_shape(filename)
-    similar_shapes_data = query.find_similar_shapes(n = 7, distance_measure = 'Cosine Distance', normalization = 'Standard Score Normalization')
-
-
-    print('Original shape:')
+    similar_shapes_data = query.find_similar_shapes(n = 5, distance_measure = 'Cosine Distance', normalization = 'Standard Score Normalization')
 
     search_shape = Shape(filename)
     search_shape.render()
 
-    for similar_shape_data in similar_shapes_data:
+    distances = list(map(similar_shapes_data, lambda x: x[2]))
+    filenames = list(map(similar_shapes_data, lambda x: x[1]))
+    
+    print('Similar shapes with distances: ' + str(distances))
 
-        shape_id, filename_similar_shape, distance = similar_shape_data
-
-        print('Similar shape with distance: ' + str(distance))
-
-        similar_shape = Shape(filename_similar_shape)
-        similar_shape.render()
-
+    render(filenames)
 
 if __name__ == '__main__':
     main()

@@ -22,7 +22,7 @@ from utils.tools import get_features
 from numba import jit
 
 NR_DESIRED_FACES = 5000
-NR_SAMPLES_FOR_FEATURE_DESCRIPTORS = 500
+NR_SAMPLES_FOR_FEATURE_DESCRIPTORS = 5000
 FEATURE_DESCRIPTORS_DIMENSIONS = 8
 
 class Shape:

@@ -132,16 +132,16 @@ class Preprocessor:
         # saving computed statistics
         os.makedirs("statistics", exist_ok=True)
         with open(f"statistics/statistics_{type}.txt", "w") as f:
-            f.write(f"Number of faces {type} resampling: {faces_count}")
-            f.write(f"Number of vertices {type} resampling: {vertices_count}")
-            f.write(f"Distance from barycenters to origin {type} normalization: {barycenters_dists}")
-            f.write(f"Dot product between eigenvectors and x axis {type} normalization: {eigenvectors_dot_prods_x}")
-            f.write(f"Dot product between eigenvectors and y axis {type} normalization: {eigenvectors_dot_prods_y}")
-            f.write(f"Dot product between eigenvectors and z axis {type} normalization: {eigenvectors_dot_prods_z}")
-            f.write(f"Histogram of diff x-coord {type} normalization: {diff_axis_x}")
-            f.write(f"Histogram of diff y-coord {type} normalization: {diff_axis_y}")
-            f.write(f"Histogram of diff z-coord {type} normalization: {diff_axis_z}")
-            f.write(f"Length of bounding box diagonal {type} normalization: {bbox_diagonals}")
+            f.write(f"Number of faces {type} resampling: {faces_count} \n\n")
+            f.write(f"Number of vertices {type} resampling: {vertices_count} \n\n")
+            f.write(f"Distance from barycenters to origin {type} normalization: {barycenters_dists} \n\n")
+            f.write(f"Dot product between eigenvectors and x axis {type} normalization: {eigenvectors_dot_prods_x} \n\n")
+            f.write(f"Dot product between eigenvectors and y axis {type} normalization: {eigenvectors_dot_prods_y} \n\n")
+            f.write(f"Dot product between eigenvectors and z axis {type} normalization: {eigenvectors_dot_prods_z} \n\n")
+            f.write(f"Histogram of diff x-coord {type} normalization: {diff_axis_x} \n\n")
+            f.write(f"Histogram of diff y-coord {type} normalization: {diff_axis_y} \n\n")
+            f.write(f"Histogram of diff z-coord {type} normalization: {diff_axis_z} \n\n")
+            f.write(f"Length of bounding box diagonal {type} normalization: {bbox_diagonals} \n\n")
         
         # Plotting histograms
                     
