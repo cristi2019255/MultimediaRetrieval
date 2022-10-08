@@ -27,6 +27,8 @@ class Database:
         self.connection = self.get_db_connection()
         self.cursor = self.connection.cursor()
     
+    def __del__ (self):
+        self.close()
     
     def get_db_connection(self, db_name=None):
         # loading the environment variables

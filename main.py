@@ -24,8 +24,8 @@ def preprocess_data():
 def compute_statistics():
     preprocessor = Preprocessor(log = True)
     preprocessor.compute_class_distribution()
-    #preprocessor.compute_statistics(type="before")
-    #preprocessor.compute_statistics(type="after")
+    preprocessor.compute_statistics(type="before")
+    preprocessor.compute_statistics(type="after")
     
     
 def extract_features():

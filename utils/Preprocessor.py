@@ -127,6 +127,23 @@ class Preprocessor:
                     eigenvectors_dot_prods_z.append(abs(np.dot(z, Z_AXIS)))
                     
                     bbox_diagonals.append(shape.bbox_diagonal)
+        
+        
+        # saving computed statistics
+        os.makedirs("statistics", exist_ok=True)
+        with open(f"statistics/statistics_{type}.txt", "w") as f:
+            f.write(f"Number of faces {type} resampling: {faces_count}")
+            f.write(f"Number of vertices {type} resampling: {vertices_count}")
+            f.write(f"Distance from barycenters to origin {type} normalization: {barycenters_dists}")
+            f.write(f"Dot product between eigenvectors and x axis {type} normalization: {eigenvectors_dot_prods_x}")
+            f.write(f"Dot product between eigenvectors and y axis {type} normalization: {eigenvectors_dot_prods_y}")
+            f.write(f"Dot product between eigenvectors and z axis {type} normalization: {eigenvectors_dot_prods_z}")
+            f.write(f"Histogram of diff x-coord {type} normalization: {diff_axis_x}")
+            f.write(f"Histogram of diff y-coord {type} normalization: {diff_axis_y}")
+            f.write(f"Histogram of diff z-coord {type} normalization: {diff_axis_z}")
+            f.write(f"Length of bounding box diagonal {type} normalization: {bbox_diagonals}")
+        
+        # Plotting histograms
                     
         # for checking resampling
         plot_histogram(vertices_count, title=f"Number of vertices {type} resampling")
@@ -135,12 +152,12 @@ class Preprocessor:
         # for checking normalization
         
         # plotting distribution of distance from barycenters to origin before normalization
-        plot_histogram(barycenters_dists, title="Distance from barycenters to origin {type} normalization")
+        plot_histogram(barycenters_dists, title=f"Distance from barycenters to origin {type} normalization")
 
         # plotting histograms before normalization to check eigenvectors alignment
-        plot_histogram(eigenvectors_dot_prods_x, title="Dot product between eigenvectors and x axis {type} normalization")
-        plot_histogram(eigenvectors_dot_prods_y, title="Dot product between eigenvectors and y axis {type} normalization")
-        plot_histogram(eigenvectors_dot_prods_z, title="Dot product between eigenvectors and z axis {type} normalization")
+        plot_histogram(eigenvectors_dot_prods_x, title=f"Dot product between eigenvectors and x axis {type} normalization")
+        plot_histogram(eigenvectors_dot_prods_y, title=f"Dot product between eigenvectors and y axis {type} normalization")
+        plot_histogram(eigenvectors_dot_prods_z, title=f"Dot product between eigenvectors and z axis {type} normalization")
 
         # plotting distribution of differences between the amount of points on positive and negative part of axis 
         plot_histogram(diff_axis_x, title=f"Histogram of diff x-coord {type} normalization")
