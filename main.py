@@ -7,8 +7,8 @@ from utils.tools import track_progress
 
 
 def main():
-    # convert_to_ply(directory="./data/PRINCETON/train")
-    track_progress(preprocess_data)  # uncomment to preprocess data
+    #track_progress(preprocess_data)  # uncomment to preprocess data
+    track_progress(compute_statistics)  # uncomment to compute statistics
     #track_progress(extract_features) # uncomment to extract features
     # track_progress(run_query) # uncomment to run query
 
@@ -21,7 +21,13 @@ def preprocess_data():
     preprocessor.db.prepare_db(limit=5)
     preprocessor.preprocess()
 
-
+def compute_statistics():
+    preprocessor = Preprocessor(log = True)
+    preprocessor.compute_class_distribution()
+    #preprocessor.compute_statistics(type="before")
+    #preprocessor.compute_statistics(type="after")
+    
+    
 def extract_features():
     feature_extractor = FeatureExtractor(log=True)
     feature_extractor.extract_features()

@@ -63,6 +63,8 @@ def scan_files(directory="./LabeledDB_new", limit=None):
     """
     files = {}
     for r, d, f in os.walk(directory):
+        if "test" in r:
+            continue
         for file in f:    
             if ('.ply' in file):
                 dir = r.split('/')[-1]

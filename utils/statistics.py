@@ -23,14 +23,14 @@ import matplotlib.pyplot as plt
 plt.style.use(['science', 'no-latex'])  # style from SciencePlots
 
 
-def plot_histogram(data, title="Histogram of vertex counts", ticks=False):
+def plot_histogram(data, title="Histogram of vertex counts", bins = 20):
     plt.figure(figsize=(8, 6), dpi=80)
     plt.clf()
-    plt.hist(data, edgecolor='black', rwidth=0.9, color='#607c8e')
+    plt.hist(data, bins=bins, edgecolor='black', rwidth=0.85, color='#607c8e')
     plt.title(title)
 
-    if ticks:
-        plt.xticks(rotation=90, fontsize=10, va='top', ha='center')
+    
+    plt.xticks(rotation=60, fontsize=10, va='top', ha='center')
 
     file_name = title.replace(" ", "_") + ".png"
     plt.savefig(f"./report/histograms/{file_name}")

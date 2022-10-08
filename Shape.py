@@ -57,6 +57,9 @@ class Shape:
         self.mesh = self.ms.current_mesh()
         self.vertices = self.mesh.vertex_matrix()
         self.faces = self.mesh.face_matrix()
+        self.faces_count = self.mesh.face_number()
+        self.vertices_count = self.mesh.vertex_number()
+        self.bbox_diagonal = self.mesh.bounding_box().diagonal()
         self.logger = Logger(active=log)
     
     # ----------------- 2. General shape I/O methods -----------------
