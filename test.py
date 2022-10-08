@@ -46,10 +46,19 @@ def test_volume():
     print(shape.get_volume())
     print(shape.get_surface_area())    
 
+def test_super_sampling():
+    filename = "data/PRINCETON/train/plant/m1044.ply"
+    #filename = "data/PRINCETON/train/plant/m1044.ply"
+    render([filename])
+    shape = Shape(filename, log=True)
+    shape.resample(target_faces=5000)
+    shape.save_mesh("./test_data/supersampled.ply")
+    render([filename, "./test_data/supersampled.ply"])
 
-render(["data/PRINCETON/train/furniture/m855.ply"])
+#render(["data/PRINCETON/train/furniture/m855.ply"])
 # test_shape_normalization()
 # test_subsampling()
 # test_supersampling()
 
 #test_render_report()
+#test_super_sampling()

@@ -14,7 +14,7 @@
 
 from utils.Logger import Logger
 import math
-from pymeshlab import MeshSet, Mesh, Percentage
+from pymeshlab import MeshSet, Mesh
 import numpy as np
 from utils.renderer import render
 import os
@@ -98,7 +98,7 @@ class Shape:
         assert(target_faces > 0)
         faces = self.mesh.face_number()
         
-        self.logger.log("Resampling shape faces: {faces} -> {target_faces}")
+        self.logger.log(f"Resampling shape faces: {faces} -> {target_faces}")
         
         if faces == target_faces:
             return
@@ -111,8 +111,9 @@ class Shape:
         
         self.vertices = self.mesh.vertex_matrix()
         self.faces = self.mesh.face_matrix()
+        faces = self.mesh.face_number()
         
-        self.logger.log("Resampling succeeded with {faces} faces")
+        self.logger.log(f"Resampling succeeded with {faces} faces")
         
     
     def _sub_sample(self, target_faces = NR_DESIRED_FACES):
@@ -127,16 +128,10 @@ class Shape:
         # https://support.shapeways.com/hc/en-us/articles/360022742294-Polygon-reduction-with-MeshLab
         # https://help.sketchfab.com/hc/en-us/articles/205852789-MeshLab-Decimating-a-model
 
-        # 1: calculate the mean number of faces in the distribution for NR_DESIRED_FACES
-        # for testing, 5000
-
+        
         # This would be done before normalisation, so we dont need to preserve boundaries, normal, etc
 
         self.ms.apply_filter("meshing_decimation_quadric_edge_collapse", targetfacenum=target_faces, qualitythr=1)
-
-        # self.ms.apply_filter("meshing_decimation_clustering", threshold=Percentage(2))
-        # self.ms.apply_filter("generate_sampling_element", sampling=2, samplenum=target_faces)
-        # neither works better
 
         self.mesh = self.ms.current_mesh()
         
@@ -156,38 +151,42 @@ class Shape:
         
         faces = self.mesh.face_number()
         
-        self.logger.log("Super sampling... {faces} -> {target_faces}")
+        self.logger.log(f"Super sampling... {faces} -> {target_faces}")
         
-        # It works but it is provoking me anxiety the way we do it (Cristian Grosu), I wanna change it
+        iterations = int(math.log(target_faces // faces, 4)) + 1 # with each iteration the number of faces is 4 times the previous number of faces
+        self.logger.log(f"Planning to do {iterations} iterations for midpoint subdivision")
         
-        old_faces = faces
-        while faces < target_faces:
-            self.ms.apply_filter("meshing_surface_subdivision_loop", iterations=1, threshold=Percentage(0))
+        # trying to apply subdivision filter, in case non manifold mesh is given repairing it
+        try:
+            self.ms.apply_filter("meshing_surface_subdivision_midpoint", iterations=iterations)
+        except Exception as e:
+            self.logger.error(f"Super sampling failed with {faces} faces due to {e}")
+            self.logger.log(f"Trying to repair mesh...")
+            self.ms.apply_filter("meshing_repair_non_manifold_edges")
+            self.logger.log("Mesh repaired, trying to super sample again")
+            
             self.mesh = self.ms.current_mesh()
             faces = self.mesh.face_number()
+            self.logger.log(f"Faces after repair: {faces}")
+            try:
+                self.ms.apply_filter("meshing_surface_subdivision_midpoint", iterations=iterations)        
+            except Exception as e:
+                self.logger.error(f"Super sampling failed with {faces} faces due to {e}")
+                
+        self.mesh = self.ms.current_mesh()
+        faces = self.mesh.face_number()
             
-            self.logger.log("\t Current number of faces: {faces}")
-            
-            
-            if old_faces == faces:
-                self.logger.error(f'File {self.file_name} does not doing super sampling')
-                break
-            old_faces = faces
-            
-                    
+        self.logger.log(f"\t Current number of faces: {faces}")
+        
+                   
         if faces > target_faces:
             self._sub_sample(target_faces)
-            return
-            
-        self.mesh = self.ms.current_mesh()
-
+         
     # -------------------- 4. Shape Normalization ----------------------
     
     def get_barycenter(self):
         """
         _summary_: Computing the barycenter of a shape
-        
-        TODO: is this the correct way to compute the barycenter?
         """ 
         x = 0
         y = 0
