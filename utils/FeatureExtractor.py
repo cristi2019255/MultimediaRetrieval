@@ -27,6 +27,9 @@ class FeatureExtractor:
         shapes = self.db.get_table_data(table='shapes', columns=['id', 'file_name'])
         for shape_data in shapes:
             [id, file_name] = shape_data
+            
+            self.logger.log("Extracting features for shape: " + file_name)
+            
             shape = Shape(file_name=file_name)
             feature_id  = self.db.insert_features_data(shape, shape_id = id)
             self.db.update_shape_feature_id(id, feature_id = feature_id)
