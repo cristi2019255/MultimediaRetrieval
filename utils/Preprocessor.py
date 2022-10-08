@@ -157,6 +157,7 @@ class Preprocessor:
                 try:
                     self.logger.log("Resampling shape: " + filename)
                     shape.resample(target_faces=target_faces_nr)            
+                    
                     # getting shapes data before normalization
                     barycenters_before_normalization.append(shape.get_barycenter())
 
@@ -186,14 +187,16 @@ class Preprocessor:
 
                     original_file_name = shape.file_name
                     shape.file_name = shape.file_name.replace("data", "preprocessed")
-                    shape.save_mesh()
+                    shape.save_mesh(shape.file_name)
 
                     self.db.update_shape_data(shape, original_file_name)
+                    
                 except Exception as e:
                     self.logger.error("Error while resampling and normalizing shapes: " + str(e))
-                    self.logger.error("Skipping shape: " + filename + " Deleting from db...")
-                    self.db.delete_shape(filename)
                     errors += 1
+                
+                # deleting shape from memory
+                del shape
         
         self.logger.warn("Number of errors: " + str(errors))
         

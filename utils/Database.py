@@ -92,8 +92,8 @@ class Database:
             D2 FLOAT[],
             D3 FLOAT[],
             D4 FLOAT[],
-            created_at TIMESTAMP NOT NULL DEFAULT NOW(),
             shape_id INT NOT NULL
+            created_at TIMESTAMP NOT NULL DEFAULT NOW(),
             ); '''
         self.execute_query(sql, 'create')
     
