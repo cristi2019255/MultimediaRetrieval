@@ -14,14 +14,11 @@
 
 
 import psycopg2
-
 from utils.Database import Database
-
 
 def migrate_db_to_cloud(table = "shapes"):
     """_summary_ Migrates the local database to the cloud
     """
-    
     
     cloud = Database()
     if table == "shapes":
@@ -29,10 +26,9 @@ def migrate_db_to_cloud(table = "shapes"):
         table_schema = "(id, file_name, class, faces_count, vertices_count, faces_type, bounding_box_dim_x, bounding_box_dim_y, bounding_box_dim_z, bounding_box_diagonal, features_id)"
     elif table == "features":
         cloud.create_features_table()
-        table_schema = "(shape_id, surface_area, compactness, ratio_bbox_volume, volume, ratio_ch_volume, ratio_ch_area, diameter, eccentricity, A3, D1, D2, D3, D4)"
+        table_schema = "(id, surface_area, compactness, ratio_bbox_volume, volume, ratio_ch_volume, ratio_ch_area, diameter, eccentricity, A3, D1, D2, D3, D4, shape_id)"
     else:
         return
-    
     
     # get local database
     conn = psycopg2.connect(
@@ -47,12 +43,12 @@ def migrate_db_to_cloud(table = "shapes"):
     cur.execute(f"SELECT * FROM {table}")
     rows = cur.fetchall()
     
+    # creating the insert query for the cloud database
     sql = f""" INSERT INTO {table} {table_schema} VALUES """
-    
     for row in rows:
-        s = str(row[:-1]).replace("[", "(").replace("]", ")")
-        sql += f"""{s}, """
-    
+        sql += str(row[:-1]).replace("[", "(").replace("]", ")") + ", "
     sql = sql[:-2] + ";"
     print(sql[:1000])
+    
+    # insert data into cloud database
     cloud.cursor.execute(sql)
