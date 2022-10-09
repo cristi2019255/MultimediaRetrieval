@@ -15,16 +15,13 @@ def main():
 
 
 def preprocess_data():
-    # preparing the database
     # this is a costly operation, so it is recommended to run it only once
-
     preprocessor = Preprocessor(log=True)
     preprocessor.db.prepare_db(limit=None)
     preprocessor.preprocess()
 
 def compute_statistics():
     # this is a costly operation, so it is recommended to run it only once
-    
     preprocessor = Preprocessor(log = True)
     preprocessor.compute_class_distribution()
     preprocessor.compute_statistics(type="before")
@@ -32,6 +29,7 @@ def compute_statistics():
     
     
 def extract_features():
+    # this is a costly operation, so it is recommended to run it only once
     feature_extractor = FeatureExtractor(log=True)
     feature_extractor.extract_features()
 
