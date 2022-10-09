@@ -26,6 +26,7 @@ In order to run the application follow the next 3 simple steps:
 
 1) In order to get the project started first run the following command: `pip install -r requirements.txt`
 2) In order to create the database run `docker-compose up`
+2.1) If you want to use our cloud database with extracted features just change the `.env` file and run next step without running `docker-compose up`
 3) Now you can run `python3 main.py` to start the application
 
 Enjoy!
@@ -49,8 +50,7 @@ Run `docker-compose up` and update the database then run `docker-compose down` t
 For Step 2:
 
     Problems:
-        A lot of shapes from princeton data set have problems with super sampling, for now we just ignore them, however we would probably like to solve this problem and not ignore them
-        Histograms before resampling and after resampling differ because of ignoring shapes when doing resampling
+        Histograms ugly looking for the report, make them more beautiful
 
 For Step 3:
     Test if the features are correctly implemented
