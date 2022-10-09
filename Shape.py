@@ -379,7 +379,13 @@ class Shape:
     def get_tetrahedron_volume(v1,v2,v3,v4 = np.array([0,0,0])):
         return np.dot(v1 - v4, np.cross(v2 - v4, v3 - v4)) / 6
     
-    
+    @staticmethod
+    def compute_volume(vertices, faces):
+        volume = 0
+        for face in faces:
+            [v1,v2,v3] = vertices[face]
+            volume += Shape.get_tetrahedron_volume(v1,v2,v3)
+        return abs(volume)
 
     # ----------------- 5. Feature extraction from shape ---------------------#
     def get_elongation(self):
@@ -435,8 +441,19 @@ class Shape:
         """
         self.ms.generate_convex_hull()
         measures = self.ms.get_geometric_measures()
+        
+        mesh = self.ms.current_mesh()
+        
+        if "mesh_volume" not in measures.keys():
+            volume = Shape.compute_volume(mesh.vertex_matrix(), mesh.face_matrix())
+        else:
+            volume = measures["mesh_volume"]    
+            
+        surface_area = measures["surface_area"]
+        
         self.ms.delete_current_mesh()
-        return [measures["mesh_volume"], measures["surface_area"]]    
+        
+        return [volume, surface_area]    
     
     def get_compactness(self):
         """

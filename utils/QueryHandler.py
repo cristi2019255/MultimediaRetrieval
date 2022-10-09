@@ -59,10 +59,10 @@ class QueryHandler:
                      , max("compactness")       as compactness_max
                      , avg("compactness")       as compactness_avg
                      , stddev("compactness")    as compactness_stddev
-                     , min("bbox_volume")       as bbox_volume_min
-                     , max("bbox_volume")       as bbox_volume_max
-                     , avg("bbox_volume")       as bbox_volume_avg
-                     , stddev("bbox_volume")    as bbox_volume_stddev
+                     , min("volume")       as volume_min
+                     , max("volume")       as volume_max
+                     , avg("volume")       as volume_avg
+                     , stddev("volume")    as volume_stddev
                      , min("diameter")          as diameter_min
                      , max("diameter")          as diameter_max
                      , avg("diameter")          as diameter_avg
@@ -82,7 +82,7 @@ class QueryHandler:
                      , 'Minimum Maximum Normalization' as "normalization_type"
                      , ("surface_area" - "surface_area_min") / ("surface_area_max" - "surface_area_min") as "surface_area_normalized"
                      , ("compactness"  - "compactness_min" ) / ("compactness_max"  - "compactness_min" ) as "compactness_normalized"
-                     , ("bbox_volume"  - "bbox_volume_min" ) / ("bbox_volume_max"  - "bbox_volume_min" ) as "bbox_volume_normalized"
+                     , ("volume"  - "volume_min" ) / ("volume_max"  - "volume_min" ) as "volume_normalized"
                      , ("diameter"     - "diameter_min"    ) / ("diameter_max"     - "diameter_min"    ) as "diameter_normalized"
                      , ("eccentricity" - "eccentricity_min") / ("eccentricity_max" - "eccentricity_min") as "eccentricity_normalized"
 
@@ -98,7 +98,7 @@ class QueryHandler:
                      , 'Standard Score Normalization' as "normalization_type"
                      , ("surface_area" - "surface_area_avg") / "surface_area_stddev" as "surface_area_normalized"
                      , ("compactness"  - "compactness_avg" ) / "compactness_stddev"  as "compactness_normalized"
-                     , ("bbox_volume"  - "bbox_volume_avg" ) / "bbox_volume_stddev"  as "bbox_volume_normalized"
+                     , ("volume"  - "volume_avg" ) / "volume_stddev"  as "volume_normalized"
                      , ("diameter"     - "diameter_avg"    ) / "diameter_stddev"     as "diameter_normalized"
                      , ("eccentricity" - "eccentricity_avg") / "eccentricity_stddev" as "eccentricity_normalized"
 
@@ -114,7 +114,7 @@ class QueryHandler:
                        when 'Euclidean Distance'
                        then sqrt( pow(features."surface_area_normalized" - target."surface_area_normalized", 2)
                                 + pow(features."compactness_normalized"  - target."compactness_normalized" , 2)
-                                + pow(features."bbox_volume_normalized"  - target."bbox_volume_normalized" , 2)
+                                + pow(features."volume_normalized"  - target."volume_normalized" , 2)
                                 + pow(features."diameter_normalized"     - target."diameter_normalized"    , 2)
                                 + pow(features."eccentricity_normalized" - target."eccentricity_normalized", 2)
                             )   
@@ -124,7 +124,7 @@ class QueryHandler:
                             /* Dot Product */
                             ( features."surface_area_normalized" * target."surface_area_normalized"
                             + features."compactness_normalized"  * target."compactness_normalized" 
-                            + features."bbox_volume_normalized"  * target."bbox_volume_normalized" 
+                            + features."volume_normalized"  * target."volume_normalized" 
                             + features."diameter_normalized"     * target."diameter_normalized"    
                             + features."eccentricity_normalized" * target."eccentricity_normalized"
                             )
@@ -133,14 +133,14 @@ class QueryHandler:
                             (
                                 sqrt( features."surface_area_normalized" * features."surface_area_normalized"
                                     + features."compactness_normalized"  * features."compactness_normalized" 
-                                    + features."bbox_volume_normalized"  * features."bbox_volume_normalized" 
+                                    + features."volume_normalized"  * features."volume_normalized" 
                                     + features."diameter_normalized"     * features."diameter_normalized"    
                                     + features."eccentricity_normalized" * features."eccentricity_normalized"
                                 )
                                 *
                                 sqrt( target."surface_area_normalized" * target."surface_area_normalized"
                                     + target."compactness_normalized"  * target."compactness_normalized" 
-                                    + target."bbox_volume_normalized"  * target."bbox_volume_normalized" 
+                                    + target."volume_normalized"  * target."volume_normalized" 
                                     + target."diameter_normalized"     * target."diameter_normalized"    
                                     + target."eccentricity_normalized" * target."eccentricity_normalized"
                                 )

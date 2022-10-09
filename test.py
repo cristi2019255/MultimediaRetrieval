@@ -4,7 +4,6 @@
 from Shape import Shape
 from utils.renderer import render
 
-
 def test_shape_normalization():
     """
     _summary_ test the shape normalization
@@ -55,6 +54,14 @@ def test_super_sampling():
     shape.save_mesh("./test_data/supersampled.ply")
     render([filename, "./test_data/supersampled.ply"])
 
+
+def test_convex_hull():
+    filename = "preprocessed/PRINCETON/train/furniture/m861.ply"
+    shape = Shape(filename, log=True)
+    print(shape.get_convex_hull_measures())
+    
+
+test_convex_hull()    
 #render(["data/PRINCETON/train/furniture/m855.ply"])
 # test_shape_normalization()
 # test_subsampling()

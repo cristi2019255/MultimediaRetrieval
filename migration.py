@@ -46,9 +46,9 @@ def migrate_db_to_cloud(table = "shapes"):
     # creating the insert query for the cloud database
     sql = f""" INSERT INTO {table} {table_schema} VALUES """
     for row in rows:
-        sql += str(row[:-1]).replace("[", "(").replace("]", ")") + ", "
+        sql += "(" + str(row[:-1])[1:-1].replace("[", "'{").replace("]", "}'") + "), "
     sql = sql[:-2] + ";"
-    print(sql[:1000])
+    print(sql[:1500])
     
     # insert data into cloud database
     cloud.cursor.execute(sql)

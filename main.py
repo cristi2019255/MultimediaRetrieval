@@ -10,8 +10,8 @@ from utils.tools import track_progress
 def main():
     #track_progress(preprocess_data)  # uncomment to preprocess data
     #track_progress(compute_statistics)  # uncomment to compute statistics
-    track_progress(extract_features) # uncomment to extract features
-    # track_progress(run_query) # uncomment to run query
+    #track_progress(extract_features) # uncomment to extract features
+    track_progress(run_query) # uncomment to run query
 
 
 def preprocess_data():
@@ -36,7 +36,7 @@ def extract_features():
     feature_extractor.extract_features()
 
 
-def run_query(filename="./preprocessed/LabeledDB_new/Airplane/61.ply"):
+def run_query(filename="preprocessed/PRINCETON/train/furniture/m880.ply"):
     query = QueryHandler(log=True)
     query.fetch_shape(filename)
     similar_shapes_data = query.find_similar_shapes(n = 5, distance_measure = 'Cosine Distance', normalization = 'Standard Score Normalization')
@@ -44,8 +44,8 @@ def run_query(filename="./preprocessed/LabeledDB_new/Airplane/61.ply"):
     search_shape = Shape(filename)
     search_shape.render()
 
-    distances = list(map(similar_shapes_data, lambda x: x[2]))
-    filenames = list(map(similar_shapes_data, lambda x: x[1]))
+    distances = list(map(lambda x: x[2], similar_shapes_data))
+    filenames = list(map(lambda x: x[1], similar_shapes_data))
     
     print('Similar shapes with distances: ' + str(distances))
 
