@@ -61,7 +61,7 @@ def render(filenames=["./LabeledDB_new/Airplane/61.ply"], show_features=True):
         plotter.subplot(0, index)
         plotter.camera.zoom(0.35)
         plotter.show_grid()
-        plotter.add_mesh(mesh, show_edges=True, smooth_shading=True)
+        plotter.add_mesh(mesh, show_edges=True, smooth_shading=True) #, color="white")
         plotter.add_title(filename, font_size=10)
         plotter.add_axes(interactive=True)
         plotter.add_bounding_box()
@@ -75,6 +75,7 @@ def render(filenames=["./LabeledDB_new/Airplane/61.ply"], show_features=True):
 
             plotter.add_text(text=data, font_size=14, position="upper_left", name="text")
 
+    # plotter.save_graphic("img.svg")
     plotter.show()  # show the rendering window
 
 
