@@ -12,10 +12,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import math
 from Shape import Shape
 from utils.Logger import Logger
 from utils.Database import Database
-
+import os
+import numpy as np
+from matplotlib import pyplot as plt
 
 class FeatureExtractor:
     def __init__(self, log=False):
@@ -44,3 +47,44 @@ class FeatureExtractor:
         # closing the db connection
         self.db.close()
     
+    def compute_statistics(self, type="A3", limit = 10):
+        self.logger.log("Computing statistics for " + type + " feature")
+        
+        os.makedirs(f"statistics/features/{type}", exist_ok=True)
+        
+        classes = np.unique(self.db.get_table_data(table='shapes', columns=['class']))
+        
+        for class_name in classes:
+            self.logger.log("Computing statistics for class: " + class_name)
+            
+            sql = f"""SELECT {type} from features join shapes on features.shape_id = shapes.id where shapes.class = '{class_name}' LIMIT {limit}"""
+            self.db.cursor.execute(sql)
+            rows = self.db.cursor.fetchall()
+            rows = [row[0] for row in rows]
+            
+            self._plot_signature(rows, filename = f"statistics/features/{type}/{class_name}", type = type)
+            
+            self.logger.log("Plotted signature for: " + class_name)
+            
+        self.logger.log("Computed statistics for " + type + " feature")
+        
+    def _plot_signature(self, data, filename = "furniture", type = "A3"):
+        upper_bound_x = math.pi if type == "A3" else 1
+        
+        plt.figure(figsize=(10, 10))
+        plt.clf()
+        plt.title(f"Signature for {filename} for feature {type}")
+        plt.xlim(0, upper_bound_x)
+        
+        filename = filename + ".png"
+        for row in data:
+            x = np.linspace(0, upper_bound_x, len(row))
+            plt.plot(x, row)
+            
+        plt.savefig(filename)
+        plt.close()
+        
+    
+    def __del__ (self):
+        # closing the db connection
+        self.db.close()

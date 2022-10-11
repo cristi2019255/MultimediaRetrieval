@@ -11,8 +11,8 @@ def main():
     #track_progress(preprocess_data)  # uncomment to preprocess data
     #track_progress(compute_statistics)  # uncomment to compute statistics
     #track_progress(extract_features) # uncomment to extract features
-    track_progress(run_query) # uncomment to run query
-
+    #track_progress(run_query) # uncomment to run query
+    track_progress(compute_statistics_feature_extraction) # uncomment to compute statistics for feature extraction
 
 def preprocess_data():
     # this is a costly operation, so it is recommended to run it only once
@@ -26,6 +26,14 @@ def compute_statistics():
     preprocessor.compute_class_distribution()
     preprocessor.compute_statistics(type="before")
     preprocessor.compute_statistics(type="after")
+    
+def compute_statistics_feature_extraction():
+    feature_extractor = FeatureExtractor(log=True)
+    feature_extractor.compute_statistics(type="A3", limit = 20)
+    feature_extractor.compute_statistics(type="D1", limit = 20)
+    feature_extractor.compute_statistics(type="D2", limit = 20)
+    feature_extractor.compute_statistics(type="D3", limit = 20)
+    feature_extractor.compute_statistics(type="D4", limit = 20)
     
     
 def extract_features():
