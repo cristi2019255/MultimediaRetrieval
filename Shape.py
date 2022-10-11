@@ -22,8 +22,16 @@ from utils.tools import get_features
 from numba import jit
 
 NR_DESIRED_FACES = 5000
-NR_SAMPLES_FOR_FEATURE_DESCRIPTORS = 500 # APPROVED!
-FEATURE_DESCRIPTORS_DIMENSIONS = 8 # 22? 
+NR_SAMPLES_FOR_FEATURE_DESCRIPTORS_D1 = 1500
+NR_SAMPLES_FOR_FEATURE_DESCRIPTORS_D2 = 500
+NR_SAMPLES_FOR_FEATURE_DESCRIPTORS_D3 = NR_SAMPLES_FOR_FEATURE_DESCRIPTORS_A3 = 500
+NR_SAMPLES_FOR_FEATURE_DESCRIPTORS_D4 = 200
+ 
+FEATURE_DESCRIPTORS_DIMENSIONS_D1 = 21
+FEATURE_DESCRIPTORS_DIMENSIONS_D2 = 23
+FEATURE_DESCRIPTORS_DIMENSIONS_D3 = FEATURE_DESCRIPTORS_DIMENSIONS_A3 = 26
+FEATURE_DESCRIPTORS_DIMENSIONS_D4 = 30
+  
 
 class Shape:
     # ------------------ Class Methods ------------------
@@ -488,7 +496,7 @@ class Shape:
         # returning |lambda_1| / |lambda_3|        
         return abs(eigenvalues[0]) / abs(eigenvalues[2])
        
-    def get_A3(self):
+    def get_A3(self, samples = NR_SAMPLES_FOR_FEATURE_DESCRIPTORS_A3, dimension = FEATURE_DESCRIPTORS_DIMENSIONS_A3):
         """
         _summary_ compute the A3 of the shape
         
@@ -498,20 +506,27 @@ class Shape:
         n = self.vertices.shape[0] # number of vertices
         
         angles = []
-        for _ in range(NR_SAMPLES_FOR_FEATURE_DESCRIPTORS):
-            # getting 3 random vertices
-            [v1,v2,v3] = self.vertices[np.random.choice(n, 3, replace=False)]
-            
-            angles.append(self.get_angle_between_vertices(v1, v2, v3))
         
-        hist, _ = np.histogram(angles, bins=FEATURE_DESCRIPTORS_DIMENSIONS, range=(0, math.pi), density=True)
+        for _ in range(samples):
+            i = np.random.randint(0, n)
+            for _ in range(samples):
+                j = np.random.randint(0, n)
+                if i == j:
+                    continue
+                for _ in range(samples):
+                    k = np.random.randint(0, n)
+                    if k == i or k == j:
+                        continue
+                    angles.append(self.get_angle_between_vertices(self.vertices[i], self.vertices[j], self.vertices[k]))
+                    
+        hist, _ = np.histogram(angles, bins=dimension, range=(0, math.pi), density=True)
         hist = list(hist / np.sum(hist)) # normalizing
         
         self.logger.log("Histogram for A3 feature vector is: " + str(hist))
         
         return hist
     
-    def get_D1(self):
+    def get_D1(self, samples = NR_SAMPLES_FOR_FEATURE_DESCRIPTORS_D1, dimension = FEATURE_DESCRIPTORS_DIMENSIONS_D1):
         """
         _summary_ compute the D1 of the shape
         
@@ -521,20 +536,20 @@ class Shape:
         barycenter = self.get_barycenter()
         distances = []
         
-        for _ in range(NR_SAMPLES_FOR_FEATURE_DESCRIPTORS):
+        for _ in range(samples):
             # getting a random vertex
             v = self.vertices[np.random.choice(n, 1, replace=False)]
             
             distances.append(np.linalg.norm(v - barycenter))
         
-        hist, _ = np.histogram(distances, bins=FEATURE_DESCRIPTORS_DIMENSIONS, range=(0,1), density=True)
+        hist, _ = np.histogram(distances, bins=dimension, range=(0,1), density=True)
         hist = list(hist / np.sum(hist)) # normalizing
         
         self.logger.log(f"Histogram for D1 feature vector is: {hist}")
         
         return hist
     
-    def get_D2(self):
+    def get_D2(self, samples = NR_SAMPLES_FOR_FEATURE_DESCRIPTORS_D2, dimension = FEATURE_DESCRIPTORS_DIMENSIONS_D2):
         """
         _summary_ compute the D2 of the shape
         
@@ -543,21 +558,23 @@ class Shape:
         n = self.vertices.shape[0] # number of vertices
         
         distances = []
+           
+        for _ in range(samples):
+            i = np.random.randint(0, n)
+            for _ in range(samples):
+                j = np.random.randint(0, n)
+                if i == j:
+                    continue
+                distances.append(np.linalg.norm(self.vertices[i] - self.vertices[j]))
         
-        for _ in range(NR_SAMPLES_FOR_FEATURE_DESCRIPTORS):
-            # getting 2 random vertices
-            v1, v2 = self.vertices[np.random.choice(n, 2, replace=False)]
-            
-            distances.append(np.linalg.norm(v1 - v2))
-        
-        hist, _ = np.histogram(distances, bins=FEATURE_DESCRIPTORS_DIMENSIONS, range=(0,1), density=True)
+        hist, _ = np.histogram(distances, bins=dimension, range=(0,1), density=True)
         hist = list(hist / np.sum(hist)) # normalizing
         
         self.logger.log(f"Histogram for D2 feature vector is: {hist}")
         
         return hist
     
-    def get_D3(self):
+    def get_D3(self, samples = NR_SAMPLES_FOR_FEATURE_DESCRIPTORS_D3, dimension = FEATURE_DESCRIPTORS_DIMENSIONS_D3):
         """
         _summary_ compute the D3 of the shape
         
@@ -567,20 +584,26 @@ class Shape:
         n = self.vertices.shape[0] # number of vertices
         
         areas = []
-        for _ in range(NR_SAMPLES_FOR_FEATURE_DESCRIPTORS):
-            # getting 3 random vertices
-            [v1,v2,v3] = self.vertices[np.random.choice(n, 3, replace=False)]
-            
-            areas.append(math.sqrt(self.get_triangle_area([v1, v2, v3])))
+        for _ in range(samples):
+            i = np.random.randint(0, n)
+            for _ in range(samples):
+                j = np.random.randint(0, n)
+                if i == j:
+                    continue
+                for _ in range(samples):
+                    k = np.random.randint(0, n)
+                    if k == i or k == j:
+                        continue
+                    areas.append(math.sqrt(self.get_triangle_area([self.vertices[i], self.vertices[j], self.vertices[k]])))
         
-        hist, _ = np.histogram(areas, bins=FEATURE_DESCRIPTORS_DIMENSIONS, range=(0,1), density=True)
+        hist, _ = np.histogram(areas, bins=dimension, range=(0,1), density=True)
         hist = list(hist / np.sum(hist)) # normalizing
         
         self.logger.log(f"Histogram for D3 feature vector is: {hist}")
         
         return hist
     
-    def get_D4(self):
+    def get_D4(self, samples = NR_SAMPLES_FOR_FEATURE_DESCRIPTORS_D4, dimension = FEATURE_DESCRIPTORS_DIMENSIONS_D4):
         """
         _summary_ compute the D4 of the shape
         cube root of volume of tetrahedron formed by 4 random vertices
@@ -588,18 +611,27 @@ class Shape:
         n = self.vertices.shape[0] # number of vertices
         
         volumes = []
-        for _ in range(NR_SAMPLES_FOR_FEATURE_DESCRIPTORS):
-            # getting 4 random vertices
-            [v1,v2,v3, v4] = self.vertices[np.random.choice(n, 4, replace=False)]
-            
-            volumes.append(math.sqrt(abs(self.get_tetrahedron_volume(v1, v2, v3, v4))))
         
-        hist, _ = np.histogram(volumes, bins=FEATURE_DESCRIPTORS_DIMENSIONS, range=(0,1), density=True)
+        for _ in range(samples):
+            i = np.random.randint(0, n)
+            for _ in range(samples):
+                j = np.random.randint(0, n)
+                if i == j:
+                    continue
+                for _ in range(samples):
+                    k = np.random.randint(0, n)
+                    if k == i or k == j:
+                        continue
+                    for _ in range(samples):
+                        l = np.random.randint(0, n)
+                        if l == i or l == j or l == k:
+                            continue
+                        volumes.append(math.sqrt(abs(self.get_tetrahedron_volume(self.vertices[i], self.vertices[j], self.vertices[k], self.vertices[l]))))
+        
+        hist, _ = np.histogram(volumes, bins=dimension, range=(0,1), density=True)
         hist = list(hist / np.sum(hist)) # normalizing
         
         self.logger.log(f"Histogram for D4 feature vector is: {hist}")
         
         return hist
-    
-    # TODO: check this and add the other features
     
