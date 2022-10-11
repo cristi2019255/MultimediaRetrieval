@@ -22,8 +22,8 @@ from utils.tools import get_features
 from numba import jit
 
 NR_DESIRED_FACES = 5000
-NR_SAMPLES_FOR_FEATURE_DESCRIPTORS = 500
-FEATURE_DESCRIPTORS_DIMENSIONS = 8
+NR_SAMPLES_FOR_FEATURE_DESCRIPTORS = 500 # APPROVED!
+FEATURE_DESCRIPTORS_DIMENSIONS = 8 # 22? 
 
 class Shape:
     # ------------------ Class Methods ------------------
@@ -527,7 +527,7 @@ class Shape:
             
             distances.append(np.linalg.norm(v - barycenter))
         
-        hist, _ = np.histogram(distances, bins=FEATURE_DESCRIPTORS_DIMENSIONS, density=True)
+        hist, _ = np.histogram(distances, bins=FEATURE_DESCRIPTORS_DIMENSIONS, range=(0,1), density=True)
         hist = list(hist / np.sum(hist)) # normalizing
         
         self.logger.log(f"Histogram for D1 feature vector is: {hist}")
@@ -550,7 +550,7 @@ class Shape:
             
             distances.append(np.linalg.norm(v1 - v2))
         
-        hist, _ = np.histogram(distances, bins=FEATURE_DESCRIPTORS_DIMENSIONS, density=True)
+        hist, _ = np.histogram(distances, bins=FEATURE_DESCRIPTORS_DIMENSIONS, range=(0,1), density=True)
         hist = list(hist / np.sum(hist)) # normalizing
         
         self.logger.log(f"Histogram for D2 feature vector is: {hist}")
@@ -573,7 +573,7 @@ class Shape:
             
             areas.append(math.sqrt(self.get_triangle_area([v1, v2, v3])))
         
-        hist, _ = np.histogram(areas, bins=FEATURE_DESCRIPTORS_DIMENSIONS, density=True)
+        hist, _ = np.histogram(areas, bins=FEATURE_DESCRIPTORS_DIMENSIONS, range=(0,1), density=True)
         hist = list(hist / np.sum(hist)) # normalizing
         
         self.logger.log(f"Histogram for D3 feature vector is: {hist}")
@@ -594,7 +594,7 @@ class Shape:
             
             volumes.append(math.sqrt(abs(self.get_tetrahedron_volume(v1, v2, v3, v4))))
         
-        hist, _ = np.histogram(volumes, bins=FEATURE_DESCRIPTORS_DIMENSIONS, density=True)
+        hist, _ = np.histogram(volumes, bins=FEATURE_DESCRIPTORS_DIMENSIONS, range=(0,1), density=True)
         hist = list(hist / np.sum(hist)) # normalizing
         
         self.logger.log(f"Histogram for D4 feature vector is: {hist}")
