@@ -508,16 +508,8 @@ class Shape:
         angles = []
         
         for _ in range(samples):
-            i = np.random.randint(0, n)
-            for _ in range(samples):
-                j = np.random.randint(0, n)
-                if i == j:
-                    continue
-                for _ in range(samples):
-                    k = np.random.randint(0, n)
-                    if k == i or k == j:
-                        continue
-                    angles.append(self.get_angle_between_vertices(self.vertices[i], self.vertices[j], self.vertices[k]))
+            v1, v2, v3 = self.vertices[np.random.choice(n, 3, replace=False)]
+            angles.append(self.get_angle_between_vertices(v1, v2, v3))
                     
         hist, _ = np.histogram(angles, bins=dimension, range=(0, math.pi), density=True)
         hist = list(hist / np.sum(hist)) # normalizing
@@ -560,12 +552,8 @@ class Shape:
         distances = []
            
         for _ in range(samples):
-            i = np.random.randint(0, n)
-            for _ in range(samples):
-                j = np.random.randint(0, n)
-                if i == j:
-                    continue
-                distances.append(np.linalg.norm(self.vertices[i] - self.vertices[j]))
+            v1, v2 = self.vertices[np.random.choice(n, 2, replace=False)]
+            distances.append(np.linalg.norm(v1 - v2))
         
         hist, _ = np.histogram(distances, bins=dimension, range=(0,1), density=True)
         hist = list(hist / np.sum(hist)) # normalizing
@@ -585,16 +573,8 @@ class Shape:
         
         areas = []
         for _ in range(samples):
-            i = np.random.randint(0, n)
-            for _ in range(samples):
-                j = np.random.randint(0, n)
-                if i == j:
-                    continue
-                for _ in range(samples):
-                    k = np.random.randint(0, n)
-                    if k == i or k == j:
-                        continue
-                    areas.append(math.sqrt(self.get_triangle_area([self.vertices[i], self.vertices[j], self.vertices[k]])))
+            v1, v2, v3 = self.vertices[np.random.choice(n, 3, replace=False)]
+            areas.append(math.sqrt(self.get_triangle_area([v1, v2, v3])))
         
         hist, _ = np.histogram(areas, bins=dimension, range=(0,1), density=True)
         hist = list(hist / np.sum(hist)) # normalizing
@@ -613,20 +593,8 @@ class Shape:
         volumes = []
         
         for _ in range(samples):
-            i = np.random.randint(0, n)
-            for _ in range(samples):
-                j = np.random.randint(0, n)
-                if i == j:
-                    continue
-                for _ in range(samples):
-                    k = np.random.randint(0, n)
-                    if k == i or k == j:
-                        continue
-                    for _ in range(samples):
-                        l = np.random.randint(0, n)
-                        if l == i or l == j or l == k:
-                            continue
-                        volumes.append(math.sqrt(abs(self.get_tetrahedron_volume(self.vertices[i], self.vertices[j], self.vertices[k], self.vertices[l]))))
+            v1, v2, v3, v4 = self.vertices[np.random.choice(n, 4, replace=False)]
+            volumes.append(math.sqrt(abs(self.get_tetrahedron_volume(v1, v2, v3, v4))))
         
         hist, _ = np.histogram(volumes, bins=dimension, range=(0,1), density=True)
         hist = list(hist / np.sum(hist)) # normalizing
