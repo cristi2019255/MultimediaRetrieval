@@ -23,9 +23,9 @@ from numba import jit
 
 NR_DESIRED_FACES = 5000
 NR_SAMPLES_FOR_FEATURE_DESCRIPTORS_D1 = 1500
-NR_SAMPLES_FOR_FEATURE_DESCRIPTORS_D2 = 500
-NR_SAMPLES_FOR_FEATURE_DESCRIPTORS_D3 = NR_SAMPLES_FOR_FEATURE_DESCRIPTORS_A3 = 500
-NR_SAMPLES_FOR_FEATURE_DESCRIPTORS_D4 = 200
+NR_SAMPLES_FOR_FEATURE_DESCRIPTORS_D2 = 1000
+NR_SAMPLES_FOR_FEATURE_DESCRIPTORS_D3 = NR_SAMPLES_FOR_FEATURE_DESCRIPTORS_A3 = 700
+NR_SAMPLES_FOR_FEATURE_DESCRIPTORS_D4 = 500
  
 FEATURE_DESCRIPTORS_DIMENSIONS_D1 = 21
 FEATURE_DESCRIPTORS_DIMENSIONS_D2 = 23
@@ -555,7 +555,7 @@ class Shape:
             v1, v2 = self.vertices[np.random.choice(n, 2, replace=False)]
             distances.append(np.linalg.norm(v1 - v2))
         
-        hist, _ = np.histogram(distances, bins=dimension, range=(0,1), density=True)
+        hist, _ = np.histogram(distances, bins=dimension, range=(0, math.sqrt(3)), density=True)
         hist = list(hist / np.sum(hist)) # normalizing
         
         self.logger.log(f"Histogram for D2 feature vector is: {hist}")
@@ -576,7 +576,7 @@ class Shape:
             v1, v2, v3 = self.vertices[np.random.choice(n, 3, replace=False)]
             areas.append(math.sqrt(self.get_triangle_area([v1, v2, v3])))
         
-        hist, _ = np.histogram(areas, bins=dimension, range=(0,1), density=True)
+        hist, _ = np.histogram(areas, bins=dimension, range=(0, math.sqrt(3) / 2 ), density=True)
         hist = list(hist / np.sum(hist)) # normalizing
         
         self.logger.log(f"Histogram for D3 feature vector is: {hist}")
@@ -596,7 +596,7 @@ class Shape:
             v1, v2, v3, v4 = self.vertices[np.random.choice(n, 4, replace=False)]
             volumes.append(math.sqrt(abs(self.get_tetrahedron_volume(v1, v2, v3, v4))))
         
-        hist, _ = np.histogram(volumes, bins=dimension, range=(0,1), density=True)
+        hist, _ = np.histogram(volumes, bins=dimension, range=(0,1/3), density=True)
         hist = list(hist / np.sum(hist)) # normalizing
         
         self.logger.log(f"Histogram for D4 feature vector is: {hist}")

@@ -187,6 +187,30 @@ class Database:
         self.execute_query(sql, "insert")
         self.execute_query(get_feature_id_sql, "select")
         return self.cursor.fetchone()[0]
+
+    def insert_feature_data(self, shape:Shape, shape_id:int, feature:str):
+        FEATURES = {
+                    'A3': shape.get_A3, 
+                    'D1': shape.get_D1, 
+                    'D2': shape.get_D2, 
+                    'D3': shape.get_D3, 
+                    'D4': shape.get_D4, 
+                    'surface_area': shape.get_surface_area, 
+                    'compactness': shape.get_compactness, 
+                    'volume': shape.get_volume, 
+                    'diameter': shape.get_diameter,  
+                    'eccentricity': shape.get_eccentricity,
+                    }
+        if feature not in FEATURES.keys():
+            self.logger.error(f"Feature {feature} not found")
+            return
+            
+        feature_data = FEATURES[feature]()
+        feature_data = "'" + str(feature_data).replace('[', '{').replace(']', '}') + "'"
+        
+        sql = f'''UPDATE features SET {feature} = {feature_data} WHERE shape_id = {shape_id};'''
+        self.execute_query(sql, "update")
+    
     
     def delete_shape(self, shape_file_name):
         sql = f'''DELETE FROM shapes WHERE file_name = '{shape_file_name}';'''

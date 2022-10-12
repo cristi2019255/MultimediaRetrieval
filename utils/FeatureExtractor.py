@@ -47,6 +47,21 @@ class FeatureExtractor:
         # closing the db connection
         self.db.close()
     
+    def extract_feature(self, feature = 'A3'):
+        # this function is used to extract a single feature
+        # it assumes that the features table is already created and populated
+        shapes = self.db.get_table_data(table='shapes', columns=['id', 'file_name'])
+        for shape_data in shapes:
+            [id, file_name] = shape_data
+            sql = f"""SELECT id from features where shape_id = {id}"""
+            self.db.cursor.execute(sql)
+            row = self.db.cursor.fetchone()
+            if row:
+                self.logger.log(f"Extracting feature {feature} for shape with id: {id}")
+                shape = Shape(file_name=file_name)
+                self.db.insert_feature_data(shape, shape_id = id, feature = feature)
+                self.logger.log(f"Extracted feature {feature} for shape with id: {id}")
+    
     def compute_statistics(self, type="A3", limit = 10):
         self.logger.log("Computing statistics for " + type + " feature")
         
@@ -69,7 +84,15 @@ class FeatureExtractor:
         self.logger.log("Computed statistics for " + type + " feature")
         
     def _plot_signature(self, data, filename = "furniture", type = "A3"):
-        upper_bound_x = math.pi if type == "A3" else 1
+        upper_bounds = {
+            "A3": math.pi,
+            "D1": 1,
+            "D2": math.sqrt(3),
+            "D3": math.sqrt(3) / 2,
+            "D4": 1 / 3
+        }
+
+        upper_bound_x = upper_bounds[type]
         
         plt.figure(figsize=(10, 10))
         plt.clf()
