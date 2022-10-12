@@ -90,8 +90,8 @@ class FeatureExtractor:
             "A3": math.pi,
             "D1": 1,
             "D2": math.sqrt(3),
-            "D3": math.sqrt(3) / 2,
-            "D4": 1 / 3
+            "D3": (math.sqrt(3) / 2) ** (1/2),
+            "D4": (1 / 3) ** (1/3)
         }
 
         upper_bound_x = upper_bounds[type]

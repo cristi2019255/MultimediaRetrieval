@@ -576,7 +576,7 @@ class Shape:
             v1, v2, v3 = self.vertices[np.random.choice(n, 3, replace=False)]
             areas.append(math.sqrt(self.get_triangle_area([v1, v2, v3])))
         
-        hist, _ = np.histogram(areas, bins=dimension, range=(0, math.sqrt(3) / 2 ), density=True)
+        hist, _ = np.histogram(areas, bins=dimension, range=(0, (math.sqrt(3) / 2) ** (1/2) ), density=True)
         hist = list(hist / np.sum(hist)) # normalizing
         
         self.logger.log(f"Histogram for D3 feature vector is: {hist}")
@@ -594,9 +594,9 @@ class Shape:
         
         for _ in range(samples):
             v1, v2, v3, v4 = self.vertices[np.random.choice(n, 4, replace=False)]
-            volumes.append(math.sqrt(abs(self.get_tetrahedron_volume(v1, v2, v3, v4))))
+            volumes.append(abs(self.get_tetrahedron_volume(v1, v2, v3, v4)) ** (1/3))
         
-        hist, _ = np.histogram(volumes, bins=dimension, range=(0,1/3), density=True)
+        hist, _ = np.histogram(volumes, bins=dimension, range=(0,(1/3) ** (1/3)), density=True)
         hist = list(hist / np.sum(hist)) # normalizing
         
         self.logger.log(f"Histogram for D4 feature vector is: {hist}")
