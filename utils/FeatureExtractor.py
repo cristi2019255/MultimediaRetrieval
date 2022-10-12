@@ -77,8 +77,10 @@ class FeatureExtractor:
             rows = self.db.cursor.fetchall()
             rows = [row[0] for row in rows]
             
-            self._plot_signature(rows, filename = f"statistics/features/{type}/{class_name}", type = type)
-            
+            if type in ['A3', 'D1', 'D2', 'D3', 'D4']:
+                self._plot_signature(rows, filename = f"statistics/features/{type}/{class_name}", type = type)
+            else:
+                self._plot_distribution(rows, filename = f"statistics/features/{type}/{class_name}", type = type)
             self.logger.log("Plotted signature for: " + class_name)
             
         self.logger.log("Computed statistics for " + type + " feature")
@@ -107,7 +109,15 @@ class FeatureExtractor:
         plt.savefig(filename)
         plt.close()
         
-    
+    def _plot_distribution(self, data, filename = "furniture", type = "volume"):
+        plt.figure(figsize=(10, 10))
+        plt.clf()
+        plt.title(f"Distribution for {filename} for feature {type}")
+        plt.hist(data, bins=20)
+        filename = filename + ".png"
+        plt.savefig(filename)
+        plt.close()
+        
     def __del__ (self):
         # closing the db connection
         self.db.close()

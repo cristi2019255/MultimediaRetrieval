@@ -6,13 +6,12 @@ from Shape import Shape
 from utils.renderer import render
 from utils.tools import track_progress
 
-
 def main():
     #track_progress(preprocess_data)  # uncomment to preprocess data
     #track_progress(compute_statistics)  # uncomment to compute statistics
     #track_progress(extract_features) # uncomment to extract features
     #track_progress(run_query) # uncomment to run query
-    track_progress(extract_feature) # uncomment to extract feature
+    #track_progress(extract_feature) # uncomment to extract feature
     track_progress(compute_statistics_feature_extraction) # uncomment to compute statistics for feature extraction
     
 def preprocess_data():
@@ -32,17 +31,17 @@ def compute_statistics_feature_extraction():
     feature_extractor = FeatureExtractor(log=True)
     #feature_extractor.compute_statistics(type="A3", limit = 20)
     #feature_extractor.compute_statistics(type="D1", limit = 20)
-    feature_extractor.compute_statistics(type="D2", limit = 20)
+    #feature_extractor.compute_statistics(type="D2", limit = 20)
     #feature_extractor.compute_statistics(type="D3", limit = 20)
-    #feature_extractor.compute_statistics(type="D4", limit = 20)
-    
+    feature_extractor.compute_statistics(type="D4", limit = 20)
+    #feature_extractor.compute_statistics(type="volume", limit = 20)
     
 def extract_features():
     # this is a costly operation, so it is recommended to run it only once
     feature_extractor = FeatureExtractor(log=True)
     feature_extractor.extract_features()
 
-def extract_feature(feature = 'D2'):
+def extract_feature(feature = 'D4'):
     feature_extractor = FeatureExtractor(log=True)
     feature_extractor.extract_feature(feature = feature)
 
