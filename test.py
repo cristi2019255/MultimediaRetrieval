@@ -2,7 +2,8 @@
 # Like, checking the libraries API, etc.
 
 from Shape import Shape
-from utils.renderer import render
+from utils.renderer import render, render_shape_with_features
+from pymeshlab import MeshSet
 
 def test_shape_normalization():
     """
@@ -61,7 +62,42 @@ def test_convex_hull():
     print(shape.get_convex_hull_measures())
     
 
-test_convex_hull()    
+def create_sphere(file_name = './test_data/sphere.ply', radius = 1):
+    ms = MeshSet()
+    ms.create_sphere(radius = radius, subdiv = 4)
+    ms.save_current_mesh(file_name)    
+    render([file_name])
+
+def create_torus(file_name = './test_data/torus.ply'):
+    ms = MeshSet()
+    ms.create_torus(hradius = 1, vradius = 0.5, hsubdiv = 24, vsubdiv = 24)
+    ms.save_current_mesh(file_name)
+    render([file_name])
+
+def create_cylinder(file_name = './test_data/cylinder.ply'):
+    ms = MeshSet()
+    ms.create_cone(r0 = 1, r1 = 1, h = 5, subdiv = 50)
+    ms.save_current_mesh(file_name)
+    render([file_name])
+
+def test_shape_features(file_name = "./test_data/sphere.ply"):
+    shape = Shape(file_name=file_name, log=True)
+    volume = shape.get_volume()
+    diameter = shape.get_diameter()
+    surface_area = shape.get_surface_area()
+    compactness = shape.get_compactness()
+    eccentricity = shape.get_eccentricity()
+    bbox_volume = shape.get_bbox_volume()
+    chull_volume, chull_surface_area = shape.get_convex_hull_measures()
+    render_shape_with_features(file_name, volume = volume, diameter = diameter, 
+                               surface_area = surface_area, compactness = compactness, 
+                               eccentricity = eccentricity, bbox_volume = bbox_volume, 
+                               chull_volume = chull_volume, chull_surface_area = chull_surface_area)
+
+
+
+
+#test_convex_hull()    
 #render(["data/PRINCETON/train/furniture/m855.ply"])
 # test_shape_normalization()
 # test_subsampling()
@@ -69,3 +105,7 @@ test_convex_hull()
 
 #test_render_report()
 #test_super_sampling()
+#create_sphere()
+#create_torus()
+#create_cylinder()
+#test_shape_features("./test_data/cylinder.ply")

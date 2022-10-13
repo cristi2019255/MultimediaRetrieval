@@ -33,6 +33,51 @@ pyvista.global_theme.font.family = 'times'
 pyvista.global_theme.load_theme(my_theme)
 
 
+def render_shape_with_features(filename, volume = None, surface_area = None, compactness = None, eccentricity = None, bbox_volume= None, diameter= None, chull_volume= None, chull_surface_area= None):
+    rows = 2
+    row_weights = [3, 2]
+    # setting up the plotter
+    plotter = pyvista.Plotter(shape=(rows, 1), row_weights=row_weights)  # instantiate the plotter
+
+    # adding the meshes to the plotter
+
+    if ('.off' in filename):
+        filename = off2ply(filename)
+
+    mesh = pyvista.read(filename)
+    plotter.subplot(0, 0)
+    plotter.camera.zoom(0.35)
+    plotter.show_grid()
+    plotter.add_mesh(mesh, show_edges=True, smooth_shading=True) #, color="white")
+    plotter.add_title(filename, font_size=10)
+    plotter.add_axes(interactive=True)
+    plotter.add_bounding_box()
+
+    
+    plotter.subplot(1, 0)
+    
+    [n_faces, n_vertices, faces_type, axis_aligned_bounding_box] = get_features(filename)
+    axis_aligned_bounding_box = list(map(lambda x: round(x, 2), axis_aligned_bounding_box))
+    
+    data = f"""\n\
+            Volume: {volume} \n\
+            Surface Area: {surface_area} \n\
+            Compactness: {compactness} \n\
+            Eccentricity: {eccentricity} \n\
+            Bounding box volume: {bbox_volume} \n\
+            Diameter: {diameter} \n\
+            Convex hull volume: {chull_volume} \n\
+            Convex hull surface area: {chull_surface_area} \n\
+            ---------------------------------------- \n\
+            Number of faces: {n_faces} \n\
+            Number of vertices: {n_vertices} \n\
+            Axis aligned bounding box: {axis_aligned_bounding_box}\n    
+            """
+
+    plotter.add_text(text=data, font_size=14, position="upper_left", name="text")
+    plotter.show()  # show the rendering window
+
+
 def render(filenames=["./LabeledDB_new/Airplane/61.ply"], show_features=True):
     """_summary_ Rendering shapes and optionally their features from a list of files
 
