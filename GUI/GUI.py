@@ -1,0 +1,178 @@
+# Copyright 2022 Cristian Grosu
+# 
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+# 
+#     http://www.apache.org/licenses/LICENSE-2.0
+# 
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+TITLE = "Multimedia Retrieval System"
+WINDOW_SIZE = (900, 500)
+BACKGROUND_COLOR = "#252526"
+BUTTON_PRIMARY_COLOR = "#007acc"
+TEXT_COLOR = "#ffffff"
+RIGHTS_MESSAGE = "© 2022 Cristian Grosu. All rights reserved."
+RIGHTS_MESSAGE_2 = "Made by Cristian Grosu, Marc Fluiter and Dmitar Angelov for Utrecht University in 2022"
+
+
+import PySimpleGUI as sg
+import os
+from utils.QueryHandler import QueryHandler
+from utils.renderer import render
+
+class GUI:
+    def __init__(self):
+        self.window = self.build()
+
+    def _get_layout(self):        
+        data_dir = os.getcwd() + "/data"
+        file_list_column = [
+            [
+                sg.Text(size= (15, 1), text = "3D Shapes Folder", background_color=BACKGROUND_COLOR),
+                sg.In(size=(22, 1), enable_events=True, key="-FOLDER-"),
+                sg.FolderBrowse(button_text="Browse folder", button_color=(TEXT_COLOR, BUTTON_PRIMARY_COLOR), initial_folder=data_dir, size = (22,1)),
+            ],
+            [
+               sg.Text("Choose a shape from list: ", background_color=BACKGROUND_COLOR),
+            ],
+            [   
+               sg.Text(size=(50, 1), key="-TOUT-", background_color=BACKGROUND_COLOR),            
+            ],
+            [
+                sg.Listbox(
+                    values=[], enable_events=True, size=(60, 20), key="-FILE LIST-"
+                )
+            ],
+            [
+                sg.Button("Retrieve similar shapes", button_color=(TEXT_COLOR, BUTTON_PRIMARY_COLOR), size = (59,1), key = "-RETRIEVE BTN-"),
+            ]
+        ]
+        
+        retrieval_column = [
+            [
+                sg.Text("How many shapes would you want to retrieve?", background_color=BACKGROUND_COLOR),
+                sg.Combo(
+                    values=[i for i in range(1, 6)],
+                    default_value=1,
+                    size=(5, 1),
+                    key="-RETRIEVAL NUMBER-",
+                ),
+            ],
+            [sg.Text("Choose a shape from list: ", background_color=BACKGROUND_COLOR)],
+            [
+               sg.Column([
+                    [sg.Text("Shapes list: ", background_color=BACKGROUND_COLOR)],
+                    [sg.Listbox(values=[], enable_events=True, size=(25, 20), horizontal_scroll=True, no_scrollbar=True, key="-RETRIEVAL LIST-")],   
+                ], background_color=BACKGROUND_COLOR),
+                sg.VSeparator(),
+                sg.Column([
+                    [sg.Text("Distance from original: ", background_color=BACKGROUND_COLOR)],
+                    [sg.Listbox(values=[], enable_events=True, size=(25, 20), no_scrollbar = True, key="-DISTANCE LIST-")],   
+                ], background_color=BACKGROUND_COLOR),    
+            ]
+        ]
+        
+        
+        layout = [
+            [
+                sg.Column(file_list_column, background_color=BACKGROUND_COLOR),
+                sg.VSeparator(),
+                sg.Column(retrieval_column, background_color=BACKGROUND_COLOR),
+            ],
+            [
+                sg.Text( RIGHTS_MESSAGE, background_color=BACKGROUND_COLOR),
+            ],
+            [
+                sg.Text( RIGHTS_MESSAGE_2, background_color=BACKGROUND_COLOR),
+            ]
+        ]
+
+        return layout
+    
+    def build(self):
+        layout = self._get_layout()
+        window = sg.Window(TITLE, layout, size=WINDOW_SIZE, background_color=BACKGROUND_COLOR)
+        return window
+        
+    def start(self):
+        while True:
+            event, values = self.window.read()
+            
+            if event == "Exit" or event == sg.WIN_CLOSED:
+                break
+        
+            self.handle_event(event, values)
+        
+        self.stop()
+        
+    def handle_event(self, event, values):        
+        # Folder name was filled in, make a list of files in the folder
+        EVENTS = {
+            "-FOLDER-": self.handle_select_folder_event,
+            "-FILE LIST-": self.handle_file_list_event,
+            "-RETRIEVE BTN-": self.handle_retrieve_event,
+            "-RETRIEVAL LIST-": self.handle_retrieval_list_event,
+        }
+        
+        EVENTS[event](event, values)
+
+    def handle_select_folder_event(self, event, values):
+        folder = values["-FOLDER-"]
+        try:
+            # Get list of files in folder
+            file_list = os.listdir(folder)
+        except:
+            file_list = []
+
+        fnames = [ f for f in file_list
+                   if os.path.isfile(os.path.join(folder, f)) and f.lower().endswith((".ply"))
+                ]
+        self.window["-FILE LIST-"].update(fnames)
+    
+    def handle_file_list_event(self, event, values):
+            try:
+                filename = os.path.join(
+                    values["-FOLDER-"], values["-FILE LIST-"][0]
+                )
+                self.window["-TOUT-"].update(filename)
+                render([filename])
+            except:
+                pass
+        
+    def handle_retrieve_event(self, event, values):
+        try:
+            filename = os.path.join(values["-FOLDER-"], values["-FILE LIST-"][0])
+            shapes_nr = values["-RETRIEVAL NUMBER-"]
+            
+            query = QueryHandler(log=True)
+            
+            filename = filename.replace(os.getcwd(), "").replace("data", "preprocessed")[1:]
+                        
+            similar_shapes_data = query.find_similar_shapes_v1(filename=filename, target_nr_shape_to_return = shapes_nr)
+            
+            distances = list(map(lambda x: x[1], similar_shapes_data))
+            filenames = list(map(lambda x: x[0], similar_shapes_data))
+            
+            self.window["-RETRIEVAL LIST-"].update(filenames)
+            self.window["-DISTANCE LIST-"].update(distances)
+            
+            render(filenames)
+        except:
+            pass
+        
+    def handle_retrieval_list_event(self, event, values):
+        try: 
+            render(values["-RETRIEVAL LIST-"])
+        except:
+            pass
+        
+    def stop(self):
+        self.window.close()
+
+#GUI().start()
