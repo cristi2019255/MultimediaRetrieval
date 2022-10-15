@@ -88,7 +88,7 @@ class FeatureExtractor:
     def _plot_signature(self, data, filename = "furniture", type = "A3"):
         upper_bounds = {
             "A3": math.pi,
-            "D1": 1,
+            "D1": math.sqrt(3),
             "D2": math.sqrt(3),
             "D3": (math.sqrt(3) / 2) ** (1/2),
             "D4": (1 / 3) ** (1/3)

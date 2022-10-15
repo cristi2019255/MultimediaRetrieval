@@ -512,7 +512,9 @@ class Shape:
             angles.append(self.get_angle_between_vertices(v1, v2, v3))
                     
         hist, _ = np.histogram(angles, bins=dimension, range=(0, math.pi), density=True)
-        hist = list(hist / np.sum(hist)) # normalizing
+        s = np.sum(hist)
+        s = 1 if s == 0 else s # avoid division by 0
+        hist = list(hist / s) # normalizing
         
         self.logger.log("Histogram for A3 feature vector is: " + str(hist))
         
@@ -534,8 +536,17 @@ class Shape:
             
             distances.append(np.linalg.norm(v - barycenter))
         
-        hist, _ = np.histogram(distances, bins=dimension, range=(0,1), density=True)
-        hist = list(hist / np.sum(hist)) # normalizing
+        hist, _ = np.histogram(distances, bins=dimension, range=(0,math.sqrt(3)), density=True)
+        
+        # in case the histogram has some errors when computing as for instance distance not in range       
+        if math.isnan(hist[0]):
+            self.logger.log("Histogram for D1 feature vector is corrupted: " + str(hist) + " returning [0, ... , 0, 1]")
+            return [0] * (dimension - 1) + [1]
+        
+        
+        s = np.sum(hist)
+        s = 1 if s == 0 else s # avoiding division by 0
+        hist = list(hist / s) # normalizing
         
         self.logger.log(f"Histogram for D1 feature vector is: {hist}")
         
@@ -556,7 +567,9 @@ class Shape:
             distances.append(np.linalg.norm(v1 - v2))
         
         hist, _ = np.histogram(distances, bins=dimension, range=(0, math.sqrt(3)), density=True)
-        hist = list(hist / np.sum(hist)) # normalizing
+        s = np.sum(hist)
+        s = 1 if s == 0 else s # avoiding division by 0
+        hist = list(hist / s) # normalizing
         
         self.logger.log(f"Histogram for D2 feature vector is: {hist}")
         
@@ -577,7 +590,9 @@ class Shape:
             areas.append(math.sqrt(self.get_triangle_area([v1, v2, v3])))
         
         hist, _ = np.histogram(areas, bins=dimension, range=(0, (math.sqrt(3) / 2) ** (1/2) ), density=True)
-        hist = list(hist / np.sum(hist)) # normalizing
+        s = np.sum(hist)
+        s = 1 if s == 0 else s # avoiding division by 0
+        hist = list(hist / s) # normalizing
         
         self.logger.log(f"Histogram for D3 feature vector is: {hist}")
         
@@ -597,7 +612,9 @@ class Shape:
             volumes.append(abs(self.get_tetrahedron_volume(v1, v2, v3, v4)) ** (1/3))
         
         hist, _ = np.histogram(volumes, bins=dimension, range=(0,(1/3) ** (1/3)), density=True)
-        hist = list(hist / np.sum(hist)) # normalizing
+        s = np.sum(hist)
+        s = 1 if s == 0 else s # avoiding division by 0
+        hist = list(hist / s) # normalizing
         
         self.logger.log(f"Histogram for D4 feature vector is: {hist}")
         

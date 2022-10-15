@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import math
 from utils.Database import Database
 from utils.Logger import Logger
 from Shape import Shape
@@ -219,16 +218,7 @@ class QueryHandler:
                 [A3, D1, D2, D3, D4] = row[9:-2]
                 current_scalars = row[1:9]
                 
-                # TODO: Delete this check, we have some nan in D1 for some reasons
-                if math.isnan(D1[0]):
-                    continue
-                
                 scalars_distance = self._cosine_distance(target_scalars, current_scalars)
-                
-                
-                #self.logger.debug(f""" D1: {D1}""")
-                #self.logger.debug(f""" Current shape id: {current_shape_id}""")
-                #self.logger.debug(f""" Current feature id: {row[0]}""")
                 
                 distances_A3.append(self._earth_moving_distance(target_A3, A3))
                 distances_D1.append(self._earth_moving_distance(target_D1, D1))

@@ -4,6 +4,9 @@
 from Shape import Shape
 from utils.renderer import render, render_shape_with_features
 from pymeshlab import MeshSet
+import matplotlib.pyplot as plt
+import math
+import numpy as np
 
 def test_shape_normalization():
     """
@@ -80,7 +83,7 @@ def create_cylinder(file_name = './test_data/cylinder.ply'):
     ms.save_current_mesh(file_name)
     render([file_name])
 
-def test_shape_features(file_name = "./test_data/sphere.ply"):
+def test_shape_features(file_name = "./test_data/torus.ply"):
     shape = Shape(file_name=file_name, log=True)
     volume = shape.get_volume()
     diameter = shape.get_diameter()
@@ -96,7 +99,32 @@ def test_shape_features(file_name = "./test_data/sphere.ply"):
 
 
 
-
+def show_shape_hist_features(file_name = "./test_data/sphere.ply", type = "D4"):
+    shape = Shape(file_name=file_name, log=True)
+    dict = {"A3": shape.get_A3, "D1": shape.get_D1, "D2": shape.get_D2, "D3": shape.get_D3, "D4": shape.get_D4}
+    upper_bounds = {
+            "A3": math.pi,
+            "D1": math.sqrt(3),
+            "D2": math.sqrt(3),
+            "D3": (math.sqrt(3) / 2) ** (1/2),
+            "D4": (1 / 3) ** (1/3)
+    }
+    
+    upper_bound_x = upper_bounds[type]
+    data = dict[type]()
+    plt.figure(figsize=(10, 10))
+    plt.clf()
+    plt.title(f"Signature for {file_name} for feature {type}")
+        
+    file_name = file_name.replace(".ply", ".png")
+    x = np.linspace(0, upper_bound_x, len(data))
+    plt.plot(x, data)
+    plt.xlim(0, upper_bound_x)
+    
+    #plt.savefig(file_name)
+    plt.show()
+    plt.close()
+    
 #test_convex_hull()    
 #render(["data/PRINCETON/train/furniture/m855.ply"])
 # test_shape_normalization()
@@ -108,4 +136,5 @@ def test_shape_features(file_name = "./test_data/sphere.ply"):
 #create_sphere()
 #create_torus()
 #create_cylinder()
-#test_shape_features("./test_data/cylinder.ply")
+#test_shape_features("./test_data/torus.ply")
+#show_shape_hist_features()
