@@ -63,7 +63,7 @@ def run_query(filename="preprocessed/PRINCETON/train/furniture/m880.ply"):
 def run_query_v1(filename="preprocessed/LabeledDB_new/train/Airplane/61.ply"):
     query = QueryHandler(log=True)
 
-    similar_shapes_data = query.find_similar_shapes_v1(filename=filename, target_nr_shape_to_return = 5)
+    similar_shapes_data = query.find_similar_shapes_v1(filename=filename, target_nr_shape_to_return = 5, normalization_type="minmax")
 
     search_shape = Shape(filename)
     search_shape.render()

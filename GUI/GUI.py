@@ -13,7 +13,7 @@
 # limitations under the License.
 
 TITLE = "Multimedia Retrieval System"
-WINDOW_SIZE = (900, 500)
+WINDOW_SIZE = (1000, 600)
 BACKGROUND_COLOR = "#252526"
 BUTTON_PRIMARY_COLOR = "#007acc"
 TEXT_COLOR = "#ffffff"
@@ -24,19 +24,23 @@ RIGHTS_MESSAGE_2 = "Made by Cristian Grosu, Marc Fluiter and Dmitar Angelov for 
 import PySimpleGUI as sg
 import os
 from utils.QueryHandler import QueryHandler
-from utils.renderer import render
+from utils.renderer import render, render_shape_features
 
 class GUI:
     def __init__(self):
         self.window = self.build()
+        self.query = QueryHandler(log=True)
 
     def _get_layout(self):        
-        data_dir = os.getcwd() + "/data"
+        data_dir = os.path.join(os.getcwd(), "data", "PRINCETON", "train", "animal")
         file_list_column = [
             [
                 sg.Text(size= (15, 1), text = "3D Shapes Folder", background_color=BACKGROUND_COLOR),
                 sg.In(size=(22, 1), enable_events=True, key="-FOLDER-"),
                 sg.FolderBrowse(button_text="Browse folder", button_color=(TEXT_COLOR, BUTTON_PRIMARY_COLOR), initial_folder=data_dir, size = (22,1)),
+            ],
+            [
+                sg.Checkbox("Show shape features", key="-SHOW FEATURES-", background_color=BACKGROUND_COLOR, text_color=TEXT_COLOR, default=False),
             ],
             [
                sg.Text("Choose a shape from list: ", background_color=BACKGROUND_COLOR),
@@ -59,10 +63,44 @@ class GUI:
                 sg.Text("How many shapes would you want to retrieve?", background_color=BACKGROUND_COLOR),
                 sg.Combo(
                     values=[i for i in range(1, 6)],
-                    default_value=1,
+                    default_value=3,
                     size=(5, 1),
                     key="-RETRIEVAL NUMBER-",
                 ),
+            ],
+            [
+                sg.Text("Which distance function to use for scalars? ", background_color=BACKGROUND_COLOR, size = (40,1)),
+                sg.Combo(
+                    values=["L1", "L2", "Linf", "Cosine"],
+                    default_value="Cosine",
+                    size = (20, 1),
+                    key = "-SCALAR DISTANCE-",
+                )
+            ],
+            [
+                sg.Text("Which distance function to use for histograms? ", background_color=BACKGROUND_COLOR, size = (40,1)),
+                sg.Combo(
+                    values=["Earth Mover Distance", "Other"],
+                    default_value="Earth Mover Distance",
+                    size = (20, 1),
+                    key = "-HISTOGRAMS DISTANCE-",
+                )
+            ],
+            [
+                sg.Text("Which type of normalization to use for scalars? ", background_color=BACKGROUND_COLOR, size = (40,1)),
+                sg.Combo(
+                    values=["minmax", "z-score"],
+                    default_value="minmax",
+                    size = (20, 1),
+                    key = "-NORMALIZATION TYPE-",
+                )
+            ],
+            [
+                sg.Text("Indicate how to weight the scalars and histograms: ", background_color=BACKGROUND_COLOR, size = (40,1)),
+                sg.In(size=(22, 1), enable_events=False, key="-WEIGHTS-", default_text="0.5,0.5"),
+            ],
+            [
+                sg.Checkbox("Show retrieved shapes features", key="-SHOW FEATURES RESPONSE-", background_color=BACKGROUND_COLOR, text_color=TEXT_COLOR, default=False),
             ],
             [sg.Text("Choose a shape from list: ", background_color=BACKGROUND_COLOR)],
             [
@@ -141,7 +179,12 @@ class GUI:
                     values["-FOLDER-"], values["-FILE LIST-"][0]
                 )
                 self.window["-TOUT-"].update(filename)
-                render([filename])
+                if values["-SHOW FEATURES-"]:
+                    filename = filename.replace(os.path.abspath("."), "").replace("data", "preprocessed")[1:] # remove the first slash
+                    features = self.query.fetch_features(filename)
+                    render_shape_features(filename, features)
+                else:  
+                    render([filename])
             except:
                 pass
         
@@ -149,12 +192,20 @@ class GUI:
         try:
             filename = os.path.join(values["-FOLDER-"], values["-FILE LIST-"][0])
             shapes_nr = values["-RETRIEVAL NUMBER-"]
+            distance_scalar = values["-SCALAR DISTANCE-"]
+            distance_histograms = values["-HISTOGRAMS DISTANCE-"]
+            normalization_type = values["-NORMALIZATION TYPE-"]
+            weights = values["-WEIGHTS-"]
             
-            query = QueryHandler(log=True)
-            
-            filename = filename.replace(os.getcwd(), "").replace("data", "preprocessed")[1:]
+            filename = filename.replace(os.getcwd(), "").replace("data", "preprocessed")[1:] # remove first slash
                         
-            similar_shapes_data = query.find_similar_shapes_v1(filename=filename, target_nr_shape_to_return = shapes_nr)
+            similar_shapes_data = self.query.find_similar_shapes_v1(filename = filename,
+                                                               target_nr_shape_to_return=shapes_nr,
+                                                               distance_measure_scalars=distance_scalar,
+                                                               distance_measure_histograms=distance_histograms,
+                                                               normalization_type=normalization_type,
+                                                               weights=weights
+                                                               )
             
             distances = list(map(lambda x: x[1], similar_shapes_data))
             filenames = list(map(lambda x: x[0], similar_shapes_data))
@@ -162,13 +213,18 @@ class GUI:
             self.window["-RETRIEVAL LIST-"].update(filenames)
             self.window["-DISTANCE LIST-"].update(distances)
             
+            
             render(filenames)
         except:
             pass
         
     def handle_retrieval_list_event(self, event, values):
         try: 
-            render(values["-RETRIEVAL LIST-"])
+            if values["-SHOW FEATURES RESPONSE-"]:
+                features = self.query.fetch_features(values["-RETRIEVAL LIST-"][0])
+                render_shape_features(values["-RETRIEVAL LIST-"][0], features)
+            else:
+                render(values["-RETRIEVAL LIST-"])
         except:
             pass
         

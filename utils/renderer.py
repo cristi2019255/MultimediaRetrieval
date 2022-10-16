@@ -33,6 +33,14 @@ pyvista.global_theme.font.family = 'times'
 pyvista.global_theme.load_theme(my_theme)
 
 
+def render_shape_features(filename, features = None):
+    if features is not None:
+        [surface_area, compactness, r_bbox, volume, r_ch_volume, r_ch_area, diameter, eccentricity] = features[1:9]
+        bbox_volume = volume / r_bbox
+        chull_volume = volume / r_ch_volume
+        chull_surface_area = surface_area / r_ch_area
+        render_shape_with_features(filename, volume, surface_area, compactness, eccentricity, bbox_volume, diameter, chull_volume, chull_surface_area)
+
 def render_shape_with_features(filename, volume = None, surface_area = None, compactness = None, eccentricity = None, bbox_volume= None, diameter= None, chull_volume= None, chull_surface_area= None):
     rows = 2
     row_weights = [3, 2]
