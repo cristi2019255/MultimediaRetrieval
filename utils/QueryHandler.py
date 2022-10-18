@@ -321,12 +321,14 @@ class QueryHandler:
     def _kullback_leibler_divergence(A = None, B = None):
         """Kullback-Leibler Divergence"""
         assert(len(A) == len(B))
-        A = np.array(A)
-        B = np.array(B)
         # TODO: don't know how to avoid divisions by zero
-        sumAB = np.sum(np.where(A != 0, A * np.log(A / B), 0))
-        sumBA = np.sum(np.where(B != 0, B * np.log(B / A), 0))
-        return sumAB + sumBA
+        # Relative entropy is defined so only if for all x, B(x)=0 implies A(x)=0 (absolute continuity).
+        sum = 0
+        for i in range(len(A)):
+            if B[i] != 0 and A[i] != 0:
+                sum += (A[i] - B[i])* np.log(A[i] / B[i])
+                    
+        return sum
     
     @staticmethod
     def _cosine_distance(x = None, y = None, w = None):

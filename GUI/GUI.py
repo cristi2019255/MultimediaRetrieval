@@ -349,14 +349,20 @@ class GUI:
                                                                scalar_weights=scalar_weights
                                                                )
             
-            distances = list(map(lambda x: x[1], similar_shapes_data))
+            distances = list(map(lambda x: round(x[1], 10), similar_shapes_data))
             filenames = list(map(lambda x: x[0], similar_shapes_data))
             # ---------------------------------------------------------------------
             
             # ------------------ Updating the GUI with the retrieved shapes ------------------
-            self.window["-RETRIEVAL LIST-"].update(filenames)
-            self.window["-DISTANCE LIST-"].update(distances)
-            render(filenames)
+            if filenames != []:
+                self.window["-RETRIEVAL LIST-"].update(filenames)
+                self.window["-DISTANCE LIST-"].update(distances)
+                if len(filenames) > 5:
+                    filenames = filenames[:5]
+                render(filenames)
+            else:
+                self.window["-RETRIEVAL LIST-"].update(["No similar shapes found"])
+                self.window["-DISTANCE LIST-"].update(["No similar shapes found"])
             # --------------------------------------------------------------------------------
         except Exception as e:
             self.logger.error(e)
@@ -373,5 +379,3 @@ class GUI:
         
     def stop(self):
         self.window.close()
-
-#GUI().start()
