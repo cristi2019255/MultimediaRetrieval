@@ -253,7 +253,7 @@ class Database:
             self.logger.error(e)
             return None
 
-    def get_average(self, by="vertices_count", table = "sahpes"):
+    def get_average(self, by="vertices_count", table = "shapes"):
         try:
             data = self.get_column_data(by, table)
             avg = np.mean(data)

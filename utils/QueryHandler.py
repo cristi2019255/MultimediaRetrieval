@@ -153,11 +153,13 @@ class QueryHandler:
         # ------------- Normalizing the weight vectors --------------------------------
         if len(global_weights) == 2:
             global_weights = [global_weights[0]] + [global_weights[1]] * 5
+        
         assert(len(global_weights) == 6)
         
         global_weights_sum = sum(global_weights)
         global_weights = [w / global_weights_sum for w in global_weights]
-        assert(sum(global_weights) == 1)
+        assert(sum(global_weights) <= 1)
+        assert(sum(global_weights) >= 0.9999999)
         
         if (len(scalar_weights) == 1):
             scalar_weights = [scalar_weights[0]] * 8
@@ -165,7 +167,8 @@ class QueryHandler:
     
         scalar_weights_sum = sum(scalar_weights)
         scalar_weights = [w / scalar_weights_sum for w in scalar_weights]
-        assert(sum(scalar_weights) == 1)
+        assert(sum(scalar_weights) <= 1)
+        assert(sum(scalar_weights) >= 0.9999999)
          
         # ---------------------------------------------------------------------------------    
             
