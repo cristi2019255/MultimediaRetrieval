@@ -620,3 +620,36 @@ class Shape:
         
         return hist
     
+    def compute_features(self):
+        A3 = self.get_A3()
+        D1 = self.get_D1()
+        D2 = self.get_D2()
+        D3 = self.get_D3()
+        D4 = self.get_D4()
+        
+        surface_area = self.get_surface_area()
+        compactness = self.get_compactness()
+        bbox_volume = self.get_bbox_volume()
+        volume = self.get_volume()
+        diameter = self.get_diameter()
+        eccentricity = self.get_eccentricity()
+        volume_convex_hull, surface_area_convex_hull = self.get_convex_hull_measures()
+        ratio_volume = volume / volume_convex_hull
+        ratio_surface_area = surface_area / surface_area_convex_hull
+        ratio_bbox_volume = volume / bbox_volume 
+        
+        return [
+            surface_area, 
+            compactness,
+            ratio_bbox_volume,
+            volume,
+            ratio_volume,
+            ratio_surface_area,
+            diameter,
+            eccentricity, 
+            A3,
+            D1,
+            D2,
+            D3,
+            D4
+        ]

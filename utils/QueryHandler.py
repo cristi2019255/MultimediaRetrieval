@@ -88,24 +88,30 @@ class QueryHandler:
         
         return normalized_features
     
-    def fetch_shape(self, filename: str):
+    def fetch_shape_features(self, filename: str):
         self.logger.log(f"Running query on {filename}")
         
         self.shape = Shape(filename, log = self.logger.active)
 
-        self.logger.log(f"Shape {filename} has {self.shape.get_features()} features")
-        
         # Fetch shape id
         self.db.execute_query(f"select \"id\" from \"shapes\" where \"file_name\" = '{self.shape.file_name}'", "select")
         
         shape_ids = self.db.cursor.fetchone()
-        if shape_ids == [] or shape_ids == None:
-            raise Exception(f"No shape found in database with file name '{self.shape.file_name}'!")
-        self.shape_id = shape_ids[0]
-
-        self.logger.log(f"Shape {filename} has shape id: {self.shape_id}")
         
-        return self.shape_id
+        if shape_ids == [] or shape_ids == None:
+            self.logger.log(f"Shape {filename} not found in database. Computing features... This may take a while.")
+            shape = Shape(filename)
+            shape.normalize()
+            return shape.compute_features()
+            
+        self.shape_id = shape_ids[0]
+        self.logger.log(f"Shape {filename} has shape id: {self.shape_id}")
+        # getting the features of the target shape
+        sql = f""" SELECT * FROM features WHERE shape_id = {self.shape_id} """
+        self.db.execute_query(sql, "select")
+        features = self.db.cursor.fetchone()
+                    
+        return features
     
     def fetch_features(self, filename: str):
         shape_id = self.fetch_shape(filename)
@@ -116,8 +122,14 @@ class QueryHandler:
     
     def find_similar_shapes(self, filename,
                             target_nr_shape_to_return = None, 
+                            threshold_based_retrieval = False,
+                            threshold = 0.001,
                             distance_measure_scalars = 'L2', 
-                            distance_measure_histograms = 'Earth Mover Distance', 
+                            distance_measure_histogram_A3 = 'Earth Mover', 
+                            distance_measure_histogram_D1 = 'Earth Mover', 
+                            distance_measure_histogram_D2 = 'Earth Mover', 
+                            distance_measure_histogram_D3 = 'Earth Mover',
+                            distance_measure_histogram_D4 = 'Earth Mover',                           
                             normalization_type = 'minmax',
                             global_weights = [0.5, 0.5],
                             scalar_weights = [1]
@@ -141,12 +153,12 @@ class QueryHandler:
         }
         
         histograms_distances = {
-            "Earth Mover Distance": self._earth_moving_distance,
-            "other": self._earth_moving_distance,
+            "Earth Mover": self._earth_moving_distance,
+            "Kulback-Leibler": self._kullback_leibler_divergence,
         }
         
         scalars_distance_measure = scalars_distances[distance_measure_scalars]
-        histograms_distance_measure = histograms_distances[distance_measure_histograms]
+        histograms_distance_measures = [histograms_distances[d] for d in [distance_measure_histogram_A3, distance_measure_histogram_D1, distance_measure_histogram_D2, distance_measure_histogram_D3, distance_measure_histogram_D4]]
         # ------------------------------------------------------------------------------
         
         
@@ -159,7 +171,7 @@ class QueryHandler:
         global_weights_sum = sum(global_weights)
         global_weights = [w / global_weights_sum for w in global_weights]
         assert(sum(global_weights) <= 1)
-        assert(sum(global_weights) >= 0.9999999)
+        assert(sum(global_weights) >= 1 - 1e-6)
         
         if (len(scalar_weights) == 1):
             scalar_weights = [scalar_weights[0]] * 8
@@ -168,19 +180,14 @@ class QueryHandler:
         scalar_weights_sum = sum(scalar_weights)
         scalar_weights = [w / scalar_weights_sum for w in scalar_weights]
         assert(sum(scalar_weights) <= 1)
-        assert(sum(scalar_weights) >= 0.9999999)
+        assert(sum(scalar_weights) >= 1 - 1e-6)
          
         # ---------------------------------------------------------------------------------    
             
         
         # ---------------------- Fetching the shape from the database ---------------------    
         try:
-            shape_id = self.fetch_shape(filename=filename)
-            
-            # getting the features of the target shape
-            sql = f""" SELECT * FROM features WHERE shape_id = {shape_id} """
-            self.db.execute_query(sql, "select")
-            features = self.db.cursor.fetchone()
+            features = self.fetch_shape_features(filename=filename)
             
             [target_A3, 
              target_D1, 
@@ -211,11 +218,11 @@ class QueryHandler:
                 
                 scalars_distance = scalars_distance_measure(target_scalars, current_scalars, scalar_weights)
                 
-                distances_A3.append(histograms_distance_measure(target_A3, A3))
-                distances_D1.append(histograms_distance_measure(target_D1, D1))
-                distances_D2.append(histograms_distance_measure(target_D2, D2))
-                distances_D3.append(histograms_distance_measure(target_D3, D3))
-                distances_D4.append(histograms_distance_measure(target_D4, D4))
+                distances_A3.append(histograms_distance_measures[0](target_A3, A3))
+                distances_D1.append(histograms_distance_measures[1](target_D1, D1))
+                distances_D2.append(histograms_distance_measures[2](target_D2, D2))
+                distances_D3.append(histograms_distance_measures[3](target_D3, D3))
+                distances_D4.append(histograms_distance_measures[4](target_D4, D4))
                 distances_scalars.append(scalars_distance)
                 shape_ids.append(current_shape_id)
                 
@@ -235,7 +242,10 @@ class QueryHandler:
             
             distances.sort(key=lambda x: x[1])
             
-            distances = distances[:target_nr_shape_to_return]
+            if threshold_based_retrieval:
+                distances = [d for d in distances if d[1] <= threshold]
+            else:
+                distances = distances[:target_nr_shape_to_return]
             
             result = []
             for (shape_id, distance) in distances:
@@ -246,7 +256,7 @@ class QueryHandler:
             
             return result        
         except Exception as e:
-            raise Exception("Shape not found in database.")
+            raise Exception("Error in the fetching similar shapes: " + str(e))
         
         
         
@@ -257,6 +267,17 @@ class QueryHandler:
         u_values = v_values = np.arange(len(A))
         return wasserstein_distance(u_values = u_values, v_values = v_values, u_weights = A, v_weights = B)
     
+    
+    @staticmethod
+    def _kullback_leibler_divergence(A = None, B = None):
+        """Kullback-Leibler Divergence"""
+        assert(len(A) == len(B))
+        A = np.array(A)
+        B = np.array(B)
+        # TODO: don't know how to avoid divisions by zero
+        sumAB = np.sum(np.where(A != 0, A * np.log(A / B), 0))
+        sumBA = np.sum(np.where(B != 0, B * np.log(B / A), 0))
+        return sumAB + sumBA
     
     @staticmethod
     def _cosine_distance(x = None, y = None, w = None):
@@ -271,7 +292,6 @@ class QueryHandler:
             """Lp Distance: default is Euclidean Distance"""
             return np.sum((np.array(w) * np.abs(np.array(x) - np.array(y)))**p)**(1/p)
         return _lp_distance
-    
     
 def dot(x,y,w):
         assert(len(y) == len(x))

@@ -23,6 +23,7 @@ RIGHTS_MESSAGE_2 = "Made by Cristian Grosu, Marc Fluiter and Dmitar Angelov for 
 
 import PySimpleGUI as sg
 import os
+from utils.Logger import Logger
 from utils.QueryHandler import QueryHandler
 from utils.renderer import render, render_shape_features
 
@@ -30,9 +31,13 @@ class GUI:
     def __init__(self):
         self.window = self.build()
         self.query = QueryHandler(log=True)
+        self.logger = Logger()
 
     def _get_layout(self):        
         data_dir = os.path.join(os.getcwd(), "data", "PRINCETON", "train", "animal")
+        histogram_distances = ["Earth Mover", "Kulback-Leibler"]
+        scalar_distances = ["Cosine", "L1", "L2", "Linf"]
+        
         file_list_column = [
             [
                 sg.Text(size= (15, 1), text = "3D Shapes Folder", background_color=BACKGROUND_COLOR),
@@ -46,18 +51,18 @@ class GUI:
                sg.Text("Choose a shape from list: ", background_color=BACKGROUND_COLOR),
             ],
             [   
-               sg.Text(size=(50, 1), key="-TOUT-", background_color=BACKGROUND_COLOR),            
+               sg.Text(key="-TOUT-", background_color=BACKGROUND_COLOR, size=(70, 1)),            
             ],
             [
                 sg.Listbox(
-                    values=[], enable_events=True, size=(70, 20), key="-FILE LIST-"
+                    values=[], enable_events=True, size=(70, 30), key="-FILE LIST-"
                 )
             ],
             [
                 sg.Button("Retrieve similar shapes", button_color=(TEXT_COLOR, BUTTON_PRIMARY_COLOR), size = (69,1), key = "-RETRIEVE BTN-"),
             ],
             [
-                sg.Text("", size=(10,5), background_color=BACKGROUND_COLOR)    
+                sg.Text("", size=(10,1), background_color=BACKGROUND_COLOR)    
             ],
             [
                 sg.Text( RIGHTS_MESSAGE, background_color=BACKGROUND_COLOR),
@@ -71,28 +76,69 @@ class GUI:
             [
                 sg.Text("How many shapes would you want to retrieve?", background_color=BACKGROUND_COLOR, size=(60,1)),
                 sg.Combo(
-                    values=[i for i in range(1, 6)],
+                    values=[i for i in range(1, 6)] + ["threshold based retrieval"],
                     default_value=3,
                     size=(20, 1),
                     key="-RETRIEVAL NUMBER-",
+                    enable_events=True,
                 ),
+            ],
+            [
+              sg.Text("Indicate the distance threshold", background_color=BACKGROUND_COLOR, size=(60,1), visible=False, key="-THRESHOLD TEXT-"),
+              sg.In(key="-THRESHOLD-", visible=False, size=(20,1), default_text="0.0001"),
             ],
             [
                 sg.Text("Which distance function to use for scalars? ", background_color=BACKGROUND_COLOR, size = (60,1)),
                 sg.Combo(
-                    values=["L1", "L2", "Linf", "Cosine"],
-                    default_value="Cosine",
+                    values=scalar_distances,
+                    default_value=scalar_distances[0],
                     size = (20, 1),
                     key = "-SCALAR DISTANCE-",
                 )
             ],
             [
-                sg.Text("Which distance function to use for histograms? ", background_color=BACKGROUND_COLOR, size = (60,1)),
+                sg.Text("Which distance function to use for A3 histograms? ", background_color=BACKGROUND_COLOR, size = (60,1)),
                 sg.Combo(
-                    values=["Earth Mover Distance", "Other"],
-                    default_value="Earth Mover Distance",
+                    values=histogram_distances,
+                    default_value=histogram_distances[0],
                     size = (20, 1),
-                    key = "-HISTOGRAMS DISTANCE-",
+                    key = "-HISTOGRAM A3 DISTANCE-",
+                )
+            ],
+            [
+                sg.Text("Which distance function to use for D1 histograms? ", background_color=BACKGROUND_COLOR, size = (60,1)),
+                sg.Combo(
+                    values=histogram_distances,
+                    default_value=histogram_distances[0],
+                    size = (20, 1),
+                    key = "-HISTOGRAM D1 DISTANCE-",
+                )
+            ],
+            [
+                sg.Text("Which distance function to use for D2 histograms? ", background_color=BACKGROUND_COLOR, size = (60,1)),
+                sg.Combo(
+                    values=histogram_distances,
+                    default_value=histogram_distances[0],
+                    size = (20, 1),
+                    key = "-HISTOGRAM D2 DISTANCE-",
+                )
+            ],
+            [
+                sg.Text("Which distance function to use for D3 histograms? ", background_color=BACKGROUND_COLOR, size = (60,1)),
+                sg.Combo(
+                    values=histogram_distances,
+                    default_value=histogram_distances[0],
+                    size = (20, 1),
+                    key = "-HISTOGRAM D3 DISTANCE-",
+                )
+            ],
+            [
+                sg.Text("Which distance function to use for D4 histograms? ", background_color=BACKGROUND_COLOR, size = (60,1)),
+                sg.Combo(
+                    values=histogram_distances,
+                    default_value=histogram_distances[0],
+                    size = (20, 1),
+                    key = "-HISTOGRAM D4 DISTANCE-",
                 )
             ],
             [
@@ -131,12 +177,12 @@ class GUI:
             [
                sg.Column([
                     [sg.Text("Shapes list: ", background_color=BACKGROUND_COLOR)],
-                    [sg.Listbox(values=[], enable_events=True, size=(50, 20), horizontal_scroll=True, no_scrollbar=True, key="-RETRIEVAL LIST-")],   
+                    [sg.Listbox(values=[], enable_events=True, size=(50, 10), horizontal_scroll=True, key="-RETRIEVAL LIST-")],   
                 ], background_color=BACKGROUND_COLOR),
                 sg.VSeparator(),
                 sg.Column([
                     [sg.Text("Distance from original: ", background_color=BACKGROUND_COLOR)],
-                    [sg.Listbox(values=[], enable_events=True, size=(25, 20), no_scrollbar = True, key="-DISTANCE LIST-")],   
+                    [sg.Listbox(values=[], enable_events=True, size=(25, 10), key="-DISTANCE LIST-")],   
                 ], background_color=BACKGROUND_COLOR),    
             ]
         ]
@@ -175,6 +221,7 @@ class GUI:
             "-FILE LIST-": self.handle_file_list_event,
             "-RETRIEVE BTN-": self.handle_retrieve_event,
             "-RETRIEVAL LIST-": self.handle_retrieval_list_event,
+            "-RETRIEVAL NUMBER-": self.handle_retrieval_number_event,
         }
         
         EVENTS[event](event, values)
@@ -204,20 +251,43 @@ class GUI:
                     render_shape_features(filename, features)
                 else:  
                     render([filename])
-            except:
-                pass
+            except Exception as e:
+                self.logger.error("Error while loading the shape" + str(e))
+    
+    def handle_retrieval_number_event(self, event, values):
+        retrieval = values["-RETRIEVAL NUMBER-"]        
+        if retrieval == "threshold based retrieval":
+            self.window["-THRESHOLD TEXT-"].update(visible=True)
+            self.window["-THRESHOLD-"].update(visible=True)
+        else:
+            self.window["-THRESHOLD TEXT-"].update(visible=False)
+            self.window["-THRESHOLD-"].update(visible=False)
+        
         
     def handle_retrieve_event(self, event, values):
         try:
+            # ------------------ Getting the data from the GUI ------------------
             filename = os.path.join(values["-FOLDER-"], values["-FILE LIST-"][0])
             shapes_nr = values["-RETRIEVAL NUMBER-"]
             distance_scalar = values["-SCALAR DISTANCE-"]
-            distance_histograms = values["-HISTOGRAMS DISTANCE-"]
+            distance_histogram_A3 = values["-HISTOGRAM A3 DISTANCE-"]
+            distance_histogram_D1 = values["-HISTOGRAM D1 DISTANCE-"]
+            distance_histogram_D2 = values["-HISTOGRAM D2 DISTANCE-"]
+            distance_histogram_D3 = values["-HISTOGRAM D3 DISTANCE-"]
+            distance_histogram_D4 = values["-HISTOGRAM D4 DISTANCE-"]
             normalization_type = values["-NORMALIZATION TYPE-"]
             global_weights = values["-GLOBAL WEIGHTS-"].split(",")
             scalar_weights = values["-SCALAR WEIGHTS-"].split(",")
+            # ---------------------------------------------------------------------
             
             
+            # ------------------ Validation of the data from the GUI ------------------
+            threshold_based_retrieval = False
+            threshold = 0
+            if shapes_nr == "threshold based retrieval":
+                threshold = float(values["-THRESHOLD-"])
+                threshold_based_retrieval = True
+                
             if len(global_weights) != 6 and len(global_weights) != 2:
                 self.window["-ERROR GLOBAL WEIGHTS-"].update("Global weights should be a list of either 2 or 6 elements")
                 return
@@ -228,6 +298,9 @@ class GUI:
                 self.window["-ERROR GLOBAL WEIGHTS-"].update("Global weights should be float numbers")
                 return 
             
+            self.window["-ERROR GLOBAL WEIGHTS-"].update("")            
+            self.window.refresh()
+            
             if  len(scalar_weights) != 8 and len(scalar_weights) != 1:
                 self.window["-ERROR SCALAR WEIGHTS-"].update("Scalar weights should be a list of either 1 or 8 elements")
                 return 
@@ -237,16 +310,31 @@ class GUI:
             except Exception:
                 self.window["-ERROR SCALAR WEIGHTS-"].update("Scalar weights should be float numbers")
                 return 
-            
             self.window["-ERROR SCALAR WEIGHTS-"].update("")
-            self.window["-ERROR GLOBAL WEIGHTS-"].update("")            
+            self.window.refresh()
+            
+            # ---------------------------------------------------------------------
+            
+            # ------------------ Updating the GUI if the data is valid ------------------
             
             filename = filename.replace(os.getcwd(), "").replace("data", "preprocessed")[1:] # remove first slash
-                                    
-            similar_shapes_data = self.query.find_similar_shapes_v1(filename = filename,
+            
+            self.window["-RETRIEVAL LIST-"].update(["Loading..."])
+            self.window["-DISTANCE LIST-"].update(["Loading..."])
+            self.window.refresh()
+            # ----------------------------------------------------------------------------------------------------
+            
+            # ------------------ Retrieving the shapes ------------------
+            similar_shapes_data = self.query.find_similar_shapes(filename = filename,
                                                                target_nr_shape_to_return=shapes_nr,
+                                                               threshold_based_retrieval=threshold_based_retrieval,
+                                                               threshold=threshold,
                                                                distance_measure_scalars=distance_scalar,
-                                                               distance_measure_histograms=distance_histograms,
+                                                               distance_measure_histogram_A3=distance_histogram_A3,
+                                                               distance_measure_histogram_D1=distance_histogram_D1,
+                                                               distance_measure_histogram_D2=distance_histogram_D2,
+                                                               distance_measure_histogram_D3=distance_histogram_D3,
+                                                               distance_measure_histogram_D4=distance_histogram_D4,
                                                                normalization_type=normalization_type,
                                                                global_weights=global_weights,
                                                                scalar_weights=scalar_weights
@@ -254,14 +342,15 @@ class GUI:
             
             distances = list(map(lambda x: x[1], similar_shapes_data))
             filenames = list(map(lambda x: x[0], similar_shapes_data))
+            # ---------------------------------------------------------------------
             
+            # ------------------ Updating the GUI with the retrieved shapes ------------------
             self.window["-RETRIEVAL LIST-"].update(filenames)
             self.window["-DISTANCE LIST-"].update(distances)
-            
-            
             render(filenames)
-        except:
-            pass
+            # --------------------------------------------------------------------------------
+        except Exception as e:
+            self.logger.error(e)
         
     def handle_retrieval_list_event(self, event, values):
         try: 
@@ -270,8 +359,8 @@ class GUI:
                 render_shape_features(values["-RETRIEVAL LIST-"][0], features)
             else:
                 render(values["-RETRIEVAL LIST-"])
-        except:
-            pass
+        except Exception as e:
+            self.logger.error("Error while loading the shape" + str(e))
         
     def stop(self):
         self.window.close()
