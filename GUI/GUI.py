@@ -36,7 +36,7 @@ class GUI:
     def _get_layout(self):        
         data_dir = os.path.join(os.getcwd(), "data", "PRINCETON", "train", "animal")
         histogram_distances = ["Earth Mover", "Kulback-Leibler"]
-        scalar_distances = ["Cosine", "L1", "L2", "Linf"]
+        scalar_distances = ["Cosine", "L1", "L2", "Linf", "Mahalanobis"]
         
         file_list_column = [
             [
@@ -77,7 +77,7 @@ class GUI:
                 sg.Text("How many shapes would you want to retrieve?", background_color=BACKGROUND_COLOR, size=(60,1)),
                 sg.Combo(
                     values=[i for i in range(1, 6)] + ["threshold based retrieval"],
-                    default_value=3,
+                    default_value=4,
                     size=(20, 1),
                     key="-RETRIEVAL NUMBER-",
                     enable_events=True,
@@ -94,6 +94,7 @@ class GUI:
                     default_value=scalar_distances[0],
                     size = (20, 1),
                     key = "-SCALAR DISTANCE-",
+                    enable_events=True,
                 )
             ],
             [
@@ -142,7 +143,7 @@ class GUI:
                 )
             ],
             [
-                sg.Text("Which type of normalization to use for scalars? ", background_color=BACKGROUND_COLOR, size = (60,1)),
+                sg.Text("Which type of normalization to use for scalars? ", background_color=BACKGROUND_COLOR, size = (60,1), key="-NORMALIZATION TYPE TEXT-"),
                 sg.Combo(
                     values=["minmax", "z-score"],
                     default_value="z-score",
@@ -152,20 +153,20 @@ class GUI:
             ],
             [
                 sg.Text("Indicate how to weight the scalars and histograms (A3, D1, D2, D3, D4): ", background_color=BACKGROUND_COLOR, size = (60,1)),
-                sg.In(size=(22, 1), enable_events=False, key="-GLOBAL WEIGHTS-", default_text="2,1,1,1,1,1"),
+                sg.In(size=(22, 1), enable_events=False, key="-GLOBAL WEIGHTS-", default_text="3,1,1,1,1,1"),
             ],
             [
                 sg.Text("", background_color=BACKGROUND_COLOR, text_color="red", key="-ERROR GLOBAL WEIGHTS-")
             ],
             [
-                sg.Text("Indicate how to weight the scalars in the distance function: ", background_color=BACKGROUND_COLOR, size = (60,1)),
-                sg.In(size=(22, 2), enable_events=False, key="-SCALAR WEIGHTS-", default_text="1,1,1,1,1,1,1,1"),
+                sg.Text("Indicate how to weight the scalars in the distance function: ", background_color=BACKGROUND_COLOR, size = (60,1), key="-SCALAR WEIGHTS TEXT-"),
+                sg.In(size=(22, 2), enable_events=False, key="-SCALAR WEIGHTS-", default_text="1,1,1,1,1,1,1,1", visible=True),
             ],
             [
-                sg.Text("The scalars: (surface_area, compactness, ratio_bbox_volume,", background_color=BACKGROUND_COLOR, size = (80,1)),
+                sg.Text("The scalars: (surface_area, compactness, ratio_bbox_volume,", background_color=BACKGROUND_COLOR, size = (80,1), key="-SCALAR TEXT1-"),
             ],
             [
-              sg.Text(" volume, ratio_ch_volume, ratio_ch_area, diameter, eccentricity)", background_color=BACKGROUND_COLOR, size = (80,1)),  
+              sg.Text(" volume, ratio_ch_volume, ratio_ch_area, diameter, eccentricity)", background_color=BACKGROUND_COLOR, size = (80,1), key="-SCALAR TEXT2-"),  
             ],
             [
                 sg.Text("", background_color=BACKGROUND_COLOR, text_color="red", key="-ERROR SCALAR WEIGHTS-")
@@ -222,6 +223,7 @@ class GUI:
             "-RETRIEVE BTN-": self.handle_retrieve_event,
             "-RETRIEVAL LIST-": self.handle_retrieval_list_event,
             "-RETRIEVAL NUMBER-": self.handle_retrieval_number_event,
+            "-SCALAR DISTANCE-": self.handle_scalar_distance_event,
         }
         
         EVENTS[event](event, values)
@@ -262,6 +264,13 @@ class GUI:
         else:
             self.window["-THRESHOLD TEXT-"].update(visible=False)
             self.window["-THRESHOLD-"].update(visible=False)
+    
+    def handle_scalar_distance_event(self, event, values):
+        visible = False if values["-SCALAR DISTANCE-"] == "Mahalanobis" else True        
+        elements = ["-SCALAR WEIGHTS TEXT-", "-SCALAR WEIGHTS-", "-ERROR SCALAR WEIGHTS-", "-NORMALIZATION TYPE TEXT-", "-NORMALIZATION TYPE-", "-SCALAR TEXT1-", "-SCALAR TEXT2-"]
+        for x in elements:
+            self.window[x].update(visible=visible)
+        self.window.refresh()    
         
         
     def handle_retrieve_event(self, event, values):

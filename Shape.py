@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import datetime
 from utils.Logger import Logger
 import math
 from pymeshlab import MeshSet, Mesh
@@ -621,11 +622,6 @@ class Shape:
         return hist
     
     def compute_features(self):
-        A3 = self.get_A3()
-        D1 = self.get_D1()
-        D2 = self.get_D2()
-        D3 = self.get_D3()
-        D4 = self.get_D4()
         
         surface_area = self.get_surface_area()
         compactness = self.get_compactness()
@@ -638,7 +634,19 @@ class Shape:
         ratio_surface_area = surface_area / surface_area_convex_hull
         ratio_bbox_volume = volume / bbox_volume 
         
+        A3 = self.get_A3()
+        D1 = self.get_D1()
+        D2 = self.get_D2()
+        D3 = self.get_D3()
+        D4 = self.get_D4()
+        
+        # dummy data to fit the feature length vector
+        feature_id = -1
+        shape_id = -1
+        created_at = datetime.datetime.now()
+        
         return [
+            feature_id,
             surface_area, 
             compactness,
             ratio_bbox_volume,
@@ -651,5 +659,7 @@ class Shape:
             D1,
             D2,
             D3,
-            D4
+            D4,
+            shape_id,
+            created_at
         ]

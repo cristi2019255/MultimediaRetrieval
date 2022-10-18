@@ -91,16 +91,16 @@ class QueryHandler:
     def fetch_shape_features(self, filename: str):
         self.logger.log(f"Running query on {filename}")
         
-        self.shape = Shape(filename, log = self.logger.active)
-
         # Fetch shape id
-        self.db.execute_query(f"select \"id\" from \"shapes\" where \"file_name\" = '{self.shape.file_name}'", "select")
+        self.db.execute_query(f"select \"id\" from \"shapes\" where \"file_name\" = '{filename}'", "select")
         
         shape_ids = self.db.cursor.fetchone()
         
         if shape_ids == [] or shape_ids == None:
             self.logger.log(f"Shape {filename} not found in database. Computing features... This may take a while.")
-            shape = Shape(filename)
+            filename = filename.replace("preprocessed", "data") # switching to original data folder
+            shape = Shape(filename, log=True)
+            shape.resample()
             shape.normalize()
             return shape.compute_features()
             
@@ -112,13 +112,6 @@ class QueryHandler:
         features = self.db.cursor.fetchone()
                     
         return features
-    
-    def fetch_features(self, filename: str):
-        shape_id = self.fetch_shape(filename)
-        sql = f"select * from \"features\" where \"shape_id\" = {shape_id}"
-        self.db.execute_query(sql, "select")
-        row = self.db.cursor.fetchone()
-        return row
     
     def find_similar_shapes(self, filename,
                             target_nr_shape_to_return = None, 
@@ -137,11 +130,7 @@ class QueryHandler:
         """
             Find similar shapes to the target shape using the specified distance measure and normalization method.
             TODO: I would like to compute a distance matrix beforehand for all the shapes in the db and store it somewhere and then fetch just based on that matrix.
-            e.g.: 5 shapes that on the row of the target shape gives smallest distance.
-            
-            TODO: check problems with nan from D1
-            normalize scalars to [0,1] range
-            
+            e.g.: 5 shapes that on the row of the target shape gives smallest distance. 
         """
         
         # ------------------- Choosing the distance function ------------------------ 
@@ -150,6 +139,7 @@ class QueryHandler:
             "L2": self.get_lp_distance(2),
             "Linf": self.get_lp_distance("inf"),
             "Cosine": self._cosine_distance,
+            "Mahalanobis": self._mahalanobis_distance,
         }
         
         histograms_distances = {
@@ -159,6 +149,7 @@ class QueryHandler:
         
         scalars_distance_measure = scalars_distances[distance_measure_scalars]
         histograms_distance_measures = [histograms_distances[d] for d in [distance_measure_histogram_A3, distance_measure_histogram_D1, distance_measure_histogram_D2, distance_measure_histogram_D3, distance_measure_histogram_D4]]
+        
         # ------------------------------------------------------------------------------
         
         
@@ -182,12 +173,18 @@ class QueryHandler:
         assert(sum(scalar_weights) <= 1)
         assert(sum(scalar_weights) >= 1 - 1e-6)
          
-        # ---------------------------------------------------------------------------------    
-            
+        # ---------------------------------------------------------------------------------        
         
         # ---------------------- Fetching the shape from the database ---------------------    
         try:
+            mahalanobis_distance = True if scalars_distance_measure == self._mahalanobis_distance else False
+        
             features = self.fetch_shape_features(filename=filename)
+            
+            if mahalanobis_distance:
+                target_scalars = np.array(features[1:9])
+            else:
+                target_scalars = np.array(self.normalize_features(features[1:9], normalization_factors=self.normalization_factors, normalization_type=normalization_type))
             
             [target_A3, 
              target_D1, 
@@ -195,50 +192,33 @@ class QueryHandler:
              target_D3, 
              target_D4] = features[9:-2]            
             
-            target_scalars = self.normalize_features(features[1:9], normalization_factors=self.normalization_factors, normalization_type=normalization_type)
             
             # getting the features of all the shapes in the db except the target shape
-            sql = f""" SELECT * FROM features WHERE shape_id <> {shape_id} """
+            sql = f""" SELECT * FROM features WHERE id <> {features[0]} """
             self.db.execute_query(sql, "select")
-            rows = self.db.cursor.fetchall()
-            
-            distances_A3 = []
-            distances_D1 = []
-            distances_D2 = []
-            distances_D3 = []
-            distances_D4 = []
-            distances_scalars = []
-            shape_ids = []
-            
-            for row in rows:
-                current_shape_id = row[-2]
+            data = self.db.cursor.fetchall()
+
+            if mahalanobis_distance:
+                scalars_data = np.array([d[1:9] for d in data])
+                covariance_matrix = np.cov(scalars_data.T)
+                scalars_distance_measure = lambda x, y: self._mahalanobis_distance(x, y, covariance_matrix)
+        
                 
-                [A3, D1, D2, D3, D4] = row[9:-2]
-                current_scalars = self.normalize_features(row[1:9], normalization_factors=self.normalization_factors, normalization_type=normalization_type)
-                
-                scalars_distance = scalars_distance_measure(target_scalars, current_scalars, scalar_weights)
-                
-                distances_A3.append(histograms_distance_measures[0](target_A3, A3))
-                distances_D1.append(histograms_distance_measures[1](target_D1, D1))
-                distances_D2.append(histograms_distance_measures[2](target_D2, D2))
-                distances_D3.append(histograms_distance_measures[3](target_D3, D3))
-                distances_D4.append(histograms_distance_measures[4](target_D4, D4))
-                distances_scalars.append(scalars_distance)
-                shape_ids.append(current_shape_id)
-                
-            # normalizing
-            distances_A3 = np.array(distances_A3) / np.sum(distances_A3)
-            distances_D1 = np.array(distances_D1) / np.sum(distances_D1)
-            distances_D2 = np.array(distances_D2) / np.sum(distances_D2)
-            distances_D3 = np.array(distances_D3) / np.sum(distances_D3)
-            distances_D4 = np.array(distances_D4) / np.sum(distances_D4)
-            distances_scalars = np.array(distances_scalars) / np.sum(distances_scalars)
-            
-            distances = []
-            for i in range(len(distances_A3)):
-                feature_vector = np.array([distances_scalars[i], distances_A3[i], distances_D1[i], distances_D2[i], distances_D3[i], distances_D4[i] ])
-                total_distance = np.dot(global_weights, feature_vector) 
-                distances.append((shape_ids[i] , total_distance))
+            distances = self.get_distance_list(
+                               data, 
+                               scalars_distance_measure,
+                               histograms_distance_measures, 
+                               target_scalars, 
+                               target_A3, 
+                               target_D1,
+                               target_D2, 
+                               target_D3, 
+                               target_D4, 
+                               scalar_weights, 
+                               global_weights,
+                               normalization_type,
+                               mahalanobis_distance
+                               )  
             
             distances.sort(key=lambda x: x[1])
             
@@ -253,12 +233,77 @@ class QueryHandler:
                 self.db.execute_query(sql, "select")
                 row = self.db.cursor.fetchone()
                 result.append((row[0], distance))
-            
+        
             return result        
+        
         except Exception as e:
             raise Exception("Error in the fetching similar shapes: " + str(e))
         
         
+    def get_distance_list(self, 
+                          data, 
+                          scalars_distance_measure,
+                          histograms_distance_measures, 
+                          target_scalars, 
+                          target_A3, 
+                          target_D1,
+                          target_D2, 
+                          target_D3, 
+                          target_D4, 
+                          scalar_weights, 
+                          global_weights,
+                          normalization_type,
+                          mahalanobis_distance = False
+                        ):
+        """
+            Compute the distance matrix for all the shapes in the database.
+        """
+        
+    
+        distances_A3 = []
+        distances_D1 = []
+        distances_D2 = []
+        distances_D3 = []
+        distances_D4 = []
+        distances_scalars = []
+        shape_ids = []
+            
+        for row in data:
+                current_shape_id = row[-2]
+                shape_ids.append(current_shape_id)
+                
+                current_scalars = np.array(row[1:9])
+                
+                if mahalanobis_distance:
+                    scalars_distance = scalars_distance_measure(target_scalars, current_scalars)
+                else:
+                    current_scalars = np.array(self.normalize_features(current_scalars, normalization_factors=self.normalization_factors, normalization_type=normalization_type))
+                    scalars_distance = scalars_distance_measure(target_scalars, current_scalars, scalar_weights)
+                    
+                distances_scalars.append(scalars_distance)
+                
+                [A3, D1, D2, D3, D4] = row[9:-2]
+                distances_A3.append(histograms_distance_measures[0](target_A3, A3))
+                distances_D1.append(histograms_distance_measures[1](target_D1, D1))
+                distances_D2.append(histograms_distance_measures[2](target_D2, D2))
+                distances_D3.append(histograms_distance_measures[3](target_D3, D3))
+                distances_D4.append(histograms_distance_measures[4](target_D4, D4))
+                
+        # normalizing
+        distances_A3 = np.array(distances_A3) / np.sum(distances_A3)
+        distances_D1 = np.array(distances_D1) / np.sum(distances_D1)
+        distances_D2 = np.array(distances_D2) / np.sum(distances_D2)
+        distances_D3 = np.array(distances_D3) / np.sum(distances_D3)
+        distances_D4 = np.array(distances_D4) / np.sum(distances_D4)
+        distances_scalars = np.array(distances_scalars) / np.sum(distances_scalars)
+            
+        distances = []
+        for i in range(len(distances_A3)):
+                feature_vector = np.array([distances_scalars[i], distances_A3[i], distances_D1[i], distances_D2[i], distances_D3[i], distances_D4[i] ])
+                total_distance = np.dot(global_weights, feature_vector) 
+                distances.append((shape_ids[i] , total_distance))
+            
+        return distances
         
     @staticmethod
     def _earth_moving_distance(A = None, B = None):
@@ -267,6 +312,10 @@ class QueryHandler:
         u_values = v_values = np.arange(len(A))
         return wasserstein_distance(u_values = u_values, v_values = v_values, u_weights = A, v_weights = B)
     
+    @staticmethod
+    def _mahalanobis_distance(x, y, cov):
+        """Mahalanobis distance"""
+        return np.sqrt(np.dot(np.dot((x - y).T, np.linalg.inv(cov)), (x - y)))
     
     @staticmethod
     def _kullback_leibler_divergence(A = None, B = None):
@@ -292,6 +341,8 @@ class QueryHandler:
             """Lp Distance: default is Euclidean Distance"""
             return np.sum((np.array(w) * np.abs(np.array(x) - np.array(y)))**p)**(1/p)
         return _lp_distance
+    
+    
     
 def dot(x,y,w):
         assert(len(y) == len(x))
