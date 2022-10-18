@@ -7,3 +7,4 @@ python-dotenv==0.21.0
 pyvista==0.36.1
 termcolor==2.0.1
 tqdm==4.62.3
+PySimpleGUI~=4.60.4
