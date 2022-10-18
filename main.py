@@ -10,7 +10,7 @@ def main():
     #track_progress(preprocess_data)  # uncomment to preprocess data
     #track_progress(compute_statistics)  # uncomment to compute statistics
     #track_progress(extract_features) # uncomment to extract features
-    track_progress(run_query_v1) # uncomment to run query
+    track_progress(run_query) # uncomment to run query
     #track_progress(extract_feature) # uncomment to extract feature
     #track_progress(compute_statistics_feature_extraction) # uncomment to compute statistics for feature extraction
     
@@ -45,25 +45,10 @@ def extract_feature(feature = 'D1'):
     feature_extractor = FeatureExtractor(log=True)
     feature_extractor.extract_feature(feature = feature)
 
-def run_query(filename="preprocessed/PRINCETON/train/furniture/m880.ply"):
-    query = QueryHandler(log=True)
-    query.fetch_shape(filename)
-    similar_shapes_data = query.find_similar_shapes(n = 5, distance_measure = 'Cosine Distance', normalization = 'Standard Score Normalization')
-
-    search_shape = Shape(filename)
-    search_shape.render()
-
-    distances = list(map(lambda x: x[2], similar_shapes_data))
-    filenames = list(map(lambda x: x[1], similar_shapes_data))
-    
-    print('Similar shapes with distances: ' + str(distances))
-
-    render(filenames)
-
-def run_query_v1(filename="preprocessed/LabeledDB_new/train/Airplane/61.ply"):
+def run_query(filename="preprocessed/LabeledDB_new/train/Airplane/61.ply"):
     query = QueryHandler(log=True)
 
-    similar_shapes_data = query.find_similar_shapes_v1(filename=filename, target_nr_shape_to_return = 5, normalization_type="minmax")
+    similar_shapes_data = query.find_similar_shapes(filename=filename, target_nr_shape_to_return = 5, normalization_type="minmax")
 
     search_shape = Shape(filename)
     search_shape.render()
