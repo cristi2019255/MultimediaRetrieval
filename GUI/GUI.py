@@ -227,7 +227,7 @@ class GUI:
             
             filename = filename.replace(os.getcwd(), "").replace("data", "preprocessed")[1:] # remove first slash
                         
-            similar_shapes_data = self.query.find_similar_shapes_v1(filename = filename,
+            similar_shapes_data = self.query.find_similar_shapes(filename = filename,
                                                                target_nr_shape_to_return=shapes_nr,
                                                                distance_measure_scalars=distance_scalar,
                                                                distance_measure_histograms=distance_histograms,
