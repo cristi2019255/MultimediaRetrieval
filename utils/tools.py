@@ -32,12 +32,11 @@ def off2ply(filename="./LabeledDB_new/Airplane/61.off"):
         return filename
     
     meshes = MeshSet()
-    meshes.load_new_mesh(filename)
     if filename.endswith('.off') or filename.endswith('.obj'):
+        meshes.load_new_mesh(filename)
         new_filename = filename[:-4] + '.ply'
-    else:
+        meshes.save_current_mesh(new_filename)
         return filename
-    meshes.save_current_mesh(new_filename)
     return filename
 
 
