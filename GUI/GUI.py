@@ -96,8 +96,15 @@ class GUI:
                 )
             ],
             [
-                sg.Text("Indicate how to weight the scalars and histograms: ", background_color=BACKGROUND_COLOR, size = (40,1)),
-                sg.In(size=(22, 1), enable_events=False, key="-WEIGHTS-", default_text="0.5,0.5"),
+                sg.Text("Indicate how to weight the scalars and histograms (A3, D1, D2, D3, D4): ", background_color=BACKGROUND_COLOR, size = (40,1)),
+                sg.In(size=(22, 1), enable_events=False, key="-GLOBAL WEIGHTS-", default_text="2,1,1,1,1,1"),
+                sg.Text("", background_color=BACKGROUND_COLOR, text_color="red", key="-ERROR GLOBAL WEIGHTS-")
+            ],
+            [
+                sg.Text("Indicate how to weight the scalars in the distance function: ", background_color=BACKGROUND_COLOR, size = (40,1)),
+                sg.In(size=(22, 2), enable_events=False, key="-WEIGHTS-", default_text="1,1,1,1,1,1,1,1"),
+                sg.Text("The scalars: (surface_area, compactness, ratio_bbox_volume, volume, ratio_ch_volume, ratio_ch_area, diameter, eccentricity) ", background_color=BACKGROUND_COLOR, size = (40,1)),
+                sg.Text("", background_color=BACKGROUND_COLOR, text_color="red", key="-ERROR SCALAR WEIGHTS-")
             ],
             [
                 sg.Checkbox("Show retrieved shapes features", key="-SHOW FEATURES RESPONSE-", background_color=BACKGROUND_COLOR, text_color=TEXT_COLOR, default=False),
@@ -195,7 +202,28 @@ class GUI:
             distance_scalar = values["-SCALAR DISTANCE-"]
             distance_histograms = values["-HISTOGRAMS DISTANCE-"]
             normalization_type = values["-NORMALIZATION TYPE-"]
-            weights = values["-WEIGHTS-"]
+            global_weights = values["-GLOBAL WEIGHTS-"].split(",")
+            scalar_weights = values["-SCALAR WEIGHTS-"].split(",")
+            
+            if len(global_weights) != 6 or len(global_weights) != 2:
+                self.window["-ERROR GLOBAL WEIGHTS-"].update("Global weights should be a list of either 2 or 6 elements")
+                return
+            
+            try:
+                global_weights = list(map(lambda x: float(x), global_weights))
+            except Exception:
+                self.window["-ERROR SCALAR WEIGHTS-"].update("Global weights should be float numbers")
+                return 
+            
+            if  len(scalar_weights) != 8 or len(scalar_weights) != 1:
+                self.window["-ERROR SCALAR WEIGHTS-"].update("Scalar weights should be a list of either 1 or 8 elements")
+                return 
+            
+            try:
+                scalar_weights = list(map(lambda x: float(x), scalar_weights))
+            except Exception:
+                self.window["-ERROR SCALAR WEIGHTS-"].update("Scalar weights should be float numbers")
+                return 
             
             filename = filename.replace(os.getcwd(), "").replace("data", "preprocessed")[1:] # remove first slash
                         
@@ -204,7 +232,8 @@ class GUI:
                                                                distance_measure_scalars=distance_scalar,
                                                                distance_measure_histograms=distance_histograms,
                                                                normalization_type=normalization_type,
-                                                               weights=weights
+                                                               global_weights=global_weights,
+                                                               scalar_weights=scalar_weights
                                                                )
             
             distances = list(map(lambda x: x[1], similar_shapes_data))

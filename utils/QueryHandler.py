@@ -119,7 +119,8 @@ class QueryHandler:
                                distance_measure_scalars = 'L2', 
                                distance_measure_histograms = 'Earth Mover Distance', 
                                normalization_type = 'minmax',
-                               weights = "0.5,0.5"
+                               global_weights = [0.5, 0.5],
+                               scalar_weights = [1]
                                ):
         """
             Find similar shapes to the target shape using the specified distance measure and normalization method.
@@ -131,6 +132,7 @@ class QueryHandler:
             
         """
         
+        # ------------------- Choosing the distance function ------------------------ 
         scalars_distances = {
             "L1": self.get_lp_distance(1),
             "L2": self.get_lp_distance(2),
@@ -145,11 +147,30 @@ class QueryHandler:
         
         scalars_distance_measure = scalars_distances[distance_measure_scalars]
         histograms_distance_measure = histograms_distances[distance_measure_histograms]
+        # ------------------------------------------------------------------------------
         
-        weights = [float(w) for w in weights.split(",")]
-        weights_sum = sum(weights)
-        weights = [w / weights_sum for w in weights]
         
+        # ------------- Normalizing the weight vectors --------------------------------
+        if len(global_weights) == 2:
+            global_weights = [global_weights[0]] + [global_weights[1]] * 5
+        assert(len(global_weights) == 6)
+        
+        global_weights_sum = sum(global_weights)
+        global_weights = [w / global_weights_sum for w in global_weights]
+        assert(sum(global_weights) == 1)
+        
+        if (len(scalar_weights) == 1):
+            scalar_weights = [scalar_weights[0]] * 8
+        assert(len(scalar_weights) == 8)   
+    
+        scalar_weights_sum = sum(scalar_weights)
+        scalar_weights = [w / scalar_weights_sum for w in scalar_weights]
+        assert(sum(scalar_weights) == 1)
+         
+        # ---------------------------------------------------------------------------------    
+            
+        
+        # ---------------------- Fetching the shape from the database ---------------------    
         try:
             shape_id = self.fetch_shape(filename=filename)
             
@@ -185,7 +206,7 @@ class QueryHandler:
                 [A3, D1, D2, D3, D4] = row[9:-2]
                 current_scalars = self.normalize_features(row[1:9], normalization_factors=self.normalization_factors, normalization_type=normalization_type)
                 
-                scalars_distance = scalars_distance_measure(target_scalars, current_scalars)
+                scalars_distance = scalars_distance_measure(target_scalars, current_scalars, scalar_weights)
                 
                 distances_A3.append(histograms_distance_measure(target_A3, A3))
                 distances_D1.append(histograms_distance_measure(target_D1, D1))
@@ -205,7 +226,8 @@ class QueryHandler:
             
             distances = []
             for i in range(len(distances_A3)):
-                total_distance = weights[0] * distances_scalars[i] + weights[1] * (distances_A3[i] + distances_D1[i] + distances_D2[i] + distances_D3[i] + distances_D4[i]) 
+                feature_vector = np.array([distances_scalars[i], distances_A3[i], distances_D1[i], distances_D2[i], distances_D3[i], distances_D4[i] ])
+                total_distance = np.dot(global_weights, feature_vector) 
                 distances.append((shape_ids[i] , total_distance))
             
             distances.sort(key=lambda x: x[1])
@@ -232,19 +254,22 @@ class QueryHandler:
         u_values = v_values = np.arange(len(A))
         return wasserstein_distance(u_values = u_values, v_values = v_values, u_weights = A, v_weights = B)
     
+    
     @staticmethod
-    def _cosine_distance(x = None, y = None):
+    def _cosine_distance(x = None, y = None, w = None):
         """Cosine Distance"""
-        return 1 - (np.dot(x,y)) / (np.sqrt(np.dot(x,x)) * np.sqrt(np.dot(y,y)))
+        return 1 - (dot(x,y,w)) / (np.sqrt(dot(x, x, w)) * np.sqrt(dot(y, y, w)))
     
     @staticmethod
     def get_lp_distance(p = 2):
         if p == "inf":
-            return lambda x,y: max(np.abs(np.array(x)-np.array(y)))
-        def _lp_distance(x=None, y = None, p=2):
+            return lambda x,y, w: max(np.abs(np.array(x)-np.array(y)))
+        def _lp_distance(x=None, y = None, w = None, p=2):
             """Lp Distance: default is Euclidean Distance"""
-            return np.sum(np.abs(np.array(x) - np.array(y))**p)**(1/p)
+            return np.sum((np.array(w) * np.abs(np.array(x) - np.array(y)))**p)**(1/p)
         return _lp_distance
+    
+    
     
     def find_similar_shapes(self, n = None, distance_measure = None, normalization = None):
     
@@ -376,3 +401,11 @@ class QueryHandler:
         self.db.execute_query(query, "select")
         return self.db.cursor.fetchall()
     
+    
+def dot(x,y,w):
+        assert(len(y) == len(x))
+        assert(len(y) == len(w))
+        sum = 0
+        for i in range(len(x)):
+            sum += w[i] * x[i] * y[i]
+        return sum 
