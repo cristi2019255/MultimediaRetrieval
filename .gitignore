@@ -1,11 +1,9 @@
-/**/__pycache__
+# Custom ignore list
 /**/.DS_Store
 /LabeledDB_new
-/venv
 /test_data
 /.DS_Store
 /test_data
-/temp
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
