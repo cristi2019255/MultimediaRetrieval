@@ -32,7 +32,7 @@ class GUI:
         self.window = self.build()
         self.query = QueryHandler(log=True)
         self.logger = Logger()
-
+        
     def _get_layout(self):        
         data_dir = os.path.join(os.getcwd(), "data", "PRINCETON", "train", "animal")
         histogram_distances = ["Earth Mover", "Kulback-Leibler"]
@@ -84,93 +84,187 @@ class GUI:
                 ),
             ],
             [
-              sg.Text("Indicate the distance threshold", background_color=BACKGROUND_COLOR, size=(60,1), visible=False, key="-THRESHOLD TEXT-"),
-              sg.In(key="-THRESHOLD-", visible=False, size=(20,1), default_text="0.0001"),
+                sg.Checkbox("Advanced search", 
+                            key="-ADVANCED OPTIONS-", 
+                            background_color=BACKGROUND_COLOR, 
+                            text_color=TEXT_COLOR, 
+                            default=False, 
+                            enable_events=True),
             ],
             [
-                sg.Text("Which distance function to use for scalars? ", background_color=BACKGROUND_COLOR, size = (60,1)),
+              sg.Text("Indicate the distance threshold", 
+                      background_color=BACKGROUND_COLOR, 
+                      size=(60,1), 
+                      visible=False, 
+                      key="-THRESHOLD TEXT-"),
+              sg.In(default_text="0.0001", 
+                    size=(20,1),
+                    visible=False,
+                    key="-THRESHOLD-"),
+            ],
+            [
+                sg.Text("Which distance function to use for scalars? ", 
+                        background_color=BACKGROUND_COLOR, 
+                        size = (60,1), 
+                        visible=False, 
+                        key = "-SCALAR DISTANCE TEXT-"
+                        ),
                 sg.Combo(
                     values=scalar_distances,
                     default_value=scalar_distances[0],
                     size = (20, 1),
+                    visible=False,
                     key = "-SCALAR DISTANCE-",
                     enable_events=True,
                 )
             ],
             [
-                sg.Text("Which distance function to use for A3 histograms? ", background_color=BACKGROUND_COLOR, size = (60,1)),
+                sg.Text("Which distance function to use for A3 histograms? ", 
+                        background_color=BACKGROUND_COLOR, 
+                        size = (60,1), 
+                        visible=False, 
+                        key = "-HISTOGRAM A3 DISTANCE TEXT-"
+                        ),
                 sg.Combo(
                     values=histogram_distances,
                     default_value=histogram_distances[0],
                     size = (20, 1),
+                    visible=False,
                     key = "-HISTOGRAM A3 DISTANCE-",
                 )
             ],
             [
-                sg.Text("Which distance function to use for D1 histograms? ", background_color=BACKGROUND_COLOR, size = (60,1)),
+                sg.Text(
+                        "Which distance function to use for D1 histograms? ", 
+                        background_color=BACKGROUND_COLOR, 
+                        size = (60,1),
+                        visible=False, 
+                        key = "-HISTOGRAM D1 DISTANCE TEXT-"
+                        ),
                 sg.Combo(
                     values=histogram_distances,
                     default_value=histogram_distances[0],
                     size = (20, 1),
+                    visible=False,
                     key = "-HISTOGRAM D1 DISTANCE-",
                 )
             ],
             [
-                sg.Text("Which distance function to use for D2 histograms? ", background_color=BACKGROUND_COLOR, size = (60,1)),
+                sg.Text(
+                        "Which distance function to use for D2 histograms? ", 
+                        background_color=BACKGROUND_COLOR, 
+                        size = (60,1),
+                        visible=False, 
+                        key = "-HISTOGRAM D2 DISTANCE TEXT-"
+                        ),
                 sg.Combo(
                     values=histogram_distances,
                     default_value=histogram_distances[0],
                     size = (20, 1),
+                    visible=False,
                     key = "-HISTOGRAM D2 DISTANCE-",
                 )
             ],
             [
-                sg.Text("Which distance function to use for D3 histograms? ", background_color=BACKGROUND_COLOR, size = (60,1)),
+                sg.Text("Which distance function to use for D3 histograms? ", 
+                        background_color=BACKGROUND_COLOR, 
+                        size = (60,1),
+                        visible=False, 
+                        key = "-HISTOGRAM D3 DISTANCE TEXT-"
+                        ),
                 sg.Combo(
                     values=histogram_distances,
                     default_value=histogram_distances[0],
                     size = (20, 1),
+                    visible=False,
                     key = "-HISTOGRAM D3 DISTANCE-",
                 )
             ],
             [
-                sg.Text("Which distance function to use for D4 histograms? ", background_color=BACKGROUND_COLOR, size = (60,1)),
+                sg.Text("Which distance function to use for D4 histograms? ",
+                        background_color=BACKGROUND_COLOR, 
+                        size = (60,1),
+                        visible=False, 
+                        key = "-HISTOGRAM D4 DISTANCE TEXT-"
+                        ),
                 sg.Combo(
                     values=histogram_distances,
                     default_value=histogram_distances[0],
                     size = (20, 1),
+                    visible=False,
                     key = "-HISTOGRAM D4 DISTANCE-",
                 )
             ],
             [
-                sg.Text("Which type of normalization to use for scalars? ", background_color=BACKGROUND_COLOR, size = (60,1), key="-NORMALIZATION TYPE TEXT-"),
+                sg.Text("Which type of normalization to use for scalars? ", 
+                        background_color=BACKGROUND_COLOR, 
+                        size = (60,1), 
+                        visible=False,
+                        key="-NORMALIZATION TYPE TEXT-"),
                 sg.Combo(
                     values=["minmax", "z-score"],
                     default_value="z-score",
                     size = (20, 1),
+                    visible=False,
                     key = "-NORMALIZATION TYPE-",
                 )
             ],
             [
-                sg.Text("Indicate how to weight the scalars and histograms (A3, D1, D2, D3, D4): ", background_color=BACKGROUND_COLOR, size = (60,1)),
-                sg.In(size=(22, 1), enable_events=False, key="-GLOBAL WEIGHTS-", default_text="3,1,1,1,1,1"),
+                sg.Text("Indicate how to weight the scalars and histograms (A3, D1, D2, D3, D4): ", 
+                        background_color=BACKGROUND_COLOR, 
+                        size = (60,1),
+                        visible=False, 
+                        key = "-GLOBAL WEIGHTS TEXT-"
+                        ),
+                sg.In(default_text="3,1,1,1,1,1", 
+                      size=(22, 1), 
+                      enable_events=False, 
+                      visible=False,
+                      key="-GLOBAL WEIGHTS-"),
             ],
             [
-                sg.Text("", background_color=BACKGROUND_COLOR, text_color="red", key="-ERROR GLOBAL WEIGHTS-")
+                sg.Text("", 
+                        background_color=BACKGROUND_COLOR, 
+                        text_color="red", 
+                        visible=False,
+                        key="-ERROR GLOBAL WEIGHTS-")
             ],
             [
-                sg.Text("Indicate how to weight the scalars in the distance function: ", background_color=BACKGROUND_COLOR, size = (60,1), key="-SCALAR WEIGHTS TEXT-"),
-                sg.In(size=(22, 2), enable_events=False, key="-SCALAR WEIGHTS-", default_text="1,1,1,1,1,1,1,1", visible=True),
+                sg.Text("Indicate how to weight the scalars in the distance function: ", 
+                        background_color=BACKGROUND_COLOR, 
+                        size = (60,1), 
+                        visible=False,
+                        key="-SCALAR WEIGHTS TEXT-"
+                        ),
+                sg.In(default_text="1,1,1,1,1,1,1,1", 
+                      size=(22, 2), 
+                      enable_events=False, 
+                      visible=False,
+                      key="-SCALAR WEIGHTS-"),
             ],
             [
-                sg.Text("The scalars: (surface_area, compactness, ratio_bbox_volume,", background_color=BACKGROUND_COLOR, size = (80,1), key="-SCALAR TEXT1-"),
+                sg.Text("The scalars: (surface_area, compactness, ratio_bbox_volume,", 
+                        background_color=BACKGROUND_COLOR, 
+                        size = (80,1), 
+                        visible=False,
+                        key="-SCALAR TEXT1-"),
             ],
             [
-              sg.Text(" volume, ratio_ch_volume, ratio_ch_area, diameter, eccentricity)", background_color=BACKGROUND_COLOR, size = (80,1), key="-SCALAR TEXT2-"),  
+              sg.Text(" volume, ratio_ch_volume, ratio_ch_area, diameter, eccentricity)",
+                      background_color=BACKGROUND_COLOR, 
+                      size = (80,1), 
+                      visible=False,
+                      key="-SCALAR TEXT2-"),  
             ],
             [
-                sg.Text("", background_color=BACKGROUND_COLOR, text_color="red", key="-ERROR SCALAR WEIGHTS-")
+                sg.Text("", 
+                        background_color=BACKGROUND_COLOR, 
+                        text_color="red",
+                        visible=False,
+                        key="-ERROR SCALAR WEIGHTS-")
             ],
+            
+            # ---------------------------------------------------------------------------------------------------
             [
                 sg.Checkbox("Show retrieved shapes features", key="-SHOW FEATURES RESPONSE-", background_color=BACKGROUND_COLOR, text_color=TEXT_COLOR, default=False),
             ],
@@ -224,6 +318,7 @@ class GUI:
             "-RETRIEVAL LIST-": self.handle_retrieval_list_event,
             "-RETRIEVAL NUMBER-": self.handle_retrieval_number_event,
             "-SCALAR DISTANCE-": self.handle_scalar_distance_event,
+            "-ADVANCED OPTIONS-": self.handle_advanced_options_event,
         }
         
         EVENTS[event](event, values)
@@ -268,12 +363,68 @@ class GUI:
     def handle_scalar_distance_event(self, event, values):
         visible = False if values["-SCALAR DISTANCE-"] == "Mahalanobis" else True        
         elements = ["-SCALAR WEIGHTS TEXT-", "-SCALAR WEIGHTS-", "-ERROR SCALAR WEIGHTS-", "-NORMALIZATION TYPE TEXT-", "-NORMALIZATION TYPE-", "-SCALAR TEXT1-", "-SCALAR TEXT2-"]
+        self.switch_visibility(elements, visible)    
+        
+    def handle_advanced_options_event(self, event, values):
+        elements = [
+            "-SCALAR DISTANCE TEXT-", 
+            "-SCALAR DISTANCE-", 
+            "-SCALAR WEIGHTS TEXT-", 
+            "-SCALAR WEIGHTS-", 
+            "-ERROR SCALAR WEIGHTS-",
+            "-NORMALIZATION TYPE TEXT-",
+            "-NORMALIZATION TYPE-", 
+            "-SCALAR TEXT1-", 
+            "-SCALAR TEXT2-", 
+            "-HISTOGRAM A3 DISTANCE TEXT-",
+            "-HISTOGRAM D1 DISTANCE TEXT-",
+            "-HISTOGRAM D2 DISTANCE TEXT-",
+            "-HISTOGRAM D3 DISTANCE TEXT-",
+            "-HISTOGRAM D4 DISTANCE TEXT-",
+            "-HISTOGRAM A3 DISTANCE-",
+            "-HISTOGRAM D1 DISTANCE-",
+            "-HISTOGRAM D2 DISTANCE-",
+            "-HISTOGRAM D3 DISTANCE-",
+            "-HISTOGRAM D4 DISTANCE-",
+        ]
+        self.switch_visibility(elements, values["-ADVANCED OPTIONS-"])
+    
+    def switch_visibility(self, elements, visible):
         for x in elements:
             self.window[x].update(visible=visible)
-        self.window.refresh()    
-        
+        self.window.refresh()
         
     def handle_retrieve_event(self, event, values):
+        advanced = values["-ADVANCED OPTIONS-"]
+        if advanced:
+            self.handle_advanced_retrieve_event(event, values)
+        else:
+            self.handle_indexed_retrieve_event(event, values)
+    
+    def handle_indexed_retrieve_event(self, event, values):
+        # here will be the indexed retrieval based on ann index
+        try:
+            filename = os.path.join(values["-FOLDER-"], values["-FILE LIST-"][0])
+            filename = filename.replace(os.getcwd(), "").replace("data", "preprocessed")[1:] # remove first slash
+                
+            self.set_loading_state_retrieval()    
+            shapes_nr = values["-RETRIEVAL NUMBER-"] 
+            
+            threshold = None
+            if shapes_nr == "threshold based retrieval":
+                threshold = float(values["-THRESHOLD-"])
+            
+            filenames, distances = self.query.get_similar_shapes_indexed(filename, shapes_nr, threshold)
+            
+            self.update_retrieved_shapes(filenames, distances)
+        except Exception as e:
+            self.logger.error("Error while retrieving the shape" + str(e))
+            return
+        
+        
+        
+        
+    def handle_advanced_retrieve_event(self, event, values):
         try:
             # ------------------ Getting the data from the GUI ------------------
             filename = os.path.join(values["-FOLDER-"], values["-FILE LIST-"][0])
@@ -327,10 +478,7 @@ class GUI:
             # ------------------ Updating the GUI if the data is valid ------------------
             
             filename = filename.replace(os.getcwd(), "").replace("data", "preprocessed")[1:] # remove first slash
-            
-            self.window["-RETRIEVAL LIST-"].update(["Loading..."])
-            self.window["-DISTANCE LIST-"].update(["Loading..."])
-            self.window.refresh()
+            self.set_loading_state_retrieval()
             # ----------------------------------------------------------------------------------------------------
             
             # ------------------ Retrieving the shapes ------------------
@@ -352,20 +500,28 @@ class GUI:
             distances = list(map(lambda x: round(x[1], 10), similar_shapes_data))
             filenames = list(map(lambda x: x[0], similar_shapes_data))
             # ---------------------------------------------------------------------
+            self.update_retrieved_shapes(filenames, distances)
             
-            # ------------------ Updating the GUI with the retrieved shapes ------------------
-            if filenames != []:
-                self.window["-RETRIEVAL LIST-"].update(filenames)
-                self.window["-DISTANCE LIST-"].update(distances)
-                if len(filenames) > 5:
-                    filenames = filenames[:5]
-                render(filenames)
-            else:
-                self.window["-RETRIEVAL LIST-"].update(["No similar shapes found"])
-                self.window["-DISTANCE LIST-"].update(["No similar shapes found"])
-            # --------------------------------------------------------------------------------
         except Exception as e:
             self.logger.error(e)
+    
+    def set_loading_state_retrieval(self):
+        self.window["-RETRIEVAL LIST-"].update(["Loading..."])
+        self.window["-DISTANCE LIST-"].update(["Loading..."])
+        self.window.refresh()
+    
+    def update_retrieved_shapes(self, filenames, distances):
+        # ------------------ Updating the GUI with the retrieved shapes ------------------
+        if filenames != []:
+            self.window["-RETRIEVAL LIST-"].update(filenames)
+            self.window["-DISTANCE LIST-"].update(distances)
+            if len(filenames) > 5:
+                filenames = filenames[:5]
+            render(filenames)
+        else:
+            self.window["-RETRIEVAL LIST-"].update(["No similar shapes found"])
+            self.window["-DISTANCE LIST-"].update(["No similar shapes found"])
+        # --------------------------------------------------------------------------------
         
     def handle_retrieval_list_event(self, event, values):
         try: 

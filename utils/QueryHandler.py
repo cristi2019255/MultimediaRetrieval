@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from utils.ANN import ANN
 from utils.Database import Database
 from utils.Logger import Logger
 from Shape import Shape
@@ -23,7 +24,36 @@ class QueryHandler:
         self.logger = Logger(active = log)
         self.db = Database(log=log)
         self.normalization_factors = self._get_normalization_factors()
+        self.ann = ANN(log=True)
+        self.ann_index = self.ann.load_index()
     
+    
+    def get_similar_shapes_indexed(self, filename, k: int = 10, threshold = None):
+        """
+            Returns the k most similar shapes to the target shape, based on the features extracted from the shape.
+            Using precomputed ANN index.
+        """
+        features = self.fetch_shape_features(filename)
+        embedding = self.ann.get_embedding_from_feature_row(features)
+        
+        if threshold == None:
+            neighbors_ids, distances = self.ann.get_nearest_neighbors(self.ann_index, embedding=embedding, n=k)
+        else:
+            neighbors_ids, distances = self.ann.get_nearest_neighbors_by_threshold(self.ann_index, embedding=embedding, threshold=threshold)
+        
+        # doing in a for loop to keep the order of the neighbors
+        filenames = []
+        
+        for id in neighbors_ids: 
+            sql = f""" SELECT file_name FROM shapes WHERE id={id}"""
+            self.db.execute_query(sql, "select")
+            filename = self.db.cursor.fetchone()[0]
+            filenames.append(filename)
+            
+        distances = list(map(lambda x: round(x, 10), distances))
+        return filenames, distances
+        
+    # ----------------- Advanced Query Methods ----------------- #
     def _get_normalization_factors(self):
         sql = """ SELECT      
                        min("surface_area")      as surface_area_min

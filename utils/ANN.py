@@ -13,6 +13,7 @@
 # limitations under the License.
 import annoy
 import os
+
 from utils.Logger import Logger
 from utils.Database import Database
 
@@ -58,15 +59,23 @@ class ANN:
     
     @staticmethod
     def get_embedding_from_feature_row(row):
-        r = row[1:-2]
-        [a3, d1, d2, d3, d4] = r[8:]
-        embedding = [float(x) for x in r[:8]]
-        for v in [a3, d1, d2, d3, d4]:
-            for x in v:
-                embedding.append(x)
-        return embedding    
+        try:
+            r = row[1:-2]
+            [a3, d1, d2, d3, d4] = r[8:]
+            embedding = [float(x) for x in r[:8]]
+            for v in [a3, d1, d2, d3, d4]:
+                for x in v:
+                    embedding.append(x)
+            return embedding    
+        except Exception as e:
+            print(e)
+            return None
         
     def load_index(self, index_filename = INDEX_FILENAME):
+        if not os.path.exists(index_filename):
+            self.logger.error("Index file does not exist!")
+            return None
+        
         index = annoy.AnnoyIndex(EMBEDDING_DIMENSION)
         index.load(index_filename, prefault=True)
         self.logger.log("Annoy index is loaded from disk.")
@@ -83,3 +92,17 @@ class ANN:
         """Returns the n nearest neighbors of the embedding"""
         neighbors = annoy_index.get_nns_by_vector(embedding, n, include_distances=True)
         return neighbors 
+    
+    def get_nearest_neighbors_by_threshold(self, annoy_index, embedding, threshold=0.1):
+        """Returns the nearest neighbors of the embedding within a threshold
+           ANNOY index does not support directly calling for filtering by threshold
+           We use the get_nns_by_vector method and then filter the results
+        """
+        neighbors_ids, distances = annoy_index.get_nns_by_vector(embedding, 100, include_distances=True)
+        ids, dist = [], []
+        for id, distance in zip(neighbors_ids, distances):
+            if distance <= threshold:
+                ids.append(id)
+                dist.append(distance)
+        neighbors = (ids, dist)              
+        return neighbors
