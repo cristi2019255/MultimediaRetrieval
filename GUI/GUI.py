@@ -23,16 +23,20 @@ RIGHTS_MESSAGE_2 = "Made by Cristian Grosu, Marc Fluiter and Dmitar Angelov for 
 
 import PySimpleGUI as sg
 import os
+
+from tsne import load_tsne_and_labels
 from utils.Logger import Logger
 from utils.QueryHandler import QueryHandler
 from utils.renderer import render, render_shape_features
+import matplotlib.pyplot as plt
 
 class GUI:
     def __init__(self):
         self.window = self.build()
         self.query = QueryHandler(log=True)
         self.logger = Logger()
-        
+        self.tsne_data = load_tsne_and_labels()   
+
     def _get_layout(self):        
         data_dir = os.path.join(os.getcwd(), "data", "PRINCETON", "train", "animal")
         histogram_distances = ["Earth Mover", "Kulback-Leibler"]
@@ -60,6 +64,9 @@ class GUI:
             ],
             [
                 sg.Button("Retrieve similar shapes", button_color=(TEXT_COLOR, BUTTON_PRIMARY_COLOR), size = (69,1), key = "-RETRIEVE BTN-"),
+            ],
+            [
+                sg.Button("Show the database in 2D (t-sne)", button_color=(TEXT_COLOR, BUTTON_PRIMARY_COLOR), size = (69,1), key = "-TSNE BTN-"),
             ],
             [
                 sg.Text("", size=(10,1), background_color=BACKGROUND_COLOR)    
@@ -319,6 +326,7 @@ class GUI:
             "-RETRIEVAL NUMBER-": self.handle_retrieval_number_event,
             "-SCALAR DISTANCE-": self.handle_scalar_distance_event,
             "-ADVANCED OPTIONS-": self.handle_advanced_options_event,
+            "-TSNE BTN-": self.handle_tsne_event,
         }
         
         EVENTS[event](event, values)
@@ -351,6 +359,19 @@ class GUI:
             except Exception as e:
                 self.logger.error("Error while loading the shape" + str(e))
     
+    def handle_tsne_event(self, event, values):
+        fig = plt.figure(figsize=(10, 10))
+        Y, labels, labels_colors, shape_ids = self.tsne_data
+        for i in range(len(Y)):
+            label = labels[i]
+            plt.scatter(Y[i, 0], Y[i, 1], color=labels_colors[label], label=label, picker=True)
+            
+            # TODO: annotate with shape details    
+            #plt.annotate(shape_ids[i], (Y[i, 0], Y[i, 1]))        
+        
+        plt.legend(set(labels), loc = 'best')
+        plt.show()
+        
     def handle_retrieval_number_event(self, event, values):
         retrieval = values["-RETRIEVAL NUMBER-"]        
         if retrieval == "threshold based retrieval":

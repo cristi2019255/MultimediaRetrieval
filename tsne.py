@@ -15,7 +15,6 @@
 import os
 import numpy as np
 from utils.ANN import ANN
-import matplotlib.pyplot as plt
 from utils.Database import Database
 
 
@@ -187,17 +186,19 @@ def get_features_corpus():
     ann = ANN()
     corpus = []
     labels = []
+    shapes_ids = []
     db = Database()
     sql = f"""SELECT * FROM features"""
     db.cursor.execute(sql)
     rows = db.cursor.fetchall()
     for row in rows:
+        shapes_ids.append(row[-2])
         label = get_label(shape_id = row[-2], db = db)
         labels.append(label)        
         features = ann.get_embedding_from_feature_row(row)
         corpus.append(np.array(features))
     db.close()
-    return np.array(corpus), np.array(labels)
+    return np.array(corpus), np.array(labels), np.array(shapes_ids)
 
 def clean_corpus(corpus):
     corpus = corpus[~np.isnan(corpus).any(axis=1)]
@@ -211,18 +212,22 @@ def normalize_corpus(corpus):
 
 def compute_tsne():
     print("Run Y = tsne.tsne(X, no_dims, perplexity) to perform t-SNE on your dataset.")
-    corpus, labels = get_features_corpus()
+    corpus, labels, shapes_ids = get_features_corpus()
     corpus = clean_corpus(corpus)
     corpus = normalize_corpus(corpus)
+    
+    with open(os.path.join("database", "indexes", "tsne_embedding_labels.npy"), "wb") as f:
+        np.save(f, labels)
+
+    with open(os.path.join("database", "indexes", "tsne_embedding_ids.npy"), "wb") as f:
+        np.save(f, shapes_ids)
+    
     Y = tsne(corpus, 2, corpus.shape[1], 20.0)
     
     with open(os.path.join("database", "indexes", "tsne_embedding.npy"), "wb") as f:
         np.save(f, Y)
 
-    with open(os.path.join("database", "indexes", "tsne_embedding_labels.npy"), "wb") as f:
-        np.save(f, labels)
-
-    return Y, labels
+    return Y, labels, shapes_ids
 
 def get_label(shape_id, db):
     sql = f"""SELECT class FROM shapes WHERE id = {shape_id}"""
@@ -235,19 +240,15 @@ def load_tsne_and_labels():
         Y = np.load(f)
     with open(os.path.join("database", "indexes", "tsne_embedding_labels.npy"), "rb") as f:
         labels = np.load(f)
-    return Y, labels
     
-if __name__ == "__main__":
-    Y, labels = load_tsne_and_labels()   
-    plt.figure(figsize=(10, 10))
+    with open(os.path.join("database", "indexes", "tsne_embedding_ids.npy"), "rb") as f:
+        shapes_ids = np.load(f)
+    
     label_colors = {}
     for i, label in enumerate(set(labels)):
         label_colors[label] = np.random.rand(3)
-        
-    for i, label in enumerate(labels):
-        plt.scatter(Y[i, 0], Y[i, 1], color = label_colors[label])        
     
+    return Y, labels, label_colors, shapes_ids
     
-    plt.legend(set(labels), loc='best')    
-    plt.show()
-    #plt.savefig(os.path.join("report","tsne.png"))
+if __name__ == "__main__":
+    compute_tsne() 
