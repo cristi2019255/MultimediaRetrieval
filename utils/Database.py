@@ -20,6 +20,8 @@ from utils.Logger import Logger
 from utils.tools import scan_files
 import numpy as np
 
+BACKUP_FOLDER = "database_backup"
+
 
 class Database:
     def __init__(self, log:bool = False):
@@ -220,13 +222,14 @@ class Database:
         sql = f'''UPDATE shapes SET features_id = {feature_id} WHERE id = {shape_id};'''
         self.execute_query(sql, "update")
         
-    def execute_query(self, sql, type = "insert"):
+    def execute_query(self, sql, type = "insert", log = True):
         try:
             self.cursor.execute(sql)
-            if type == "delete":
-                self.logger.error(f"Data has been {type}ed successfully !!")
-            else:
-                self.logger.log(f"Data has been {type}ed successfully !!")
+            if log:
+                if type == "delete":
+                    self.logger.error(f"Data has been {type}ed successfully !!")
+                else:
+                    self.logger.log(f"Data has been {type}ed successfully !!")
             
         except Exception as e:
             message = {
@@ -275,3 +278,54 @@ class Database:
         files = scan_files(directory= "data/LabeledDB_new/train", limit = limit)
         self.insert_shape_data(files)
         
+    def create_backup(self):
+        """_summary_ Creating a backup for the database
+
+        """
+        os.makedirs(BACKUP_FOLDER, exist_ok=True)
+        tables_to_save = ["shapes", "features"]
+        for table in tables_to_save:
+            rows = self.get_table_data(table=table)
+            with open(os.path.join(BACKUP_FOLDER, table + ".csv"), "w") as file:
+                for row in rows:
+                    string = str(list(row)) + "\n"
+                    file.write(string)
+    
+    def restore_from_backup(self):
+        """_summary_ Restoring database from the backup
+        """
+        if not os.path.exists(BACKUP_FOLDER):
+            self.logger.error("Backup folder does not exist!!")
+            return
+        
+        self.logger.log("Restoring database from the backup...")
+        
+        self.logger.log("Deleting all data from the database...")
+        self.cursor.execute("DROP TABLE shapes;")
+        self.cursor.execute("DROP TABLE features;")
+        
+        self.logger.log("Creating tables...")
+        self.create_features_table()
+        self.create_shapes_table()
+        self.logger.log("Tables created successfully!")
+        
+        self.logger.log("Restoring data...")
+        
+        try:
+            for r,d,f in os.walk(BACKUP_FOLDER):
+                for file in f:
+                    table_name = file.replace(".csv", "")
+                    self.logger.log(f"Restoring data for table {table_name}...")
+                    with open(os.path.join(r, file), "r") as table_file:
+                        lines = table_file.readlines()
+                        for line in lines:
+                            line = line.split("datetime")[0] # discard the last column with created_at timestamp
+                            line = str(line)[1:-2] # remove the brackets                        
+                            sanitized_line = line.replace("[", "'{").replace("]", "}'") # insert nested arrays
+                            sql = f"INSERT INTO {table_name} VALUES ({sanitized_line})"
+                            self.execute_query(sql, "insert", log = False)
+            
+            self.logger.log("Database restored from backup")
+        except Exception as e:
+            self.logger.error(e)
+            self.logger.error("Failed to restore database from backup")            
