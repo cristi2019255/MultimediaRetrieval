@@ -250,4 +250,4 @@ if __name__ == "__main__":
     
     plt.legend(set(labels), loc='best')    
     plt.show()
-    plt.savefig(os.path.join("report","tsne.png"))
+    #plt.savefig(os.path.join("report","tsne.png"))
