@@ -2,6 +2,8 @@
 # Like, checking the libraries API, etc.
 
 from Shape import Shape
+from utils.ANN import ANN
+from utils.Database import Database
 from utils.renderer import render, render_shape_with_features
 from pymeshlab import MeshSet
 import matplotlib.pyplot as plt
@@ -125,6 +127,16 @@ def show_shape_hist_features(file_name = "./test_data/sphere.ply", type = "D4"):
     plt.show()
     plt.close()
     
+def test_ann():
+    ann = ANN(log=True)
+    index = ann.load_index()
+    db = Database(log = True)
+    rows = db.get_table_data(table = "features")
+    embedding = ann.get_embedding_from_feature_row(rows[0])
+    neighbors_ids, distances = ann.get_nearest_neighbors(index, embedding, n=10)
+    print(neighbors_ids)
+    
+test_ann()
 #test_convex_hull()    
 #render(["data/PRINCETON/train/furniture/m855.ply"])
 # test_shape_normalization()

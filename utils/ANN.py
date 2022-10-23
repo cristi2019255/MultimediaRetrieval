@@ -11,11 +11,14 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-import pickle
 import annoy
 import os
 from utils.Logger import Logger
 from utils.Database import Database
+
+EMBEDDING_DIMENSION = 134
+INDEX_FILENAME = os.path.join("database", "indexes", "features_index.ann")
+TREES_NUMBER = 500
 
 class ANN:
     """_summary_: this is a class that contains the ANN model and its methods
@@ -29,19 +32,20 @@ class ANN:
         self.mapping = None
         self.db = Database()
     
-    def build_index(self, index_filename, vector_length, metric='angular', num_trees=100):
+    def build_index(self, metric='angular', num_trees=TREES_NUMBER, index_filename = INDEX_FILENAME):
         """Builds an ANNOY index for the features in the database"""
         
-        annoy_index = annoy.AnnoyIndex(vector_length, metric=metric)
+        annoy_index = annoy.AnnoyIndex(EMBEDDING_DIMENSION, metric=metric)
 
         # Iterate over the embeddings in the database
         rows = self.db.get_table_data(table = "features")
         
+        self.logger.log("Getting the embeddings from the database...")
         for row in rows:
-            # Get the embedding
-            embedding = row[1:-2]
             # Get the identifier
             id = row[-2] # shape id
+            # Get the embedding
+            embedding = self.get_embedding_from_feature_row(row)        
             # Add the embedding to the index
             annoy_index.add_item(id, embedding)
         
@@ -49,20 +53,24 @@ class ANN:
         self.logger.log("Building index with {} trees...".format(num_trees))
         annoy_index.build(n_trees=num_trees)
         self.logger.success("Index is built!")        
-
+        
         self.save_index(annoy_index, index_filename)
+    
+    @staticmethod
+    def get_embedding_from_feature_row(row):
+        r = row[1:-2]
+        [a3, d1, d2, d3, d4] = r[8:]
+        embedding = [float(x) for x in r[:8]]
+        for v in [a3, d1, d2, d3, d4]:
+            for x in v:
+                embedding.append(x)
+        return embedding    
         
-        # Save the mapping to disk
-        
-    def load_index(self, index_filename):
-        embedding_dimension = 512 # wtf?
-        index = annoy.AnnoyIndex(embedding_dimension)
+    def load_index(self, index_filename = INDEX_FILENAME):
+        index = annoy.AnnoyIndex(EMBEDDING_DIMENSION)
         index.load(index_filename, prefault=True)
         self.logger.log("Annoy index is loaded from disk.")
-        
-        with open(index_filename + '.mapping', 'rb') as handle:
-            self.mapping = pickle.load(handle)
-            self.logger.log("Mapping is loaded from disk.")            
+        return index        
 
     def save_index(self, annoy_index, index_filename):
         self.logger.log("Saving index to disk...")        
@@ -70,13 +78,6 @@ class ANN:
         self.logger.log("Index is saved to disk.")
         self.logger.log("Index file size: {} MB".format(round(os.path.getsize(index_filename) / float(1024 ** 2), 2)))                
         annoy_index.unload()
-
-    def save_mapping(self, mapping, mapping_filename):
-        self.logger.log("Saving mapping to disk...")        
-        with open(mapping_filename, 'wb') as handle:
-            pickle.dump(mapping, handle, protocol=pickle.HIGHEST_PROTOCOL)
-        self.logger.log("Mapping is saved to disk.")
-        self.logger.log("Mapping file size: {} MB".format(round(os.path.getsize(mapping_filename) / float(1024 ** 2), 2)))
 
     def get_nearest_neighbors(self, annoy_index, embedding, n=10):
         """Returns the n nearest neighbors of the embedding"""

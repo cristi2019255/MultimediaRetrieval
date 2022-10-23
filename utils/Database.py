@@ -20,7 +20,7 @@ from utils.Logger import Logger
 from utils.tools import scan_files
 import numpy as np
 
-BACKUP_FOLDER = "database_backup"
+BACKUP_FOLDER = os.path.join("database","backup")
 
 
 class Database:
