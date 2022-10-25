@@ -18,25 +18,23 @@
 
 ## Description
 
-A multimedia retrieval pipeline for 3D shapes.
+A multimedia retrieval system for 3D shapes. Project for Utrecht University in 2022 done by Grosu Cristian, Angelov Dmitar and Fluiter Marc, all rights reserved.
 
 ## Geting started
 
-In order to run the application follow the next 3 simple steps:
+In order to run the application follow the next 2 simple steps:
 
 1) In order to get the project started first run the following command: `pip install -r requirements.txt`
-2) In order to create the database run `docker-compose up`
-2.1) If you want to use our cloud database with extracted features just change the `.env` file and run next step without running `docker-compose up`
-3) Now you can run `python3 main.py` to start the application
+2) Now you can run `python3 mainGUI.py` to start the application
 
 Enjoy!
 
 For the technical report please follow this link `https://www.overleaf.com/1781678451tvmkmtkhcrbg`
 
-# Cloud database
+## Cloud database
 
-In latter stages when we will have all the features extracted we will upload the database to the cloud,
-so that we can use it for future steps
+The extracted features are stored in a cloud database. Please be informed that we are sharing a database connection via the
+`.env` file, the database have some limitations we set in order to prevent abuses from future users. The database will become unavailable in 2023.
 
 Database dashboard in Hekoru: `https://data.heroku.com/datastores/fd3a9a51-2a81-42fd-8891-093915414ce3#`
 See `.env` for more details.
@@ -44,21 +42,3 @@ See `.env` for more details.
 ## TO update the Database locally
 
 Run `docker-compose up` and update the database then run `docker-compose down` to shut down the container
-
-## TODO
-
-For Step 2:
-
-    Problems:
-        Histograms ugly looking for the report, make them more beautiful
-
-For Step 3:
-    Test if the features are correctly implemented
-    Testing througth histograms on each feature and class apartenance
-    Volume of the shape seems to be correctly implemented
-
-    Problems:
-        Running time
-
-For Step 4:
-    ...
