@@ -20,7 +20,9 @@ from utils.Logger import Logger
 from tqdm import tqdm
 import matplotlib.pyplot as plt
 import seaborn as sns
-import pandas as pd   
+import pandas as pd
+
+from utils.statistics import plot_bars   
 
 DATA_PATH = "data"
 RESULTS_PATH = os.path.join("report", "evaluation_results")
@@ -167,13 +169,16 @@ def plot_roc_curve_for_k(k=1):
     cm2 = load_confusion_matrix(k=k, method="KNN")
     sp1, fpr1 = compute_roc_curve(cm1)
     sp2, fpr2 = compute_roc_curve(cm2)
+    plt.figure(figsize=(10, 10))
     plt.title("ROC curve for k = " + str(k))
-    plt.plot(sp1, fpr1, label="ANN")
-    plt.plot(sp2, fpr2, label="KNN")
+    plt.plot(fpr1, sp1, label="ANN")
+    plt.plot(fpr2, sp2, label="KNN")
+    plt.plot([0, 1], [0, 1], linestyle="--", label="Random guess")
+    plt.legend()
     plt.savefig(os.path.join(RESULTS_PATH, f"roc_curve_k_{k}.png"))
     plt.show()
 
-def plot_class_histogram_prediction(class_name = "Human", k_max = 3):
+def plot_class_histogram_prediction(class_name = "Human", k_max = 1):
     classes = os.listdir(os.path.join(DATA_PATH, "PRINCETON", "train")) + os.listdir(os.path.join(DATA_PATH, "LabeledDB_new", "train"))
     preds1 = []
     preds2 = []
@@ -184,23 +189,18 @@ def plot_class_histogram_prediction(class_name = "Human", k_max = 3):
         preds2.append(cm2.loc[class_name, class_name] / k)
     
     path = os.path.join(RESULTS_PATH, "histograms_per_class")
-    os.path.makedirs(path, exist_ok=True)
+    os.makedirs(path, exist_ok=True)
 
-    class_instances = len(os.listdir(os.path.join(DATA_PATH, "PRINCETON", "train", class_name))) + len(os.listdir(os.path.join(DATA_PATH, "LabeledDB_new", "train", class_name)))
+    if os.path.exists(os.path.join(DATA_PATH, "PRINCETON", "train", class_name)):
+        class_instances = len(os.listdir(os.path.join(DATA_PATH, "PRINCETON", "train", class_name))) 
+    else:
+        class_instances = len(os.listdir(os.path.join(DATA_PATH, "LabeledDB_new", "train", class_name)))
+    bins = [str(i) for i in range(1, k_max +1)]
+    plot_bars(data = preds1, bins = bins, y_lim = class_instances, title=f"Predictions for class {class_name} with ANN", filename = os.path.join(path, f"histogram_{class_name}_ANN.png"))
+    plot_bars(data = preds2, bins = bins, y_lim = class_instances, title=f"Predictions for class {class_name} with KNN", filename = os.path.join(path, f"histogram_{class_name}_KNN.png"))
     
-    plt.title(f"Predictions for class {class_name} with method ANN")
-    plt.ylim(0, class_instances)
-    plt.hist(preds1, label="ANN")
-    plt.savefig(os.path.join(path, f"histogram_{class_name}_ANN.png"))
-
-    plt.cla()
-    plt.title(f"Predictions for class {class_name} with method KNN")
-    plt.ylim(0, class_instances)
-    plt.hist(preds2, label="KNN")
-    plt.savefig(os.path.join(path, f"histogram_{class_name}_KNN.png"))
-        
-if __name__ == "__main__":
-    k = 1
+def compute_evaluation():
+    k = 2
     method = "KNN"
     
     compute_confusion_matrix(k, method)
@@ -209,3 +209,8 @@ if __name__ == "__main__":
     confusion_matrix = load_confusion_matrix(k=k, method=method)
     plot_confusion_matrix(confusion_matrix, k, method)
     
+        
+if __name__ == "__main__":
+    compute_evaluation()
+    #plot_class_histogram_prediction()
+    #plot_roc_curve_for_k(k=1)

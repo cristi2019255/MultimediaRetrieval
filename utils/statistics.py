@@ -22,8 +22,20 @@ import matplotlib.pyplot as plt
 
 plt.style.use(['science', 'no-latex'])  # style from SciencePlots
 
+def plot_bars(data, title, bins, filename, y_lim = None):
+    plt.figure(figsize=(8, 6), dpi=80)
+    plt.clf()
+    plt.bar(x=bins, height=data, color='#607c8e', edgecolor='black', width=0.4)
+    plt.title(title)
+    plt.xticks(rotation=60, fontsize=10, va='top', ha='center')
+    plt.xlabel("K")
+    if y_lim is not None:
+        plt.ylim(0, y_lim)
+    plt.savefig(filename)
+    plt.show()
+    plt.close()
 
-def plot_histogram(data, title="Histogram of vertex counts", bins = 20):
+def plot_histogram(data, title="Histogram of vertex counts", bins = 20, filename = None):
     plt.figure(figsize=(8, 6), dpi=80)
     plt.clf()
     plt.hist(data, bins=bins, edgecolor='black', rwidth=0.85, color='#607c8e')
@@ -32,6 +44,10 @@ def plot_histogram(data, title="Histogram of vertex counts", bins = 20):
     
     plt.xticks(rotation=60, fontsize=10, va='top', ha='center')
 
-    file_name = title.replace(" ", "_") + ".png"
-    plt.savefig(f"./report/histograms/{file_name}")
+    if filename is not None:
+        plt.savefig(filename)
+    else:
+        file_name = title.replace(" ", "_") + ".png"
+        plt.savefig(f"./report/histograms/{file_name}")
+    
     plt.close()
