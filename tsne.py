@@ -16,6 +16,8 @@ import os
 import numpy as np
 from utils.ANN import ANN
 from utils.Database import Database
+import os
+import matplotlib.pyplot as plt
 
 
 def Hbeta(D=np.array([]), beta=1.0):
@@ -245,10 +247,26 @@ def load_tsne_and_labels():
         shapes_ids = np.load(f)
     
     label_colors = {}
-    for i, label in enumerate(set(labels)):
+    for label in set(labels):
         label_colors[label] = np.random.rand(3)
     
     return Y, labels, label_colors, shapes_ids
+
+def plot_tsne():
+    Y, labels, label_colors, shape_ids = load_tsne_and_labels()
+    plt.figure(figsize=(10, 10))
+    for i in range(len(Y)):
+        plt.scatter(Y[i, 0], Y[i, 1], color=label_colors[labels[i]], label=labels[i])
+    
+    classes = np.unique(labels)
+    plt.legend(classes, loc = 'upper right')
+    ax = plt.gca()
+    legend = ax.get_legend()
+    for l in range(len(legend.legendHandles)):
+        legend.legendHandles[l].set_color(label_colors[classes[l]])
+    file_path = os.path.join("report", "tsne.png")
+    plt.savefig(file_path)
     
 if __name__ == "__main__":
-    compute_tsne() 
+    #compute_tsne() 
+    plot_tsne()

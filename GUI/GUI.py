@@ -28,7 +28,7 @@ from tsne import load_tsne_and_labels
 from utils.Logger import Logger
 from utils.QueryHandler import QueryHandler
 from utils.renderer import render, render_shape_features
-import matplotlib.pyplot as plt
+from PIL import Image
 
 class GUI:
     def __init__(self):
@@ -360,17 +360,11 @@ class GUI:
                 self.logger.error("Error while loading the shape" + str(e))
     
     def handle_tsne_event(self, event, values):
-        fig = plt.figure(figsize=(10, 10))
-        Y, labels, labels_colors, shape_ids = self.tsne_data
-        for i in range(len(Y)):
-            label = labels[i]
-            plt.scatter(Y[i, 0], Y[i, 1], color=labels_colors[label], label=label, picker=True)
-            
-            # TODO: annotate with shape details    
-            #plt.annotate(shape_ids[i], (Y[i, 0], Y[i, 1]))        
-        
-        plt.legend(set(labels), loc = 'best')
-        plt.show()
+        path = os.path.join("report", "tsne.png")
+        if not os.path.exists(path):
+            return
+        img = Image.open(path)
+        img.show()
         
     def handle_retrieval_number_event(self, event, values):
         retrieval = values["-RETRIEVAL NUMBER-"]        
@@ -503,8 +497,8 @@ class GUI:
             # ----------------------------------------------------------------------------------------------------
             
             # ------------------ Retrieving the shapes ------------------
-            similar_shapes_data = self.query.find_similar_shapes(filename = filename,
-                                                               target_nr_shape_to_return=shapes_nr,
+            filenames, distances = self.query.find_similar_shapes(filename = filename,
+                                                               k = shapes_nr,
                                                                threshold_based_retrieval=threshold_based_retrieval,
                                                                threshold=threshold,
                                                                distance_measure_scalars=distance_scalar,
@@ -518,8 +512,7 @@ class GUI:
                                                                scalar_weights=scalar_weights
                                                                )
             
-            distances = list(map(lambda x: round(x[1], 10), similar_shapes_data))
-            filenames = list(map(lambda x: x[0], similar_shapes_data))
+            distances = list(map(lambda x: round(x, 10), distances))
             # ---------------------------------------------------------------------
             self.update_retrieved_shapes(filenames, distances)
             

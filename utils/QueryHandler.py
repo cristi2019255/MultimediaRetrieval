@@ -144,7 +144,7 @@ class QueryHandler:
         return features
     
     def find_similar_shapes(self, filename,
-                            target_nr_shape_to_return = None, 
+                            k = None, 
                             threshold_based_retrieval = False,
                             threshold = 0.001,
                             distance_measure_scalars = 'L2', 
@@ -153,8 +153,8 @@ class QueryHandler:
                             distance_measure_histogram_D2 = 'Earth Mover', 
                             distance_measure_histogram_D3 = 'Earth Mover',
                             distance_measure_histogram_D4 = 'Earth Mover',                           
-                            normalization_type = 'minmax',
-                            global_weights = [0.5, 0.5],
+                            normalization_type = 'z-score',
+                            global_weights = [0.75, 0.25],
                             scalar_weights = [1]
                             ):
         """
@@ -255,7 +255,7 @@ class QueryHandler:
             if threshold_based_retrieval:
                 distances = [d for d in distances if d[1] <= threshold]
             else:
-                distances = distances[:target_nr_shape_to_return]
+                distances = distances[:k]
             
             result = []
             for (shape_id, distance) in distances:
@@ -263,8 +263,10 @@ class QueryHandler:
                 self.db.execute_query(sql, "select")
                 row = self.db.cursor.fetchone()
                 result.append((row[0], distance))
-        
-            return result        
+
+            distances = list(map(lambda x: x[1], result))
+            filenames = list(map(lambda x: x[0], result))
+            return filenames, distances        
         
         except Exception as e:
             raise Exception("Error in the fetching similar shapes: " + str(e))
