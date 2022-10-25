@@ -21,7 +21,6 @@ from tqdm import tqdm
 import matplotlib.pyplot as plt
 import seaborn as sns
 import pandas as pd
-
 from utils.statistics import plot_bars   
 
 DATA_PATH = "data"
@@ -98,11 +97,8 @@ def compute_roc_curve(confusion_matrix):
     Args:
         confusion_matrix (_type_): _description_
     """
-    true_negatives = np.sum(confusion_matrix) - np.sum(np.diag(confusion_matrix))
-    false_positives = np.sum(confusion_matrix, axis=0) - np.diag(confusion_matrix)
-    specificity = true_negatives / (true_negatives + false_positives)
+    specificity = np.sum(confusion_matrix, axis=0) - np.diag(confusion_matrix)
     false_positive_rate = 1 - specificity
-    
     return specificity, false_positive_rate
 
 def compute_precision(confusion_matrix):
@@ -111,9 +107,7 @@ def compute_precision(confusion_matrix):
     :param confusion_matrix: confusion matrix
     :return: precision
     """
-    true_pos = np.diag(confusion_matrix)
-    false_pos = np.sum(confusion_matrix, axis=0) - true_pos
-    return np.sum(true_pos / (true_pos + false_pos))
+    return np.sum(np.diag(confusion_matrix) / np.sum(confusion_matrix, axis=0))
 
 def compute_recall(confusion_matrix):
     """
@@ -121,9 +115,7 @@ def compute_recall(confusion_matrix):
     :param confusion_matrix: confusion matrix
     :return: recall
     """
-    true_pos = np.diag(confusion_matrix)
-    false_neg = np.sum(confusion_matrix, axis=1) - true_pos
-    return np.sum(true_pos / (true_pos + false_neg))
+    return np.sum(np.diag(confusion_matrix) / np.sum(confusion_matrix, axis=1))
 
 def compute_f1_score(confusion_matrix):
     """
@@ -160,7 +152,10 @@ def compute_evaluation_marks(k=1, method="ANN"):
         f.close()
     
     plt.title("ROC curve for k = " + str(k) + " and method = " + method)
-    plt.plot(specificity, false_positive_rate)
+    plt.plot(false_positive_rate, specificity, label = "ROC curve")
+    plt.legend()
+    plt.xlabel("False positive rate")
+    plt.ylabel("Specificity")
     plt.savefig(os.path.join(RESULTS_PATH, method, f"roc_curve_k_{k}.png"))
     plt.show()
 
@@ -174,6 +169,8 @@ def plot_roc_curve_for_k(k=1):
     plt.plot(fpr1, sp1, label="ANN")
     plt.plot(fpr2, sp2, label="KNN")
     plt.plot([0, 1], [0, 1], linestyle="--", label="Random guess")
+    plt.xlabel("False positive rate")
+    plt.ylabel("Specificity")
     plt.legend()
     plt.savefig(os.path.join(RESULTS_PATH, f"roc_curve_k_{k}.png"))
     plt.show()
