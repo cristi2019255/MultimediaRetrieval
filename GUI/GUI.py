@@ -352,7 +352,7 @@ class GUI:
                 self.window["-TOUT-"].update(filename)
                 if values["-SHOW FEATURES-"]:
                     filename = filename.replace(os.path.abspath("."), "").replace("data", "preprocessed")[1:] # remove the first slash
-                    features = self.query.fetch_features(filename)
+                    features = self.query.fetch_shape_features(filename)
                     render_shape_features(filename, features)
                 else:  
                     render([filename])
@@ -385,7 +385,9 @@ class GUI:
             "-SCALAR DISTANCE TEXT-", 
             "-SCALAR DISTANCE-", 
             "-SCALAR WEIGHTS TEXT-", 
-            "-SCALAR WEIGHTS-", 
+            "-SCALAR WEIGHTS-",
+            "-GLOBAL WEIGHTS TEXT-", 
+            "-GLOBAL WEIGHTS-", 
             "-ERROR SCALAR WEIGHTS-",
             "-NORMALIZATION TYPE TEXT-",
             "-NORMALIZATION TYPE-", 
@@ -540,7 +542,7 @@ class GUI:
     def handle_retrieval_list_event(self, event, values):
         try: 
             if values["-SHOW FEATURES RESPONSE-"]:
-                features = self.query.fetch_features(values["-RETRIEVAL LIST-"][0])
+                features = self.query.fetch_shape_features(values["-RETRIEVAL LIST-"][0])
                 render_shape_features(values["-RETRIEVAL LIST-"][0], features)
             else:
                 render(values["-RETRIEVAL LIST-"])
