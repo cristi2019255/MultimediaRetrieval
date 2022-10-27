@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import os
 import pyvista
 from utils.tools import get_features, off2ply
 
@@ -115,7 +116,10 @@ def render(filenames=["./LabeledDB_new/Airplane/61.ply"], show_features=True):
         plotter.camera.zoom(0.35)
         plotter.show_grid()
         plotter.add_mesh(mesh, show_edges=True, smooth_shading=True) #, color="white")
-        plotter.add_title(filename, font_size=10)
+        # showing only the relative path to filename
+        relative_path = os.sep.join(filename.split(os.sep)[-4:])
+        
+        plotter.add_title(relative_path, font_size=10)
         plotter.add_axes(interactive=True)
         plotter.add_bounding_box()
 
