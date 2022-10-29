@@ -1,6 +1,8 @@
 # Here we test everything before implementing any code
 # Like, checking the libraries API, etc.
 
+import os
+
 from Shape import Shape
 from utils.ANN import ANN
 from utils.Database import Database
@@ -135,18 +137,76 @@ def test_ann():
     embedding = ann.get_embedding_from_feature_row(rows[0])
     neighbors_ids, distances = ann.get_nearest_neighbors(index, embedding, n=10)
     print(neighbors_ids)
-    
-test_ann()
-#test_convex_hull()    
-#render(["data/PRINCETON/train/furniture/m855.ply"])
-# test_shape_normalization()
-# test_subsampling()
-# test_supersampling()
 
-#test_render_report()
-#test_super_sampling()
-#create_sphere()
-#create_torus()
-#create_cylinder()
-#test_shape_features("./test_data/torus.ply")
-#show_shape_hist_features()
+
+def test_normalizing():
+    filename = "./data/PRINCETON/train/miscellaneous/m1788.ply"
+    shape = Shape(filename, log=True)
+    shape.translate_barycenter();
+    shape.save_mesh("./test_data/translated_barycenter.ply")
+    shape.align_with_principal_components()
+    shape.save_mesh("./test_data/aligned_with_principal_components.ply")
+    shape.flip_on_moment()
+    shape.save_mesh("./test_data/flipped_on_moment.ply")
+    shape.rescale_shape()
+    shape.save_mesh("./test_data/rescaled_shape.ply")
+    render([filename, "./test_data/translated_barycenter.ply", "./test_data/aligned_with_principal_components.ply", "./test_data/flipped_on_moment.ply", "./test_data/rescaled_shape.ply"])
+    
+def test_scalability():    
+    """
+    query = QueryHandler(log=False)
+    MAX_SHAPES = 500
+    K = 3
+    knn_times = []
+    ann_times = []
+    
+    shapes_filenames = os.listdir("./preprocessed/PRINCETON/train")
+    shapes_filenames = [f"./preprocessed/PRINCETON/train/{filename}" for filename in shapes_filenames]
+    ss = []
+    for filename in shapes_filenames:
+        ss += list(map(lambda x: os.path.join(filename,x), os.listdir(filename)))
+    
+    ss = ss[:MAX_SHAPES]
+        
+    for file in tqdm(ss):                        
+        if ".ply" in file:
+                filename = file[2:]                
+                # tracking time for ANN for a single shape
+                start = time.time()
+                query.get_similar_shapes_indexed(filename, k = K)
+                end = time.time()
+                ann_times.append(end - start)
+                    
+                # tracking time for KNN for a single shape
+                start = time.time()
+                query.find_similar_shapes(filename, k = K)
+                end = time.time()
+                knn_times.append(end - start)                                
+    
+    # saving the results
+    with open("./test_data/ann_times.npy", "wb") as f:
+        np.save(f, np.array(ann_times))
+        f.close()
+    
+    with open("./test_data/knn_times.npy", "wb") as f:
+        np.save(f, np.array(knn_times))
+        f.close()
+    """
+    # showing the results
+    with open("./test_data/ann_times.npy", "rb") as f:
+        ann = np.load(f)
+        f.close()
+    with open("./test_data/knn_times.npy", "rb") as f:
+        knn = np.load(f)
+        f.close()
+    
+    plt.figure(figsize=(10, 10))
+    plt.title("ANN vs KNN for 500 shapes run times (k=3)")
+    plt.plot(ann[:400], label="ANN", color="green")
+    plt.plot(knn[:400], label="KNN", color="blue") 
+    plt.xlabel("Number of shapes")
+    plt.ylabel("Time (s)")
+    plt.legend()
+    plt.savefig(os.path.join("report", "evaluation_results", "ANN_vs_KNN_run_time.png"))  
+    plt.show()
+    
