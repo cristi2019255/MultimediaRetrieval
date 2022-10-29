@@ -13,7 +13,7 @@
 # limitations under the License.
 
 TITLE = "Multimedia Retrieval System"
-WINDOW_SIZE = (1150, 700)
+WINDOW_SIZE = (1150, 750)
 BACKGROUND_COLOR = "#252526"
 BUTTON_PRIMARY_COLOR = "#007acc"
 TEXT_COLOR = "#ffffff"
