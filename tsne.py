@@ -224,7 +224,7 @@ def compute_tsne():
     with open(os.path.join("database", "indexes", "tsne_embedding_ids.npy"), "wb") as f:
         np.save(f, shapes_ids)
     
-    Y = tsne(corpus, 2, corpus.shape[1], 20.0)
+    Y = tsne(corpus, 2, corpus.shape[1], 40.0)
     
     with open(os.path.join("database", "indexes", "tsne_embedding.npy"), "wb") as f:
         np.save(f, Y)
@@ -268,5 +268,5 @@ def plot_tsne():
     plt.savefig(file_path)
     
 if __name__ == "__main__":
-    #compute_tsne() 
-    plot_tsne()
+    compute_tsne() 
+    #plot_tsne()
