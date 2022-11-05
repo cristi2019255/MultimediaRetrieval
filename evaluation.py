@@ -15,7 +15,6 @@
 import numpy as np
 import os
 
-from sklearn.metrics import confusion_matrix
 
 
 from utils.QueryHandler import QueryHandler
@@ -114,49 +113,6 @@ def compute_accuracy(confusion_matrix):
     """
     return np.trace(confusion_matrix) / np.sum(confusion_matrix)
 
-def compute_specificity_sensitivity(y_true, y_pred, cls, k):
-    """_summary_
-
-    Args:
-        y_true (_type_): _description_
-        y_pred (_type_): _description_
-    """
-    
-    y_true = np.array(y_true)
-    y_pred = np.array(y_pred)     
-    
-    # one vs all
-    y_true = np.where(y_true == cls, 1, 0)
-    y_pred = np.where(y_pred == cls, 1, 0)
-   
-    assert len(y_pred) == len(y_true)
-    
-    y_p = [0] * int(len(y_pred) / k)
-    y_t = [0] * int(len(y_true) / k)
-    
-    # assign a correct prediction only if all k predictions are correct
-    t = 0
-    for i in range(0,len(y_pred), k):
-        if (np.sum(y_pred[i:i+k]) == k): #and k == 1) or (np.sum(y_pred[i:i+k]) >= 2 and k != 1):
-            y_p[t] = 1
-        y_t[t] = y_true[i]
-        t += 1    
-    
-    tn, fp, fn, tp = confusion_matrix(y_t, y_p).ravel()
-    
-    sensitivity = tp / (tp + fn)
-    specificity = tn / (tn + fp)
-    
-    return specificity, sensitivity, cls
-
-def compute_roc_curves(y_true, y_pred):
-    """_summary_
-        Compute the ROC curve
-    Args:
-        confusion_matrix (_type_): _description_
-    """
-    return [ compute_specificity_sensitivity(y_true, y_pred, cls) for cls in np.unique(y_true) ]
-    
 def compute_precision(confusion_matrix):
     """
     Compute the precision 
@@ -212,76 +168,103 @@ def compute_evaluation_marks(k=1, method="ANN"):
                 
         f.close()
 
-def plot_roc_curve_for_method(method="ANN"):
-    plt.figure(figsize=(10, 10))
-    plt.title("ROC curve  for method = " + method)
-    
-    classes = os.listdir(os.path.join(DATA_PATH, "PRINCETON", "train")) + os.listdir(os.path.join(DATA_PATH, "LabeledDB_new", "train"))
-    
-    for c in classes:
-        sensitivities = []
-        specificities = []
-        for k in range(1, 6):
-            y_true, y_pred = load_y(k=k, method=method)
-            spe, sen, _ = compute_specificity_sensitivity(y_true, y_pred, c, k)   
-            
-            specificities.append(spe)
-            sensitivities.append(sen)
-    
-        specificities += [1,0]
-        sensitivities += [0,1]
-        
-        combined = list(zip(specificities, sensitivities))
-        combined.sort(key=lambda x: x[0])
-        specificities, sensitivities = zip(*combined)
-        
-        plt.plot( specificities, sensitivities, label=c)
+def compute_roc_curve_point(y_true, y_pred, cls, k):
+    """_summary_
 
-    plt.plot([1, 0], [0, 1], color='navy', lw=2, linestyle='--', label="Random guess")
-    plt.legend()
-    plt.xlabel("Specificity")
-    plt.ylabel("Sensitivity")
-    plt.savefig(os.path.join(RESULTS_PATH, method, f"roc_curve_{method}.png"))    
-    plt.close()
+    Args:
+        y_true (_type_): _description_
+        y_pred (_type_): _description_
+    """
+    
+    y_true = np.array(y_true)
+    y_pred = np.array(y_pred)     
+    
+    # one vs all
+    y_true = np.where(y_true == cls, 1, 0)
+    y_pred = np.where(y_pred == cls, 1, 0)
+   
+    assert len(y_pred) == len(y_true)
+    
+    # assign a correct prediction only if all k predictions are correct
+    tp, tn, fp, fn = 0, 0, 0, 0
+    
+    for i in range(0,len(y_pred), k):
+        if y_true[i] == 1:
+            if (np.sum(y_pred[i:i+k]) >= 2 * k/3):
+               tp += 1
+            else:
+                fp += 1
+        elif y_true[i] == 0:
+            if (np.sum(y_pred[i:i+k]) < k / 3):
+                tn += 1
+            else:
+                fn += 1
+    
+    #print(tp, fp, fn, tn)
+    
+    if (tp + fn) == 0:
+        tpr = 0
+    else:
+        tpr = tp / (tp + fn)
+    if (fp + tn) == 0:
+        fpr = 0
+    else:
+        fpr = fp / (fp + tn)
+    
+    #print(fpr, tpr)
+    
+    return fpr, tpr
 
-def plot_roc_curve_for_class(cls = "Human"):
-    specs1 = []
-    specs2 = []
-    sens1 = []
-    sens2 = []
+def compute_roc_curves(classes = ["Human"], method = "ANN"):
+    K_max = 5
+    roc_matrix = np.zeros((len(classes),K_max, 2)) 
+    console = Logger()
     
-    for k in range(1,6):
-        y_true1, y_pred1 = load_y(k=k, method="ANN")
-        y_true2, y_pred2 = load_y(k=k, method="KNN")
-        specificity1, sensitivity1, _ = compute_specificity_sensitivity(y_true1, y_pred1, cls,k)
-        specificity2, sensitivity2, _ = compute_specificity_sensitivity(y_true2, y_pred2, cls,k)
-        specs1.append(specificity1)
-        specs2.append(specificity2)
-        sens1.append(sensitivity1)
-        sens2.append(sensitivity2)
-    
-    specs1 += [1,0]
-    specs2 += [1,0]
-    sens1 += [0,1]
-    sens2 += [0,1]
-    
-    combined = list(zip(specs1, sens1))
-    combined.sort(key=lambda x: x[0])
-    specs1, sens1 = zip(*combined)
-    
-    combined = list(zip(specs2, sens2))
-    combined.sort(key=lambda x: x[0])
-    specs2, sens2 = zip(*combined)
+    for k in range(1, K_max + 1):
+        y_true, y_pred = load_y(k=k, method=method)    
+        for i in range(len(classes)):
+            roc_matrix[i][k - 1] = compute_roc_curve_point(y_true=y_true, y_pred=y_pred, cls = classes[i], k=k)    
         
+    # sorting within class by fpr 
+    for i in range(len(classes)):
+        roc_matrix[i] = np.sort(roc_matrix[i], axis=0)
+        #console.warn(roc_matrix[i])
+    
+    return roc_matrix
+
+def plot_roc_curve(classes = ["Human"], methods=["ANN"], combined = False, include_random_guess = True, include_boundaries = True):
     plt.figure(figsize=(10, 10))
-    plt.title("ROC curve")
-    plt.plot(specs1, sens1, label="ANN")
-    plt.plot(specs2, sens2, label="KNN")
-    plt.plot([0, 1], [1, 0], linestyle="--", label="Random guess")
-    plt.xlabel("Specificity")
-    plt.ylabel("Sensitivity")
-    plt.legend()
-    plt.savefig(os.path.join(RESULTS_PATH, f"roc_curve_{cls}.png"))
+    
+    for method in methods: 
+        roc_matrix = compute_roc_curves(classes=classes, method=method)
+        for i in range(len(classes)):
+            roc_curve = roc_matrix[i]
+            fprs = list(map(lambda x: x[0], roc_curve))
+            tprs = list(map(lambda x: x[1], roc_curve))
+            if include_boundaries:
+                fprs = [0] + fprs + [1]
+                tprs = [0] + tprs + [1]
+            plt.plot(fprs, tprs, label=method + " " + classes[i])
+
+        if not combined:
+            plt.xlabel("False positive rate")
+            plt.ylabel("True positive rate")
+            plt.title("ROC curve  for method = " + method)
+            if include_random_guess:
+                plt.plot([0, 1], [0, 1], color='navy', lw=2, linestyle='--', label="Random guess")
+            plt.legend()
+            plt.savefig(os.path.join(RESULTS_PATH, method, f"roc_curve_{method}.png"))    
+            plt.clf()
+
+    if combined:
+        plt.xlabel("False positive rate")
+        plt.ylabel("True positive rate")
+        plt.title("ROC curves for comparison")
+        if include_random_guess:
+            plt.plot([0, 1], [0, 1], color='navy', lw=2, linestyle='--', label="Random guess")
+        plt.legend()
+        plt.savefig(os.path.join(RESULTS_PATH, f"roc_curve.png"))    
+
     plt.close()
 
 def plot_class_histogram_prediction(class_name = "Human", k_max = 1):
@@ -317,6 +300,6 @@ def compute_evaluation():
         
 if __name__ == "__main__":
     #compute_evaluation()
-    plot_roc_curve_for_method(method="KNN")
-    plot_roc_curve_for_method(method="ANN")
-    plot_roc_curve_for_class(cls="Human")
+    classes = os.listdir(os.path.join(DATA_PATH, "PRINCETON","train")) + os.listdir(os.path.join(DATA_PATH, "LabeledDB_new", "train"))
+    plot_roc_curve(classes = ["Human"], methods = ["ANN", "KNN"], combined=True, include_random_guess=True)
+    plot_roc_curve(classes = classes, methods = ["ANN", "KNN"], combined=False, include_random_guess=True)
