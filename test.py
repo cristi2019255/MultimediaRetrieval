@@ -153,45 +153,6 @@ def test_normalizing():
     render([filename, "./test_data/translated_barycenter.ply", "./test_data/aligned_with_principal_components.ply", "./test_data/flipped_on_moment.ply", "./test_data/rescaled_shape.ply"])
     
 def test_scalability():    
-    """
-    query = QueryHandler(log=False)
-    MAX_SHAPES = 500
-    K = 3
-    knn_times = []
-    ann_times = []
-    
-    shapes_filenames = os.listdir("./preprocessed/PRINCETON/train")
-    shapes_filenames = [f"./preprocessed/PRINCETON/train/{filename}" for filename in shapes_filenames]
-    ss = []
-    for filename in shapes_filenames:
-        ss += list(map(lambda x: os.path.join(filename,x), os.listdir(filename)))
-    
-    ss = ss[:MAX_SHAPES]
-        
-    for file in tqdm(ss):                        
-        if ".ply" in file:
-                filename = file[2:]                
-                # tracking time for ANN for a single shape
-                start = time.time()
-                query.get_similar_shapes_indexed(filename, k = K)
-                end = time.time()
-                ann_times.append(end - start)
-                    
-                # tracking time for KNN for a single shape
-                start = time.time()
-                query.find_similar_shapes(filename, k = K)
-                end = time.time()
-                knn_times.append(end - start)                                
-    
-    # saving the results
-    with open("./test_data/ann_times.npy", "wb") as f:
-        np.save(f, np.array(ann_times))
-        f.close()
-    
-    with open("./test_data/knn_times.npy", "wb") as f:
-        np.save(f, np.array(knn_times))
-        f.close()
-    """
     # showing the results
     with open("./test_data/ann_times.npy", "rb") as f:
         ann = np.load(f)
