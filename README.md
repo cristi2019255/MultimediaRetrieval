@@ -38,7 +38,3 @@ The extracted features are stored in a cloud database. Please be informed that w
 
 Database dashboard in Hekoru: `https://data.heroku.com/datastores/fd3a9a51-2a81-42fd-8891-093915414ce3#`
 See `.env` for more details.
-
-## TO update the Database locally
-
-Run `docker-compose up` and update the database then run `docker-compose down` to shut down the container

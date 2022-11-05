@@ -19,7 +19,7 @@ from utils.Database import Database
 
 EMBEDDING_DIMENSION = 134
 INDEX_FILENAME = os.path.join("database", "indexes", "features_index.ann")
-TREES_NUMBER = 500
+TREES_NUMBER = 100
 
 class ANN:
     """_summary_: this is a class that contains the ANN model and its methods
