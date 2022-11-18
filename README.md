@@ -18,7 +18,7 @@
 
 ## :scroll: Description
 
-A multimedia retrieval system for 3D shapes. Project for Utrecht University in 2022 done by Grosu Cristian :moldova:, Angelov Dmitar :bulgaria: and Fluiter Marc :netherlands: , all rights reserved :copyright:.
+A multimedia retrieval system for 3D shapes. Project for Utrecht University :university: in 2022 done by Grosu Cristian :moldova:, Angelov Dmitar :bulgaria: and Fluiter Marc :netherlands: , all rights reserved :copyright:.
 
 ## :rocket: Quick start
 
@@ -31,7 +31,7 @@ Or simply run the following command `./main.sh` which will install the dependenc
 
 Enjoy :rocket: !
 
-## :book: Usage Guide :book
+## :book: Usage Guide
 
 After starting the programm you a window should open as follows:
 ![gui_overview](GUI/assets/overview.png)
