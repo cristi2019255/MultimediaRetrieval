@@ -475,9 +475,6 @@ class Shape:
         """
         _summary_ compute the diameter of the shape
         """
-        
-        # TODO: not very scalable, O(N^2), where N is the number of vertices
-        # TODO: find a better way to compute the diameter
         diameter = 0
         
         for i in range(len(self.vertices)):

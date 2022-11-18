@@ -352,7 +352,6 @@ class QueryHandler:
     def _kullback_leibler_divergence(A = None, B = None):
         """Kullback-Leibler Divergence"""
         assert(len(A) == len(B))
-        # TODO: don't know how to avoid divisions by zero
         # Relative entropy is defined so only if for all x, B(x)=0 implies A(x)=0 (absolute continuity).
         sum = 0
         for i in range(len(A)):
