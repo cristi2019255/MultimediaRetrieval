@@ -158,9 +158,8 @@ class QueryHandler:
                             scalar_weights = [1]
                             ):
         """
-            Find similar shapes to the target shape using the specified distance measure and normalization method.
-            TODO: I would like to compute a distance matrix beforehand for all the shapes in the db and store it somewhere and then fetch just based on that matrix.
-            e.g.: 5 shapes that on the row of the target shape gives smallest distance. 
+            Description: Find similar shapes to the target shape using the specified distance measure and normalization method.
+            returns: (filenames, distances) 
         """
         
         # ------------------- Choosing the distance function ------------------------ 

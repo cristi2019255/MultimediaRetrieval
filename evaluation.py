@@ -14,16 +14,12 @@
 
 import numpy as np
 import os
-
-
-
 from utils.QueryHandler import QueryHandler
 from utils.Logger import Logger
 from tqdm import tqdm
 import matplotlib.pyplot as plt
 import seaborn as sns
 import pandas as pd
-
 from utils.statistics import plot_bars
 
 DATA_PATH = "data"
