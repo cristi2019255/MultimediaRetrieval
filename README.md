@@ -18,7 +18,7 @@
 
 ## :scroll: Description
 
-A multimedia retrieval system for 3D shapes. Project for Utrecht University :university: in 2022 done by Grosu Cristian :moldova:, Angelov Dmitar :bulgaria: and Fluiter Marc :netherlands: , all rights reserved :copyright:.
+A multimedia retrieval system for 3D shapes. Project for Utrecht University :netherlands: in 2022 done by Grosu Cristian :moldova:, Angelov Dmitar :bulgaria: and Fluiter Marc :netherlands: , all rights reserved :copyright:.
 
 ## :rocket: Quick start
 
