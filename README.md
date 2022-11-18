@@ -25,7 +25,7 @@ A multimedia retrieval system for 3D shapes. Project for Utrecht University in 2
 In order to run the application follow the next 2 simple steps:
 
 1) In order to get the project started first run the following command: `pip install -r requirements.txt`
-2) Now you can run `python3 mainGUI.py` to start the application
+2) Now you can run `python3 main.py` to start the application
 
 Enjoy!
 
