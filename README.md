@@ -16,11 +16,11 @@
 
 # Multimedia Retrieval System
 
-## Description :scroll
+## :scroll: Description
 
 A multimedia retrieval system for 3D shapes. Project for Utrecht University in 2022 done by Grosu Cristian :moldova:, Angelov Dmitar :bulgaria: and Fluiter Marc :netherlands: , all rights reserved :copyright:.
 
-## Quick start :rocket
+## :rocket: Quick start
 
 In order to run the application follow the next 2 simple steps:
 
@@ -31,7 +31,7 @@ Or simply run the following command `./main.sh` which will install the dependenc
 
 Enjoy :rocket: !
 
-## Usage Guide :book
+## :book: Usage Guide :book
 
 After starting the programm you a window should open as follows:
 ![gui_overview](GUI/assets/overview.png)
@@ -44,7 +44,7 @@ The system will display a window with most similar shapes as follows:
 After closing the results overview window in the system window a list of filenames and distances of the most similar found shapes is displayed
 Click on a filename to view the 3D shape
 
-### Advanced search :blue_book
+### :blue_book: Advanced search
 
 If you want to manually ajust the distance function check the <b> Advanced search </b> checkbox.
 A menu with the options is displayed as follows:
@@ -53,19 +53,19 @@ Change the options you desire and press the  <b> Retrieve similar shapes </b> bu
 
 Enjoy our 3D retrieval system :rocket: !
 
-## Details :books
+## :books: Details
 
 For the technical report please follow this link `https://www.overleaf.com/1781678451tvmkmtkhcrbg` or see the `report` folder in this project
 The source code could also be find at the following link `https://github.com/cristi2019255/MultimediaRetrieval`
 
-## Cloud database :cloud
+## :cloud: Cloud databasee
 
-The extracted features are stored in a cloud database. Please be informed that we are sharing a database connection via the
+The extracted features are stored in a :cloud: database. Please be informed that we are sharing a database connection via the
 `.env` file, the database have some limitations we set in order to prevent abuses from future users. The database will become unavailable in 2023.
 
 Database dashboard in Hekoru: `https://data.heroku.com/datastores/fd3a9a51-2a81-42fd-8891-093915414ce3#`
 See `.env` for more details.
 
-##### Final message :sunny
+##### :sunny: Final message
 
 Support Ukraine :ukraine: ! (2022)
