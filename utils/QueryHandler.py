@@ -15,7 +15,7 @@
 from utils.ANN import ANN
 from utils.Database import Database
 from utils.Logger import Logger
-from Shape import Shape
+from utils.Shape import Shape
 import numpy as np
 from scipy.stats import wasserstein_distance
 

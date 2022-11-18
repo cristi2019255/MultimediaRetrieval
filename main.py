@@ -2,7 +2,7 @@ from utils.FeatureExtractor import FeatureExtractor
 from utils.Preprocessor import Preprocessor
 from utils.QueryHandler import QueryHandler
 
-from Shape import Shape
+from utils.Shape import Shape
 from utils.renderer import render
 from utils.tools import track_progress
 

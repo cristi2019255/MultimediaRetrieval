@@ -13,7 +13,7 @@
 # limitations under the License.
 
 import math
-from Shape import Shape
+from utils.Shape import Shape
 from utils.Logger import Logger
 from utils.Database import Database
 import os

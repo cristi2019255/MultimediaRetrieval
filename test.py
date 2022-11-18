@@ -3,7 +3,7 @@
 
 import os
 
-from Shape import Shape
+from utils.Shape import Shape
 from utils.ANN import ANN
 from utils.Database import Database
 from utils.renderer import render, render_shape_with_features
