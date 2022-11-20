@@ -1,0 +1,17 @@
+This report describes the implementation of a 3D shape retrieval system based on a set of discriminative features.
+We describe how a 3D shape dataset should be preprocessed in order to extract good features which are consistent across a variety of shapes.
+For each step of the preprocessing, we demonstrate the correctness of the implementation.
+An extensive analysis, involving both theoretical shapes and ones from the dataset, is done on the computed features in order to evaluate the correctness of our implementation and ensure the features' discriminative power.
+We present and evaluate several functions for computing a distance between shapes based on their features.
+
+Our system allows for the choice between using a precomputed index for searching quickly, useful for large datasets, or a custom combination of weights and distance functions, which allow for the possibility of more accurate results at the cost of the speed.
+On the one hand, the precomputed index approach gives results an order of magnitude faster, but on the other hand, the results are less accurate.
+Since the priorities differ for different applications, in order to achieve a system that is flexible, we allow the user to make this decision, even though by default our system aims for speed and ease of use, and thus uses the precomputed index.
+
+Our quantitative evaluation shows that overall the system does not perform ideally, but excels at certain, more limited, classes of objects.
+Ideally, we would have liked to evaluate the system with more fine-grained ground truth labels for our data, but that was not possible with the dataset we chose.
+Of course, the decision about how well the system performs depends on the domain and use-case, and should be decided as the system would be integrated into a larger application.
+Used on its own, the system performs relatively well, however, there is room for improvement.
+For example, further evaluation could be done to determine the ideal combination of feature weights and distance functions.
+Additionally, future work could examine more features (e.g.\ a histogram of the local distribution of curvatures of a shape) to achieve greater discriminative power, as well as evaluate the system on a different dataset with more classes.
+A further investigation in the direction of dimensionality reduction with t-SNE is also possible, for example to use icons as representations of certain clusters \& regions of the image, instead of a color for an entire class.

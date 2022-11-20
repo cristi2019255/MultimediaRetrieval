@@ -1,0 +1,225 @@
+The end goal of our retrieval system is that, when provided with a query shape, the system must find the most
+shapes from our database that are most similar to it.
+For this to happen, we have to determine the similarities - or rather, the dissimilarities - between the shapes in our
+database and the query shape.
+Instead of using the similarity to determine how similar shapes are, we use the dissimilarity to determine how dissimilar they are, because this is far easier to work with.
+The dissimilarity between two shapes can be seen as the inverse notion of the similarity between two shapes.
+We take this dissimilarity to be the distance between the feature vector representations of the shapes.
+The intuition is that the lower this distance is between two shapes, the more similar these shapes are to each other.
+Since our feature vector consists of many values and different types of data (i.e.\ scalars and histograms), we have to define a distance measure that is able to properly take all these values into account in order to distinguish between shapes accurately.
+This section discusses how the features are normalized and how these normalized values are subsequently used for calculating distances between shapes.
+We have implemented several ways of performing these normalizations and distance calculation tasks.
+We will discuss which methods can be used and explain why we have chosen the default configuration that is used for the matching of shapes.
+
+\subsection{Feature normalization}
+The feature vectors contain many values, and all these values have different ranges.
+If one feature has a far larger range of values than others, this feature would be dominant in determining whether shapes are similar.
+So, in order to give equal power to all features, we have to normalize their values.
+One way to achieve this goal is to use `Min-Max Normalization' to bring all values into the range of real numbers $[0, 1]$.
+Given the minimum value $x_{min}^{f_s}$ and the maximum value $x_{max}^{f_s}$ for a scalar feature ${f_s}$ a value $x_i^{f_s}$ of that given feature is standardized following the formula
+\begin{equation}
+    x_i^{f'_s} = \frac{x_i^{f_s} - x_{min}^{f_s}}{x_{max}^{f_s} - x_{min}^{f_s}}.
+\end{equation} 
+This normalization method subtracts the minimum value from each value before dividing them by the complete range of values, the maximum value minus the minimum value, to get values ranging between $0$ and $1$.
+Next to `min-max normalization', our system provides the user with the option to choose `z-score normalization'.
+This normalization method standardizes, again for a scalar feature ${f_s}$, a value $x_i^{f_s}$ using the formula
+\begin{equation}
+    x_i^{f'_s} = \frac{x_i^{f_s} - x_{avg}^{f_s}}{x_{stddev}^{f_s}},
+\end{equation} 
+where $x_{avg}^{f_s}$ is the average value and $x_{stddev}^{f_s}$ is the standard deviation for the feature ${f_s}$.
+Here the average value is subtracted from all values before dividing by the standard deviation for that value.
+This generally does not bring all values in the range of real numbers $[0, 1]$.
+However, most values will be contained either in or just outside that range (i.e.\ 95\% of the time the values will be in range $[0,1]$).
+If there are significant outliers, these will also be far outside this range.
+It is up to the user whether this is wanted or not.
+
+The normalization discussed so far, the `min-max normalization' and the `z-score normalization', only applies to the scalar features.
+The values for the histograms of the local descriptors are normalized separately because it does not make sense to perform the same normalization on these features.
+For these histograms, the bin values are divided by the sum of the bin values for that feature, such that the area of the histogram/distribution is equal to $1$.
+Mathematically, given a histogram feature $f_h$ with bin values $b_1^{f_h}, b_2^{f_h}, \dots, b_n^{f_h}$, the normalized bin values are calculated with
+\begin{equation}
+    b_i^{f'_h} = \frac{b_i^{f_h}}{\sum_{j=1}^n b_j^{f_h}}.
+\end{equation}
+This normalization is performed on each histogram feature separately.
+
+\subsection{Distance calculation}
+Using the normalized feature values, we can calculate a distance between feature vectors using some distance function.
+An overview of the definitions for the implemented distance measures can be found in Table \ref{tab:distance-functions}.
+In addition to their general formulas, we have also specified some advantages of the different distance measures.
+The distance functions are also included in the table containing the global notations, Table \ref{tab:notations}.
+In the following subsection we will discuss these distance measures in more detail and explain the weighing that is
+performed as part of the distance calculations.
+
+Firstly, we will talk about the weighing that is performed for the features.
+Then, we will discuss the distance functions that can be used for both the scalar features and the histogram
+features separately.
+Finally, we will the reasoning behind our choices for the default values and distance functions we use in the final
+system.
+
+\begin{table}[ht]
+    \centering
+    \resizebox{\textwidth}{!}{
+        \begin{tabular}{c|c|c}
+            Distance Name & Formula & Advantages \\
+            \hline
+            
+            \multirow{2}{*}{LP norm} & $L_p(\overrightarrow{x},\overrightarrow{y}) = \left( \sum_{i = 1}^n \left| x_i - y_i \right| ^p \right)^{\frac{1}{p}}$ & \multirow{2}{*}{Easy to compute} \\
+            & $L_{\infty}(\overrightarrow{x},\overrightarrow{y}) = \max\limits_{i \in \{1, \dots , n\}} \left| x_i - y_i \right|$ & \\
+            \hline
+
+            Cosine distance & $d_{cos}(\overrightarrow{x}, \overrightarrow{y}) = 1 - \frac{\overrightarrow{x} \cdot \overrightarrow{y}}{||\overrightarrow{x}||\cdot ||\overrightarrow{y}||}$ & Easy to compute, Scale Invariant \\
+            \hline
+            Mahalanobis Distance & $d_{mahalanobis}(\overrightarrow{x}, \overrightarrow{y}) = \sqrt{(\overrightarrow{x} - \overrightarrow{y})^T Cov^{-1}(X) (\overrightarrow{x} - \overrightarrow{y})}$ & Accounts for correlations between features \\
+            \hline
+            \multirow{2}{*}{Earth's Mover's Distance} & \multirow{2}{*}{$emd(A,B) = \min \sum_{a \in A} \sum_{b \in B} f_{a, b} d_{a, b}$} & Applicable on histograms, Intuitive \\
+            & & Measure on full distribution range \\
+            \hline
+            \multirow{2}{*}{Kullback-Leibler Divergence} & \multirow{2}{*}{$d_{KL}(A, B) = \sum_{i=1}^n (a_i - b_i) \log \left( \frac{a_i}{b_i} \right)$} & Applicable on histograms \\
+            & & Measures shared information \\
+        \end{tabular}
+    }
+    \caption{Distance functions}
+    \label{tab:distance-functions}
+\end{table}
+
+\subsubsection{Feature weighing}
+Each feature in the feature vector measures a certain aspect/property of the shape.
+It is important to note that, while some features might measure totally different, independent, aspects of the shape,
+other features could have a lot of overlap in what they measure.
+Moreover, some features might be more informative than others, especially for certain classes.
+Due to this, we chose to add the ability to weigh every feature by a certain user-chosen factor.
+When these weights are not specified by the user, we simply apply an equal weighing across the feature vector.
+
+We perform two kinds of weighing - weighing of the global features, and weighing between the importance of the distance
+calculated from the global features and the distances of the local features.
+
+By default, the values of the global features are weighed equally with weights of $1$, so this actually leaves the
+distance calculation for the scalar features unweighted.
+But, if the user considers it necessary, there is a possibility to assign an individual weight to each global feature.
+However, this weight assignment is dependent on the distance function that is used to calculate the distance between
+the scalar values.
+Therefore, we will discuss this scalar weighing together with the distance measures used for the scalar features, in
+section \ref{subsubsec:scalar_distance}.
+
+We calculate one distance over the scalar features and one distance per each histogram feature.
+Since we are using five histogram features, we end up with a total of six distances between two shapes.
+The final distance is calculated as a weighted sum of these distances.
+This weighing is simply
+
+\begin{equation}
+    \begin{aligned}[b]
+    & d_{final}(\overrightarrow{x}, \overrightarrow{y}) = w_{scalar} d_{scalar}(\overrightarrow{x}, \overrightarrow{y}) + w_{A_3} d_{A_3}(\overrightarrow{x}, \overrightarrow{y}) + \\
+    & + w_{D_1} d_{D_1}(\overrightarrow{x}, \overrightarrow{y}) + w_{D_2} d_{D_2}(\overrightarrow{x}, \overrightarrow{y}) + w_{D_3} d_{D_3}(\overrightarrow{x}, \overrightarrow{y}) + w_{D_4} d_{D_4}(\overrightarrow{x}, \overrightarrow{y}) \\
+    \end{aligned}
+    \label{eq:weighing}
+\end{equation}
+
+where we can assign a value to the weight of every single distance - both for the scalar distance and for each histogram feature.
+By default, we use the weights $w_{scalar} = 3$ and $w_{A_3} = w_{D_1} = w_{D_2} = w_{D_3} = w_{D_4} = 1$.
+This weighing makes the distance between the global features three times more important than the distance between local descriptors.
+To balance this, the local descriptors all-together have a higher weight than the scalar features - a weight of $5$ versus a weight of $3$.
+
+\subsubsection{Distance between global features}\label{subsubsec:scalar_distance}
+For the scalar values, we can calculate their distance using Minkowski distances, or the LP norm, like the well-known
+and often used $L_1$ or $L_2$ metrics, which are also known as the Manhattan and Euclidean distance respectively.
+These distances are defined as
+\begin{equation}
+    L_p(\overrightarrow{x}, \overrightarrow{y}) = \left( \sum_{i = 1}^n w_i \left| x_i - y_i \right|^p \right)^\frac{1}{p}\label{eq:lpdistance}
+\end{equation}
+where $\overrightarrow{x} = {x_1, \dots, x_n}$ and $\overrightarrow{y} = {y_1, \dots, y_n}$ are the feature vectors between which this distance is calculated, and $\overrightarrow{w} = {w_1, \dots, w_n}$ are the weights that we apply to the scalar values.
+We have implemented both these $L_1$ and $L_2$ metrics, as well as the $L_{\infty}$ distance.
+
+This $L_{\infty}$ is the LP norm corresponding to the limit where $p$ converges to $\infty$, and is therefore
+calculated slightly differently, as
+\begin{equation}
+    L_{\infty}(\overrightarrow{x}, \overrightarrow{y}) =  \max\limits_{i \in \{
+    1, \dots, n\}} w_i \left| x_i - y_i \right|,
+\end{equation}
+with $\overrightarrow{x} = {x_1, \dots, x_n}$, $\overrightarrow{y} = {y_1, \dots, y_n}$ and $\overrightarrow{w} = {w_1, \dots, w_n}$ defined as in \ref{eq:lpdistance}.
+
+Apart from the $L$ metric distances, we have also implemented the cosine distance and the Mahalanobis distance.
+The cosine distance is useful to determine how different vectors are based on the angle between them.
+As a result, this metric is independent of the length of the vectors.
+The cosine distance is defined as $1$ minus the cosine similarity, which is the value $cos(\theta)$ with $\theta$ the angle between the vectors.
+Therefore, the cosine distance is defined as
+\begin{equation}
+    d_{cos}(\overrightarrow{x}, \overrightarrow{y}) = 1 - \frac{\overrightarrow{w} \cdot\overrightarrow{x} \cdot \overrightarrow{y}}{\sqrt{\overrightarrow{w} \cdot\overrightarrow{x} \cdot \overrightarrow{x}} \cdot \sqrt{\overrightarrow{w} \cdot\overrightarrow{y} \cdot \overrightarrow{y}}}.
+\end{equation}
+
+Lastly, we have also implemented the Mahalanobis distance.
+This metric gives a distance between two vectors with respect to a probability distribution.
+The Mahalanobis distance accounts for the correlation between features by using the covariance matrix in its formula.
+The definition is somewhat similar to the Euclidean distance, where these distances coincide when this covariance matrix is the identity matrix.
+The definition of the Mahalanobis distance is
+\begin{equation}
+    d_{mahalanobis}(\overrightarrow{x}, \overrightarrow{y}) = \sqrt{(\overrightarrow{x} - \overrightarrow{y})^T Cov^{-1}(X) (\overrightarrow{x} - \overrightarrow{y})},
+\end{equation}
+where $X$ is the set of the scalar part of all the feature vectors in our database, $\overrightarrow{x}, \overrightarrow{y} \in X$.
+Notice that this distance does not require any weighting.
+Rather, the weighting is performed by means of the covariance matrix.
+
+\subsubsection{Distance between local (histogram) features}\label{subsubsec:hist_distance}
+Weighing the feature distances in the final distance calculation is not enough to properly deal with the histogram
+features - the features corresponding to the local descriptors.
+Simply using the same distance measure as for the scalars does not make sense for the histogram features, which is why
+we must handle them separately from the scalar features.
+
+Consider that the feature values corresponding to one local descriptor together form a feature.
+Therefore, for one such local descriptor we have to use the full range of values in order to determine a relevant
+distance, instead of comparing value by value like we do for the scalar values.
+
+Since the values of a histogram feature represent the bins of a distribution, we can calculate the Earth's Mover
+Distance (EMD) \cite{rubner_emd_2000} between two histograms.
+This distance function measures the amount of work that is needed to transform one distribution into another one,
+which gives a meaningful distance measure between two histograms corresponding to the same local descriptor.
+
+The EMD measure is defined as the minimum work that is needed to move from one distribution to the other.
+Since we are working with histograms with equal amounts of bins representing the same bin ranges, this distance calculation is a simplified version of the general case.
+Define $f_{a, b}$ as the amount that is moved from bin $a$ of histogram $A$ to bin $b$ of histogram $B$.
+Furthermore, define $d_{a, b}$ as the distance between the ranges of values of bin $a$ of histogram $A$ and bin $b$ of histogram $B$.
+Then the Earth's Mover's Distance is defined as
+\begin{equation}
+    emd(A,B) = \min \frac{\sum_{a \in A} \sum_{b \in B} f_{a, b} d_{a, b}}{\sum_{a \in A} \sum_{b \in B} f_{a, b}}.
+\end{equation}
+Instead of an exhaustive search over all possible solutions, much smarter approaches can be made in order to calculate this distance.
+We used the implementation by the $scipy.stats$ library in order to calculate this efficiently.
+In this implementation this distance is called the Wasserstein distance, which is a different name for the EMD.
+
+This is the default distance measure that is used for calculating distances between histograms.
+In addition to EMD, we also implemented, the Kullback-Leibler Divergence \cite{kullback1951information} and in the final system allow the user to specify it as the distance measure for local descriptors.
+The Kullback-Leibler Divergence - also called the relative entropy, measures the relative entropy between two distributions.
+It expresses how surprising one distribution is given we expect the other distribution.
+It therefore somewhat measures how much information the two distributions share.
+
+The measure that we implement is not exactly this relative entropy, since we add the distance in the reverse direction to the calculated distance in order to make the distance symmetric.
+That is
+\begin{equation}
+    d_{KL}(A, B) = d_{KL}^{pure}(A, B) + d_{KL}^{pure}(B, A),
+\end{equation}
+where $d_{KL}$ denotes our implementation of the Kullback-Leibler Divergence, and $d_{KL}^{pure}$ is the original (pure) Kullback-Leibler Divergence.
+The formula for our implementation is
+\begin{equation}
+    d_{KL}(A, B) = \sum_{i=1}^n (a_i - b_i) \log \left( \frac{a_i}{b_i} \right).\label{eq:kl-d}
+\end{equation}
+
+\subsection{Motivation for default distance measures}
+In the scalar feature normalization, we have opted for using the `z-score' normalization.
+We use this as the default since this normalization method is much more invariant to outliers, in comparison to `min-max' normalization, which is heavily affected by outliers.
+Moreover, for shapes that are not in our data set, we need to compute the feature vector on the fly, and it could be the case that applying a min-max normalization with the minimum and maximum values from our data set would lead to values outside the [0,1] range.
+For the histogram features, there is only one appropriate option for normalization, which is the bin normalization discussed in the corresponding section.
+This is also the only option implemented in our tool.
+
+We have chosen the cosine distance for calculating the distance for the scalar values since this distance measure is not affected by the length of the feature values.
+It is only dependent on the feature values relative to each other, giving a fair calculation across all features in the feature vector.
+Using the cosine distance, features with large value ranges, which can still happen even after normalization, will not dominate the distance calculation.
+
+For the distance calculation with respect to the local features, we have chosen the EMD measure, since this gives a more intuitive difference between two distributions.
+Moreover, the EMD measure is a metric, whereas the (pure) Kullback-Leibler Divergence is not, since it does not satisfy the symmetry condition and the triangle inequality.
+The symmetry condition is forced onto the measure in our implementation, as outlined in Equation \ref{eq:kl-d}.
+
+In the final system, the default measures used are the cosine distance for the global features and the EMD for the local features.
+These distances are weighed following Equation \ref{eq:weighing} to get our final distance measure.
+The final measure is what determines how similar/dissimilar two shapes are.
+
+%\subsection{Matching output}
+%With the above defined distances we can perform matching on the 3D models. An example of this can be found in Figure \ref{fig:query-response-example}, where several query shapes are shown together with the five shapes that are found most similar to them. Furthermore we can show the feature vectors in 2D using dimensionality reduction. The output of this can be seen in Figure \ref{fig:feature-vectors-2D}.
