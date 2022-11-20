@@ -1,0 +1,236 @@
+Evaluating a retrieval system is complex because we need to come up with a distance to compare how far is one result from another.
+However, if we had such a perfect distance that tells us perfectly how similar an object is to another we would have included it in our system.
+Notice that we can not use our own distance functions as evaluation metrics because in this case, the evaluation is not fair.
+
+In order to overcome this problem we need to use in our evaluation metrics some information the system does not know about.
+Luckily we have such information in the class labels of the shapes.
+We must still note that, these class labels are not very detailed and each class can contain models that differ significantly, such as the \textit{Vehicle} class.
+Still, in lieu of a better alternative, we consider the class labels the ground truth for our system. 
+This allows us to use several metrics from machine learning for the evaluation of our retrieval results.
+
+To visualize the process, consider the case in which the user makes a query with a shape of the \textit{Airplane} class and expects $k=1$ items to be returned.
+A result is correct (True Positive ($TP$)) when a shape that is also of the \textit{Airplane} class is returned.
+On the other hand, if a shape of any other class is returned, the result is incorrect (False Positive ($FP$)).
+We compute the number of $TP$, $TN$, $FP$ and $FN$ results (see Table \ref{tab:tp-tn-fp-fn}) for our multi-class problem by means of a confusion matrix.
+
+Extending this beyond $k=1$, the approach is to take the user-given shape and to create $k$ pairs of ground truth and predicted labels.
+
+\begin{table}[ht]
+    \centering
+    \begin{tabular}{c|c|c|c}
+         \multicolumn{2}{c|}{} & \multicolumn{2}{c}{Predicted class} \\
+        \cline{3-4}
+         \multicolumn{2}{c|}{} & 1 & 0 \\
+        \hline
+        \multirow{2}{*}{True class} & 1 & $TP$ (true positive)  & $FP$ (false positive) \\
+        \cline{2-4}
+        & 0 & $FN$ (false negative) & $TN$ (true negative) \\
+    \end{tabular}
+    \caption{Results notations}
+    \label{tab:tp-tn-fp-fn}
+\end{table}
+
+After computing the confusion matrix we use a set of classical evaluation metrics from the machine learning field as described in Table \ref{tab:evaluation-metrics}.
+Each metric aims to describe the system's performance from a different perspective (see Description column of Table \ref{tab:evaluation-metrics}).
+
+\begin{table}[ht]
+    \centering
+    \resizebox{\textwidth}{!}{
+        \begin{tabular}{c|c|c}
+            Name & Formula & Description \\
+            \hline
+            Accuracy & $\frac{TP}{TP + FP + FN + TN}$ & The ratio of total correct predictions\\
+            \hline
+            \multirow{2}{*}{Precision} & \multirow{2}{*}{$\frac{TP_i}{TP_i + FP_i}$} & The ratio of the number of correct predictions within \\
+            &  & a class to the number of class members\\
+            \hline
+            \multirow{2}{*}{Recall} & \multirow{2}{*}{$\frac{TP_i}{TP_i + FN_i}$} & The ratio of the number of correct predictions within \\
+            & & a class to the total number of predictions assigned to class\\
+            \hline
+            \multirow{2}{*}{F1 score} &\multirow{2}{*}{$2 \cdot \frac{Precision_i \cdot Recall_i}{Precision_i + Recall_i}$} & Combines the precision and recall of a classifier \\
+            & & into a single metric by taking their harmonic mean \\
+            \hline
+            \multirow{2}{*}{True Positive rate} & \multirow{2}{*}{$\frac{TP_i}{TP_i + FN_i}$} & The probability that an actual positive label \\
+            & & will be predicted as positive\\
+            \hline
+            \multirow{2}{*}{False Positive rate} & \multirow{2}{*}{$\frac{FP_i}{FP_i + TN_i}$} &  The probability of wrongly predicting \\
+            & & the label of a negative class\\
+        \end{tabular}
+    }
+    \caption{Notations for the evaluation metrics}
+    \label{tab:evaluation-metrics}
+\end{table}
+
+\paragraph{Receiver Operating Characteristic (ROC) curve}
+We use an ROC curve to measure the performance of our system at different query sizes. \footnote{We direct readers without a background understanding of ROC curves to \cite{fawcett2006introduction}.}  % make a note below page
+The \textbf{True Positive Rate} and \textbf{False Positive Rate} of the system are used to compute it as follows.
+For each of the $20$ classes in our system, we consider one as the positive class and all of the other classes as negative ones (i.e.\ a one-vs-all approach).
+We consider values of the query size $k$ from $1$ to $5$ and for each one, compute the True Positive and False Positive rates.
+This process gives 5 points of the ROC curve, which we interpolate to give an approximation of the ROC curve for all classes.
+
+There is a detail to note in our computation of the ROC curve in the cases where $k>1$.
+We had to decide on what are considered a $TP$ and $FP$ result.
+If a user requests $5$ shapes in their query, is $1$ correct one enough to consider the result successful;
+conversely, if $1$ of the shapes returned is incorrect, but $4$ are, should the result be considered wrong in its entirety?
+In our evaluation, we consider both a strict and a relaxed definition of the above.
+The relaxed definition is, in cases where $k>1$, to consider a result correct if at least $k-1$ of the returned shapes are of the same class as the query shape.
+While a compromise, we consider this to be the more informative metric as it is more consistent with what a user would consider satisfactory, at least at the sizes of $k$ (i.e.\ $<=5$) which we are interested in.
+
+\subsection{Results and Discussion}
+Table \ref{tab:accuracy} presents overall accuracy figures for our system at several query sizes.
+Notice how the $KNN$ approach achieves a better accuracy overall than the faster $ANN$ approach.
+As expected, the accuracy decreases as the query size increases.
+ 
+\begin{table}[ht]
+    \centering
+    \begin{tabular}{c|c|c}
+        \textbf{k} & \textbf{KNN} & \textbf{ANN} \\
+        \hline
+        1 & \textbf{62.10} & 60.29\\
+        2 & \textbf{58.75} & 58.21\\
+        3 & \textbf{55.70} & 52.73\\
+        4 & \textbf{52.47} & 48.87\\
+        5 & \textbf{50.26} & 44.90\\
+    \end{tabular}
+    \caption{KNN vs ANN in terms of accuracy}
+    \label{tab:accuracy}
+\end{table}
+
+We compute the \textbf{Precision}, \textbf{Recall}, and \textbf{F1 score} for all classes at query sizes ($k \in  \{1, 3, 5\}$) using the relaxed evaluation condition.
+Figures \ref{fig:knn-confusion-matrix-results} and \ref{fig:ann-confusion-matrix-results} show the confusion matrices for each query size.
+Tables \ref{tab:precision-recall-f1-k-1}, \ref{tab:precision-recall-f1-k-3} and \ref{tab:precision-recall-f1-k-5} present the values of the above metrics for each class for both the $KNN$ and $ANN$ approaches.
+
+Notice that for some classes we have higher values for all the metrics of interest and for other classes these values are quite low.
+That is, our system deals better with discriminating against certain classes and performs poorly in discriminating against other certain classes.
+This makes sense given that some class labels are more informative about the shape than others (recall the vehicle class contains cars, starships, ships, airplanes, tanks, and more).
+
+The values for the \textbf{Precision} range between $27$ and $100$ and for \textbf{Recall} range between $19$ and $100$.
+Notice inverse relationship between the average values of these metrics and $k$.
+Moreover, observe again how the $KNN$ approach overall performs better than $ANN$.
+
+\begin{table}[H]
+    \centering
+    \begin{tabular}{c|c|c|c|c|c|c}
+         & \multicolumn{3}{c|}{KNN} & \multicolumn{3}{c}{ANN} \\
+        \hline
+        Class & Precision & Recall & F1 score & Precision & Recall & F1 score \\
+        \hline
+        plant & 71.43 & 68.72 & 70.05 & 80.28 & 76.05 & 78.11 \\ 
+        furniture & 59.78 & 59.03 & 59.4 & 69.72 & 69.13 & 69.43 \\ 
+        household & 57.77 & 39.43 & 46.87 & 67.96 & 21.79 & 33.0 \\ 
+        vehicle & 62.38 & 44.69 & 52.07 & 68.16 & 32.99 & 44.46 \\ 
+        building & 36.36 & 59.24 & 45.07 & 69.57 & 58.47 & 63.54 \\ 
+        animal & 51.06 & 62.9 & 56.37 & 53.79 & 35.49 & 42.76 \\ 
+        miscellaneous & 38.26 & 54.45 & 44.94 & 58.1 & 46.73 & 51.8 \\ 
+        Bust & 42.86 & 45.0 & 43.9 & 41.67 & 54.64 & 47.28 \\ 
+        Hand & 47.37 & 45.0 & 46.15 & 50.0 & 26.85 & 34.94 \\ 
+        Bird & 68.75 & 55.0 & 61.11 & 38.71 & 72.14 & 50.38 \\ 
+        Ant & 60.71 & 85.0 & 70.83 & 33.33 & 30.24 & 31.71 \\ 
+        Table & 84.62 & 55.0 & 66.67 & 55.17 & 97.06 & 70.35 \\ 
+        FourLeg & 38.89 & 35.0 & 36.84 & 52.38 & 65.98 & 58.4 \\ 
+        Octopus & 47.06 & 40.0 & 43.24 & \textbf{100.0} & 36.23 & 53.19 \\ 
+        Cup & 95.0 & \textbf{95.0} & \textbf{95.0} & 73.08 & 97.94 & 83.7 \\ 
+        Airplane & 94.12 & 80.0 & 86.49 & 42.86 & 80.77 & 56.0 \\ 
+        Human & 75.0 & 60.0 & 66.67 & 46.67 & 44.19 & 45.4 \\ 
+        Plier & 95.0 & \textbf{95.0} & \textbf{95.0} & 63.64 & 85.09 & 72.82 \\ 
+        Teddy & 63.64 & 70.0 & 66.67 & 79.17 & 99.52 & 88.18 \\ 
+        Bearing & \textbf{100.0} & 86.05 & 92.5 & 47.06 & 83.8 & 60.27 \\ 
+        Fish & 50.0 & 75.0 & 60.0 & 61.29 & 99.12 & 75.75 \\ 
+        Chair & 71.43 & 75.0 & 73.17 & 95.24 & \textbf{100.0} & \textbf{97.56} \\ 
+        Vase & 40.0 & 40.0 & 40.0 & 62.5 & 78.1 & 69.43 \\ 
+        Armadillo & 31.82 & 35.0 & 33.33 & 66.67 & 68.41 & 67.53 \\ 
+        Glasses & 90.48 & \textbf{95.0} & 92.68 & 69.23 & 64.16 & 66.6 \\ 
+        Mech & 75.0 & 78.11 & 76.52 & 60.0 & 53.13 & 56.36 \\ 
+        \hline
+        \textbf{Average} & 63.41 & 62.79 & 62.37 & 61.78 & 64.54 & 60.34\\
+    \end{tabular}
+    \caption{KNN vs ANN in terms of Precision, Recall and F1 score for k=1}
+    \label{tab:precision-recall-f1-k-1}
+\end{table}
+
+\begin{table}[H]
+    \centering
+    \begin{tabular}{c|c|c|c|c|c|c}
+         & \multicolumn{3}{c|}{KNN} & \multicolumn{3}{c}{ANN} \\
+        \hline
+        Class & Precision & Recall & F1 score & Precision & Recall & F1 score \\
+        \hline
+        plant & 67.02 & 68.05 & 67.53 & 62.44 & 60.63 & 61.52 \\ 
+        furniture & 53.98 & 55.62 & 54.79 & 49.06 & 48.47 & 48.76 \\
+        household & 53.78 & 32.05 & 40.16 & 51.06 & 17.59 & 26.17 \\ 
+        vehicle & 53.85 & 39.45 & 45.54 & 53.56 & 26.31 & 35.29 \\ 
+        building & 27.41 & 49.14 & 35.19 & 46.15 & 51.54 & 48.7 \\ 
+        animal & 45.68 & 61.46 & 52.4 & 48.1 & 24.38 & 32.36 \\ 
+        miscellaneous & 33.66 & 42.82 & 37.7 & 50.38 & 36.61 & 42.4 \\ 
+        Bust & 51.61 & 53.33 & 52.46 & 54.29 & 63.97 & 58.73 \\ 
+        Hand & 39.66 & 38.33 & 38.98 & 28.17 & 38.05 & 32.37 \\ 
+        Bird & 58.18 & 53.33 & 55.65 & 32.47 & 48.73 & 38.97 \\ 
+        Ant & 51.9 & 68.33 & 58.99 & 42.37 & 46.21 & 44.21 \\ 
+        Table & 74.36 & 50.17 & 59.91 & 51.06 & 71.32 & 59.52 \\ 
+        FourLeg & 41.82 & 38.33 & 40.0 & 40.28 & 56.23 & 46.94 \\ 
+        Octopus & 33.33 & 21.67 & 26.26 & 38.1 & 28.65 & 32.71 \\ 
+        Cup & \textbf{91.38} & 88.33 & \textbf{89.83} & 59.74 & \textbf{91.71} & 72.35 \\ 
+        Airplane & 71.83 & 85.0 & 77.86 & 45.07 & 68.98 & 54.52 \\ 
+        Human & 40.62 & 43.33 & 41.94 & 40.38 & 42.83 & 41.57 \\ 
+        Plier & 90.74 & 81.67 & 85.96 & 60.0 & 87.96 & 71.34 \\ 
+        Teddy & 48.28 & 70.0 & 57.14 & 74.63 & 91.63 & \textbf{82.26} \\ 
+        Bearing & 84.21 & 61.28 & 70.94 & 53.03 & 70.82 & 60.65 \\ 
+        Fish & 46.34 & 63.33 & 53.52 & 62.86 & 78.78 & 69.92 \\ 
+        Chair & 64.41 & 63.33 & 63.87 & 71.43 & 91.63 & 80.28 \\ 
+        Vase & 46.0 & 38.33 & 41.82 & 66.67 & 66.81 & 66.74 \\ 
+        Armadillo & 38.33 & 38.33 & 38.33 & 61.76 & 75.62 & 67.99 \\ 
+        Glasses & 90.91 & \textbf{84.45} & 87.56 & 46.55 & 66.69 & 54.83 \\ 
+        Mech & 70.97 & 76.44 & 73.6 & \textbf{82.14} & 76.67 & 79.31 \\
+        \hline
+        \textbf{Average} & 56.55 & 56.38 & 55.69 & 52.76 & 58.8 & 54.25\\
+    \end{tabular}
+    \caption{KNN vs ANN in terms of Precision, Recall and F1 score for k=3}
+    \label{tab:precision-recall-f1-k-3}
+\end{table}
+
+\begin{table}[H]
+    \centering
+    \begin{tabular}{c|c|c|c|c|c|c}
+         & \multicolumn{3}{c|}{KNN} & \multicolumn{3}{c}{ANN} \\
+        \hline
+        Class & Precision & Recall & F1 score & Precision & Recall & F1 score \\
+        \hline
+        plant & 65.68 & 62.86 & 64.24 & 56.39 & 48.27 & 52.01 \\ 
+        furniture & 48.64 & 49.16 & 48.9 & 37.52 & 32.63 & 34.91 \\ 
+        household & 52.74 & 29.21 & 37.6 & 40.82 & 12.8 & 19.49 \\ 
+        vehicle & 49.7 & 35.96 & 41.73 & 47.26 & 20.02 & 28.12 \\ 
+        building & 25.21 & 47.8 & 33.01 & 37.96 & 40.78 & 39.32 \\ 
+        animal & 41.75 & 57.6 & 48.41 & 41.46 & 18.01 & 25.11 \\ 
+        miscellaneous & 32.37 & 39.27 & 35.48 & 40.42 & 30.65 & 34.86 \\ 
+        Bust & 49.5 & 50.0 & 49.75 & 42.61 & 52.98 & 47.23 \\ 
+        Hand & 37.89 & 36.0 & 36.92 & 23.97 & 33.97 & 28.1 \\ 
+        Bird & 45.0 & 45.0 & 45.0 & 25.0 & 37.36 & 29.96 \\ 
+        Ant & 43.51 & 57.0 & 49.35 & 37.04 & 45.98 & 41.03 \\ 
+        Table & 65.71 & 48.21 & 55.62 & 34.44 & 61.73 & 44.22 \\ 
+        FourLeg & 37.23 & 35.0 & 36.08 & 34.45 & 47.21 & 39.84 \\ 
+        Octopus & 27.94 & 19.0 & 22.62 & 34.88 & 31.8 & 33.27 \\ 
+        Cup & \textbf{89.69} & \textbf{87.0} & \textbf{88.32} & 49.18 & 84.36 & 62.14 \\ 
+        Airplane & 69.03 & 78.0 & 73.24 & 42.48 & 61.66 & 50.3 \\ 
+        Human & 33.65 & 35.0 & 34.31 & 29.73 & 41.8 & 34.75 \\ 
+        Plier & 75.73 & 78.0 & 76.85 & 54.41 & \textbf{87.95} & 67.23 \\ 
+        Teddy & 44.44 & 72.0 & 54.96 & 70.25 & 87.38 & \textbf{77.88} \\ 
+        Bearing & 74.51 & 43.64 & 55.04 & 43.0 & 56.51 & 48.84 \\ 
+        Fish & 42.22 & 57.0 & 48.51 & 59.13 & 74.4 & 65.89 \\ 
+        Chair & 56.7 & 55.0 & 55.84 & 60.95 & 83.38 & 70.42 \\ 
+        Vase & 35.79 & 34.0 & 34.87 & 60.98 & 55.77 & 58.26 \\ 
+        Armadillo & 31.73 & 33.0 & 32.35 & 56.19 & 66.63 & 60.96 \\ 
+        Glasses & 87.34 & 70.19 & 77.83 & 33.01 & 60.68 & 42.76 \\ 
+        Mech & 71.58 & 70.27 & 70.92 & \textbf{71.82} & 79.0 & 75.24 \\ 
+        \hline
+        \textbf{Average} & 51.36 & 50.97 & 50.3 & 44.82 & 52.06 & 46.62\\
+    \end{tabular}
+    \caption{KNN vs ANN in terms of Precision, Recall and F1 score for k=5}
+    \label{tab:precision-recall-f1-k-5}
+\end{table}
+
+Figures \ref{fig:knn-roc-curve-results} and \ref{fig:ann-roc-curve-results} present the computed ROC curves for $KNN$ and $ANN$ approaches respectively.
+Notice how the ROC curves for certain classes have a higher area under the curve than for other classes for both approaches.
+Using the relaxed definition of the correct prediction observe how the area under the curve for all the classes increases considerably.
+This means that, even though for certain classes the results are not exclusively of the same class as the query shape, the returned shapes are still overwhelmingly of the correct class.
+Figure \ref{fig:knn-vs-ann-human-roc-curve-results} presents two ROC curves for the Human class for the $KNN$ and $ANN$ approaches respectively.
+With both the strict and relaxed versions, the area under the curve for the $KNN$ is bigger than for $ANN$, which confirms once again that the $KNN$ approach performs slightly better than the faster $ANN$ one.
