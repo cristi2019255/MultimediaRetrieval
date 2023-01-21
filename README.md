@@ -56,7 +56,7 @@ Enjoy our 3D retrieval system :rocket: !
 ## :books: Details
 
 For the technical report please follow this link `https://www.overleaf.com/1781678451tvmkmtkhcrbg` or see the `report` folder in this project
-The source code could also be find at the following link `https://github.com/cristi2019255/MultimediaRetrieval`
+The source code could also be found at the following link `https://github.com/cristi2019255/MultimediaRetrieval`
 
 ## :cloud: Cloud databasee
 
